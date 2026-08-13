@@ -54,13 +54,32 @@ def ok(dk, nhan, them=""):
         lech += 1
 
 
-def cho(chu):
-    """Dung lai cho nguoi dung lam mot viec roi bam Enter."""
+def cho(chu, giay=45, xong=None, nhip=0.5):
+    """In viec can lam roi QUAN SAT trong `giay`, khong cho bam Enter.
+
+    Chay qua dau `!` trong Claude Code thi KHONG co ban phim: input() nem
+    EOFError ngay, ca bai chay tuot mot mach va moi phep kiem deu bao lech oan.
+    Da xay ra that o lan nghiem thu dau.
+
+    Nen doi cach: mo ta viec, dem nguoc, va tu phat hien khi nguoi dung lam
+    xong (`xong` tra True) - lam xong som thi di tiep ngay, khong phai doi het
+    gio. Khong co `xong` thi doi tron thoi gian.
+    """
     print(f"\n>>> {chu}")
-    try:
-        input("    (làm xong thì bấm Enter)")
-    except EOFError:
-        print("    (không có bàn phím — bỏ qua bước này)")
+    het = time.time() + giay
+    da_bao = -1
+    while time.time() < het:
+        if xong is not None and xong():
+            print(f"    ✓ đã thấy — đi tiếp ({int(giay - (het - time.time()))} giây)")
+            time.sleep(1.5)          # cho thao tac cuoi kip hoan tat
+            return True
+        con = int(het - time.time())
+        if con != da_bao and con % 5 == 0:
+            print(f"    …còn {con} giây")
+            da_bao = con
+        time.sleep(nhip)
+    print("    (hết giờ — bước này coi như chưa làm)")
+    return False
 
 
 def hwnd():
@@ -166,7 +185,8 @@ print("  PHAN CAN ANH BAM. May se tu do sau moi buoc.")
 print("=" * 62)
 
 print("\n--- C1. Keo mep cua so ---")
-cho("Kéo thử 4 cạnh và 4 góc cửa sổ cho nó ĐỔI KÍCH THƯỚC rõ rệt.")
+cho("Kéo 4 cạnh và 4 góc cửa sổ. Thử cả BẤM GIỮ VÀO CHỮ TIÊU ĐỀ rồi kéo.",
+    60, lambda: (lambda k: k and co_cua_so(k) != (r0, c0))(hwnd()))
 h = hwnd()
 if h:
     r1, c1 = co_cua_so(h)
@@ -176,9 +196,22 @@ else:
     ok(False, "khong tim thay cua so nua")
 
 print("\n--- C2. Ba thanh chinh Toc do / Cao do / Am luong ---")
-cho("Kéo thanh TỐC ĐỘ sang phải hết cỡ, rồi bấm Nghe toàn bộ.\n"
-    "    Để tiếng chạy vài giây RỒI MỚI bấm Enter (đừng dừng).")
-lenh = dong_lenh("ffplay.exe")
+# Phai BAT DUNG LUC ffplay dang song - no chi ton tai trong luc phat tieng,
+# nen doi het gio roi moi doc la khong con gi de doc.
+lenh = []
+
+
+def _bat_ffplay():
+    global lenh
+    d = dong_lenh("ffplay.exe")
+    if d:
+        lenh = d
+        return True
+    return False
+
+
+cho("Kéo thanh TỐC ĐỘ sang phải HẾT CỠ, rồi bấm Nghe toàn bộ.\n"
+    "    Cứ để tiếng chạy — máy tự bắt, không cần bấm gì thêm.", 90, _bat_ffplay)
 ok(len(lenh) >= 1, "co tien trinh ffplay dang phat", f"{len(lenh)} tien trinh")
 ok(len(lenh) <= 1, "CHI MOT nguon phat tieng cung luc", f"{len(lenh)} tien trinh")
 co_af = any("-af" in d for d in lenh)
@@ -210,7 +243,7 @@ ok(not list(THU_MUC_XUAT.glob("*.dangxuat")) if THU_MUC_XUAT.exists() else True,
    "khong bo lai tep .dangxuat nao")
 
 print("\n--- C4. Huy giua chung ---")
-cho("Xuất lần nữa, nhưng BẤM HUỶ XUẤT khi phần trăm đang chạy.")
+cho("Xuất lần nữa, nhưng BẤM HUỶ XUẤT khi phần trăm đang chạy.", 90)
 if THU_MUC_XUAT.exists():
     ok(not list(THU_MUC_XUAT.glob("*.dangxuat")),
        "huy xong khong bo lai tep do dang",
@@ -218,12 +251,13 @@ if THU_MUC_XUAT.exists():
 
 print("\n--- C5. Menu ---")
 cho("Mở cả 5 menu. Bấm thử: Lưu · Cỡ chữ lớn hơn · Thẻ cảm xúc ·\n"
-    "    Hướng dẫn nhanh. Xem có mục nào bấm vào KHÔNG RA GÌ không.")
+    "    Hướng dẫn nhanh. Xem có mục nào bấm vào KHÔNG RA GÌ không.", 75)
 print("       (bước này chỉ mắt anh thấy được — máy ghi nhận qua nhật ký lỗi ở phần D)")
 
 print("\n--- C6. Bon man phu ---")
-cho("Mở Soát văn bản · Thư viện giọng · Từ điển phát âm · Cài đặt,\n"
-    "    rồi quay lại màn hình chính.")
+cho("Mở SOÁT VĂN BẢN (xem chữ còn chồng nhau không) · Thư viện giọng ·\n"
+    "    Từ điển phát âm · Cài đặt, rồi quay lại màn hình chính.\n"
+    "    Nhân tiện: nghe lại một đoạn vừa nghe — phải ra tiếng NGAY.", 120)
 
 # ═══════════════════════════════════════════════════════ D. TU DONG — ket luan
 
@@ -249,8 +283,9 @@ if doi:
     print(f"       (có đổi: {', '.join(doi)} — bình thường nếu anh vừa chỉnh thiết lập)")
 
 print("\n--- D3. Thoat co sach khong ---")
-cho("ĐÓNG cửa sổ chương trình (bấm nút X).")
-time.sleep(3)
+cho("ĐÓNG cửa sổ chương trình (bấm nút X).", 60,
+    lambda: dem("GiongViet.exe") == 0)
+time.sleep(2)
 ok(dem("GiongViet.exe") == 0, "khong con tien trinh GiongViet.exe",
    dem("GiongViet.exe"))
 ok(dem("ffplay.exe") <= truoc_ffplay, "khong bo lai ffplay nao",
