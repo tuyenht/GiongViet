@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/bssaas-adminkit-design-system-60ba9c0b-5497-49a2-b7c1-ba0772d8cf30/fonts/inter.css">
+<style>
+body{margin:0;background:#e6e6e6}
+a{color:var(--acc)}a:hover{color:var(--acc-h)}
+:root{
+--bg:#f3f3f3;--layer:#ffffff;--layer2:#fafafa;--stroke:rgba(0,0,0,.0578);--stroke2:rgba(0,0,0,.16);--divider:#e5e5e5;
+--txt:#1a1a1a;--txt2:#5d5d5d;--txt3:#767676;--dis:#a3a3a3;
+--ctl:#fdfdfd;--ctl-h:#f6f6f6;--sub-h:rgba(0,0,0,.037);
+--acc:#0067c0;--acc-h:#1a75c6;--acc-txt:#ffffff;--acc-soft:rgba(0,103,192,.09);
+--warn:#9d5d00;--warn-bg:rgba(247,184,75,.16);--err:#c42b1c;--err-bg:rgba(196,43,28,.10);
+--info:#0067c0;--ok:#0f7b0f;--rail:#868686;--shadow:0 8px 16px rgba(0,0,0,.14);--mark:rgba(0,103,192,.14);
+--chip-bg:rgba(0,0,0,.055);--chip-bd:rgba(0,0,0,.09);--chip-fg:#4a4a4a;
+}
+:root[data-theme='dark']{
+--bg:#202020;--layer:#2b2b2b;--layer2:#272727;--stroke:rgba(255,255,255,.07);--stroke2:rgba(255,255,255,.10);--divider:#303030;
+--txt:#ffffff;--txt2:rgba(255,255,255,.73);--txt3:rgba(255,255,255,.60);--dis:rgba(255,255,255,.38);
+--ctl:rgba(255,255,255,.06);--ctl-h:rgba(255,255,255,.084);--sub-h:rgba(255,255,255,.06);
+--acc:#4cc2ff;--acc-h:#47b1e8;--acc-txt:#000000;--acc-soft:rgba(76,194,255,.12);
+--warn:#f7b84b;--warn-bg:rgba(247,184,75,.14);--err:#ff99a4;--err-bg:rgba(255,153,164,.12);
+--info:#4cc2ff;--ok:#6ccb5f;--rail:#9a9a9a;--shadow:0 8px 16px rgba(0,0,0,.36);--mark:rgba(76,194,255,.2);
+--chip-bg:rgba(255,255,255,.09);--chip-bd:rgba(255,255,255,.14);--chip-fg:rgba(255,255,255,.82);
+}
+</style>
+</helmet>
+
+<div style="min-height:100vh;padding:20px 24px 40px;background:#e6e6e6;font-family:'Segoe UI Variable Text','Segoe UI',Inter,system-ui,sans-serif;font-size:14px;color:#1a1a1a">
+
+<div style="display:flex;align-items:center;gap:14px;width:1440px;margin:0 auto 14px">
+  <span style="font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:#5d5d5d;font-weight:600">Soát văn bản</span>
+  <div style="display:flex;gap:3px;padding:3px;background:#fdfdfd;border:1px solid rgba(0,0,0,.09);border-radius:6px;margin-left:auto">
+    <sc-for list="{{ themeTabs }}" as="t" hint-placeholder-count="2">
+      <button onClick="{{ t.pick }}" style="border:0;cursor:pointer;font:600 13px 'Segoe UI Variable Text','Segoe UI',Inter,sans-serif;padding:7px 12px;border-radius:4px;background:{{ t.bg }};color:{{ t.fg }}">{{ t.label }}</button>
+    </sc-for>
+  </div>
+</div>
+
+<div style="width:1440px;height:900px;margin:0 auto;background:var(--bg);border:1px solid rgba(0,0,0,.22);border-radius:8px;box-shadow:0 16px 32px rgba(0,0,0,.22);overflow:hidden;display:flex;flex-direction:column;color:var(--txt)">
+
+  <div style="height:32px;flex:none;display:flex;align-items:center;padding-left:12px;background:var(--bg)">
+    <div style="display:flex;align-items:center;gap:9px">
+      <div style="width:16px;height:16px;border-radius:3px;background:var(--acc);display:flex;align-items:center;justify-content:center">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--acc-txt)" stroke-width="2.6" stroke-linecap="round"><path d="M4 9v6M9 5v14M14 8v8M19 11v2"/></svg>
+      </div>
+      <span style="font-size:12.5px;color:var(--txt2)">thongbao-quoc-khanh.txt — GiongDoc</span>
+      <a href="GiongDoc%20-%20M%C3%A0n%20h%C3%ACnh%20ch%C3%ADnh%20v2%20%28nghe%20theo%20d%C3%B2ng%29.dc.html" style="display:flex;align-items:center;gap:5px;flex:none;height:22px;padding:0 10px 0 7px;border-radius:11px;background:var(--sub-h);color:var(--txt2);font-size:12px;text-decoration:none;white-space:nowrap" style-hover="color:var(--txt)" title="Quay lại màn hình chính"><svg width="11" height="11" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M14 6l-6 6 6 6"/></svg>Màn hình chính</a>
+    </div>
+    <div style="margin-left:auto;display:flex">
+      <div style="width:46px;height:32px;display:flex;align-items:center;justify-content:center;color:var(--txt3)"><svg width="10" height="10" viewBox="0 0 12 12" stroke="currentColor" stroke-width="1"><path d="M1 6h10"/></svg></div>
+      <div style="width:46px;height:32px;display:flex;align-items:center;justify-content:center;color:var(--txt3)"><svg width="10" height="10" viewBox="0 0 12 12" stroke="currentColor" stroke-width="1" fill="none"><rect x="1.5" y="1.5" width="9" height="9" rx="1"/></svg></div>
+      <div style="width:46px;height:32px;display:flex;align-items:center;justify-content:center;color:var(--txt);cursor:default" style-hover="background:#c42b1c;color:#fff"><svg width="10" height="10" viewBox="0 0 12 12" stroke="currentColor" stroke-width="1.1"><path d="M1.5 1.5l9 9M10.5 1.5l-9 9"/></svg></div>
+    </div>
+  </div>
+
+  <div style="height:42px;flex:none;display:flex;align-items:center;gap:8px;padding:0 8px;background:var(--bg)">
+    <div onClick="{{ pickAudit }}" style="display:flex;align-items:center;gap:8px;height:32px;padding:0 11px;border-radius:4px;background:{{ t0bg }};color:{{ t0fg }};border:1px solid {{ t0bd }};cursor:default" style-hover="background:var(--sub-h)" title="Danh sách những chỗ dễ đọc sai">
+      <svg width="16" height="16" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h11M4 11h7M4 16h9"/><circle cx="17.5" cy="15.5" r="3.5"/><path d="M20.2 18.2L22.5 20.5"/></svg>
+      <span style="font-size:14px;font-weight:600;white-space:nowrap">Chỗ cần chú ý</span>
+    </div>
+    <div onClick="{{ pickNorm }}" style="display:flex;align-items:center;gap:8px;height:32px;padding:0 11px;border-radius:4px;background:{{ t1bg }};color:{{ t1fg }};border:1px solid {{ t1bd }};cursor:default" style-hover="background:var(--sub-h)" title="So sánh văn bản gốc với cách máy sẽ đọc">
+      <svg width="16" height="16" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4.5l1.7 4.3 4.3 1.7-4.3 1.7L12 16.5l-1.7-4.3L6 10.5l4.3-1.7z"/></svg>
+      <span style="font-size:14px;font-weight:600;white-space:nowrap">Văn bản sau chuẩn hoá</span>
+    </div>
+    <div style="margin-left:auto;font-size:13px;color:var(--txt3);white-space:nowrap">{{ topRight }}</div>
+  </div>
+
+  <sc-if value="{{ isAudit }}" hint-placeholder-val="{{ true }}">
+  <div style="flex:1;min-height:0;display:flex;flex-direction:column">
+
+  <div style="flex:1;min-height:0;display:flex;padding:0 8px">
+    <div style="width:240px;flex:none;display:flex;flex-direction:column;gap:6px;padding-right:8px;opacity:.55">
+      <div style="height:34px;background:var(--layer);border:1px solid var(--stroke);border-radius:5px"></div>
+      <div style="height:52px;background:var(--layer);border:1px solid var(--stroke);border-radius:5px"></div>
+      <div style="height:52px;background:var(--sub-h);border-radius:5px"></div>
+      <div style="height:52px;background:var(--sub-h);border-radius:5px"></div>
+    </div>
+
+    <div style="flex:1;min-width:0;display:flex;flex-direction:column;background:var(--layer);border:1px solid var(--stroke);border-radius:8px 8px 0 0;overflow:hidden">
+      <div style="height:38px;flex:none;display:flex;align-items:center;gap:12px;padding:0 14px;border-bottom:1px solid var(--divider)">
+        <span style="font-size:14px;font-weight:600;color:var(--txt)">thongbao-quoc-khanh.txt</span>
+        <span style="font-size:13px;color:var(--txt2)">215 từ · 16 đoạn</span>
+      </div>
+      <div style="position:relative;flex:1;min-height:0;overflow:hidden;padding:6px 0">
+        <div style="position:absolute;right:4px;top:2%;width:6px;height:52%;border-radius:3px;background:var(--rail);opacity:.4"></div>
+        <sc-for list="{{ lines }}" as="ln" hint-placeholder-count="8">          <div onClick="{{ ln.pick }}" style="display:flex;align-items:flex-start;padding:6px 0;background:{{ ln.bg }};cursor:default" style-hover="background:var(--sub-h)">
+            <span style="width:54px;flex:none;text-align:right;padding-right:16px;padding-top:4px;font-size:12.5px;color:var(--txt3);font-variant-numeric:tabular-nums">{{ ln.no }}</span>
+            <span style="flex:0 1 620px;min-width:0;font-size:18px;line-height:1.55;color:var(--txt);text-wrap:pretty">{{ ln.pre }}<span style="text-decoration:underline wavy {{ ln.mark }};text-decoration-skip-ink:none;text-underline-offset:5px">{{ ln.bad }}</span>{{ ln.post }}</span>
+            <span style="flex:none;margin-left:auto;padding-right:14px;padding-top:4px;font-size:13px;color:{{ ln.tagFg }};white-space:nowrap">{{ ln.tag }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <div style="width:320px;flex:none;padding-left:8px;opacity:.55">
+      <div style="height:100%;background:var(--layer);border:1px solid var(--stroke);border-radius:8px 8px 0 0"></div>
+    </div>
+  </div>
+
+  <div style="flex:none;height:302px;margin:8px 8px 0;background:var(--layer);border:1px solid var(--stroke);border-radius:8px;display:flex;flex-direction:column;overflow:hidden">
+    <div style="height:42px;flex:none;display:flex;align-items:center;gap:10px;padding:0 14px;border-bottom:1px solid var(--divider);background:var(--layer2)">
+      <span style="font-size:14px;font-weight:600;color:var(--txt)">Kết quả soát</span>
+      <div style="display:flex;gap:6px;margin-left:6px">
+        <sc-for list="{{ filters }}" as="f" hint-placeholder-count="3">
+          <div onClick="{{ f.pick }}" style="display:flex;align-items:center;gap:7px;height:28px;padding:0 11px;border-radius:14px;cursor:default;background:{{ f.bg }};border:1px solid {{ f.bd }};color:{{ f.fg }};font-size:13px;font-weight:600">
+            <span style="width:7px;height:7px;border-radius:4px;background:{{ f.dot }}"></span>
+            {{ f.label }}
+          </div>
+        </sc-for>
+      </div>
+      <div style="margin-left:auto;display:flex;gap:8px">
+        <div style="display:flex;align-items:center;height:30px;padding:0 12px;border-radius:4px;background:var(--ctl);border:1px solid var(--stroke2);font-size:13px;color:var(--txt);cursor:default" style-hover="background:var(--ctl-h)">Sửa tất cả có thể (5)</div>
+        <div style="display:flex;align-items:center;height:30px;padding:0 12px;border-radius:4px;font-size:13px;color:var(--txt2);cursor:default" style-hover="background:var(--sub-h)">Bỏ qua tất cả</div>
+      </div>
+    </div>
+
+    <div style="height:32px;flex:none;display:flex;align-items:center;border-bottom:1px solid var(--divider);font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--txt3);font-weight:600">
+      <span style="width:64px;flex:none;text-align:right;padding-right:12px">Đoạn</span>
+      <span style="width:150px;flex:none">Loại</span>
+      <span style="flex:1">Nội dung cảnh báo</span>
+      <span style="width:300px;flex:none">Đề xuất</span>
+      <span style="width:150px;flex:none;padding-right:14px;text-align:right">Hành động</span>
+    </div>
+
+    <div style="position:relative;flex:1;min-height:0;overflow:hidden">
+      <div style="position:absolute;right:4px;top:1%;width:6px;height:64%;border-radius:3px;background:var(--rail);opacity:.4"></div>
+      <sc-for list="{{ issues }}" as="it" hint-placeholder-count="6">
+        <div style="display:flex;align-items:center;height:38px;border-bottom:1px solid var(--divider);background:{{ it.bg }};cursor:default" style-hover="background:var(--sub-h)">
+          <span style="width:64px;flex:none;text-align:right;padding-right:12px;font-size:13px;color:var(--txt2);font-variant-numeric:tabular-nums">{{ it.line }}</span>
+          <span style="width:150px;flex:none;display:flex;align-items:center;gap:8px">
+            <span style="width:7px;height:7px;flex:none;border-radius:4px;background:{{ it.dot }}"></span>
+            <span style="font-size:13px;color:var(--txt2)">{{ it.kind }}</span>
+          </span>
+          <span style="flex:1;font-size:14px;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:12px">{{ it.msg }}</span>
+          <span style="width:300px;flex:none;font-size:14px;color:var(--txt2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:12px">{{ it.fix }}</span>
+          <span style="width:150px;flex:none;display:flex;justify-content:flex-end;gap:6px;padding-right:14px">
+            <span style="display:flex;align-items:center;height:26px;padding:0 10px;border-radius:4px;background:var(--ctl);border:1px solid var(--stroke2);font-size:13px;color:var(--txt)">{{ it.action }}</span>
+            <span style="display:flex;align-items:center;height:26px;padding:0 8px;border-radius:4px;font-size:13px;color:var(--txt3)">Bỏ qua</span>
+          </span>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ isNorm }}">
+    <div style="flex:1;min-height:0;display:flex;padding:0 8px">
+      <div style="width:240px;flex:none;display:flex;flex-direction:column;gap:6px;padding-right:8px;opacity:.55">
+        <div style="height:34px;background:var(--layer);border:1px solid var(--stroke);border-radius:5px"></div>
+        <div style="height:52px;background:var(--layer);border:1px solid var(--stroke);border-radius:5px"></div>
+        <div style="height:52px;background:var(--sub-h);border-radius:5px"></div>
+        <div style="height:52px;background:var(--sub-h);border-radius:5px"></div>
+      </div>
+
+      <div style="flex:1;min-width:0;display:flex;flex-direction:column;background:var(--layer);border:1px solid var(--stroke);border-radius:8px 8px 0 0;overflow:hidden">
+        <div style="flex:none;display:flex;align-items:center;gap:8px;padding:11px 14px;border-bottom:1px solid var(--divider);flex-wrap:wrap">
+          <span style="font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--txt3);font-weight:600;margin-right:4px;white-space:nowrap">Quy tắc đang bật</span>
+          <sc-for list="{{ rules }}" as="r" hint-placeholder-count="4">
+            <div onClick="{{ r.toggle }}" style="display:flex;align-items:center;gap:8px;height:30px;padding:0 12px 0 10px;border-radius:15px;cursor:default;background:{{ r.bg }};border:1px solid {{ r.bd }};color:{{ r.fg }}">
+              <span style="width:13px;height:13px;flex:none;display:flex;align-items:center;justify-content:center">
+                <sc-if value="{{ r.on }}"><svg width="13" height="13" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></svg></sc-if>
+                <sc-if value="{{ r.off }}"><svg width="11" height="11" viewBox="0 0 12 12" stroke="currentColor" stroke-width="1.4"><path d="M1.5 1.5l9 9M10.5 1.5l-9 9"/></svg></sc-if>
+              </span>
+              <span style="font-size:13.5px;white-space:nowrap">{{ r.label }}</span>
+              <span style="font-size:13px;opacity:.7;font-variant-numeric:tabular-nums">{{ r.n }}</span>
+            </div>
+          </sc-for>
+        </div>
+
+        <div style="flex:none;display:flex;height:32px;border-bottom:1px solid var(--divider);background:var(--layer2)">
+          <div style="width:52px;flex:none"></div>
+          <div style="flex:1;display:flex;align-items:center;font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--txt3);font-weight:600;padding-left:4px">Văn bản gốc</div>
+          <div style="width:1px;background:var(--divider)"></div>
+          <div style="flex:1;display:flex;align-items:center;font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--txt3);font-weight:600;padding-left:16px">Máy sẽ đọc thành</div>
+        </div>
+
+        <div style="flex:1;min-height:0;overflow:hidden">
+          <sc-for list="{{ rows }}" as="r" hint-placeholder-count="12">
+            <div onClick="{{ r.pick }}" style="display:flex;align-items:stretch;border-bottom:1px solid var(--divider);background:{{ r.bg }};cursor:default" style-hover="background:var(--sub-h)">
+              <div style="width:52px;flex:none;padding:10px 12px 10px 0;text-align:right;font-size:12.5px;color:var(--txt3);font-variant-numeric:tabular-nums">{{ r.no }}</div>
+              <div style="flex:1;min-width:0;padding:10px 12px 10px 4px;font-size:15px;color:var(--txt2);line-height:1.45;text-wrap:pretty">{{ r.src }}</div>
+              <div style="width:1px;background:var(--divider)"></div>
+              <div style="flex:1;min-width:0;padding:10px 16px;font-size:15px;color:var(--txt);line-height:1.45;text-wrap:pretty">
+                <sc-if value="{{ r.changed }}">
+                  <span>{{ r.pre }}</span><span style="background:var(--mark);border-radius:3px;padding:1px 3px;font-weight:600">{{ r.mark }}</span><span>{{ r.post }}</span>
+                </sc-if>
+                <sc-if value="{{ r.same }}">
+                  <span style="color:var(--txt3)">{{ r.out }}</span>
+                </sc-if>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+
+        <div style="flex:none;display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--layer2);border-top:1px solid var(--divider)">
+          <span style="font-size:13px;color:var(--txt3)">Chuẩn hoá chỉ ảnh hưởng đến âm thanh, văn bản gốc của bạn không thay đổi.</span>
+          <div style="margin-left:auto;display:flex;gap:8px">
+            <div style="display:flex;align-items:center;gap:9px;height:34px;padding:0 14px;border-radius:4px;background:var(--ctl);border:1px solid var(--stroke2);color:var(--txt);font-size:14px;white-space:nowrap;cursor:default" style-hover="background:var(--ctl-h)">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5l11 7-11 7z"/></svg>
+              Nghe thử đoạn đang chọn
+            </div>
+            <div style="display:flex;align-items:center;height:34px;padding:0 16px;border-radius:4px;background:var(--ctl);border:1px solid var(--stroke2);color:var(--txt);font-size:14px;white-space:nowrap;cursor:default" style-hover="background:var(--ctl-h)">Thêm vào từ điển phát âm</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="width:320px;flex:none;padding-left:8px;opacity:.55">
+        <div style="height:100%;background:var(--layer);border:1px solid var(--stroke);border-radius:8px 8px 0 0"></div>
+      </div>
+    </div>
+  </sc-if>
+
+  <div style="height:28px;flex:none;display:flex;align-items:center;padding:0 12px;margin-top:8px;background:var(--layer2);border-top:1px solid var(--divider);font-size:12px;color:var(--txt2)">
+    <span>Đoạn {{ selLabel }}</span>
+    <span style="margin-left:auto;display:flex;align-items:center;gap:8px">
+      <span style="width:7px;height:7px;border-radius:4px;background:{{ statusDot }}"></span>
+      <span>{{ statusRight }}</span>
+    </span>
+  </div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;sang&quot;,&quot;toi&quot;],&quot;default&quot;:&quot;sang&quot;,&quot;tsType&quot;:&quot;'sang'|'toi'&quot;,&quot;section&quot;:&quot;Trạng thái&quot;}}">
+class Component extends DCLogic {
+  state = { theme: null, filter: 0, sel: 1, tab: 0, rules: [true, true, true, false] };
+  get theme() { return this.state.theme || this.props.theme || 'sang'; }
+  componentDidMount() { this.applyTheme(); }
+  componentDidUpdate() { this.applyTheme(); }
+  applyTheme() { document.documentElement.setAttribute('data-theme', this.theme === 'toi' ? 'dark' : 'light'); }
+
+  normData() {
+    return [
+      [1, 'THÔNG BÁO LỊCH NGHỈ LỄ QUỐC KHÁNH 2/9', true, 'Thông báo lịch nghỉ lễ Quốc khánh ', 'hai phần chín', '', ''],
+      [2, 'Kính gửi toàn thể cán bộ, nhân viên Công ty TNHH Bảo Sơn.', true, 'Kính gửi… Công ty ', 'trách nhiệm hữu hạn', ' Bảo Sơn.', ''],
+      [3, 'Căn cứ Bộ luật Lao động 2019 và thông báo của UBND TP.HCM…', true, 'Căn cứ… thông báo của ', 'Uỷ ban nhân dân Thành phố Hồ Chí Minh', '…', ''],
+      [4, 'Thời gian nghỉ tính từ thứ Hai ngày 31/8/2026…', true, 'Thời gian nghỉ tính từ thứ Hai ngày ', 'ba mươi mốt tháng tám năm hai nghìn không trăm hai mươi sáu', '…', ''],
+      [5, 'Các bộ phận… gửi qua email ngày 12/8.', true, 'Các bộ phận… gửi qua email ngày ', 'mười hai tháng tám', '.', ''],
+      [6, 'Phòng Kinh doanh — anh Trần Minh Đức', false, '', '', '', 'Phòng Kinh doanh anh Trần Minh Đức'],
+      [7, 'Phòng Kỹ thuật — anh Lê Hoàng Nam', false, '', '', '', 'Phòng Kỹ thuật anh Lê Hoàng Nam'],
+      [8, 'Phòng Kho vận — chị Phạm Thu Hà', false, '', '', '', 'Phòng Kho vận chị Phạm Thu Hà'],
+      [9, 'Nhân viên… đăng ký trước 17h00 ngày 25/8/2026…', true, 'Nhân viên… đăng ký trước ', 'mười bảy hắt không không', ' ngày hai mươi lăm tháng tám…', ''],
+      [10, 'Trong thời gian nghỉ lễ… số hotline 1900 6868, máy lẻ 2.', true, 'Trong thời gian nghỉ lễ… số hotline ', 'một chín không không sáu tám sáu tám', ', máy lẻ hai.', ''],
+      [11, '[hắng giọng] Kính chúc toàn thể anh chị em…', false, '', '', '', 'Kính chúc toàn thể anh chị em…'],
+      [14, 'TM. BAN GIÁM ĐỐC', true, '', 'Tê mờ', ' ban giám đốc', ''],
+      [16, 'Nguyễn Văn Tuyến', false, '', '', '', 'Nguyễn Văn Tuyến']
+    ];
+  }
+
+  renderVals() {
+    const themeTabs = [['sang','Sáng'],['toi','Tối']].map(([id,label]) => ({
+      label, bg: this.theme === id ? '#0067c0' : 'transparent', fg: this.theme === id ? '#fff' : '#5d5d5d',
+      pick: () => this.setState({ theme: id })
+    }));
+
+    const tab = this.state.tab;
+    const isAudit = tab === 0, isNorm = tab === 1;
+
+    const ruleDefs = [['Số thành chữ','48'],['Viết tắt, ký hiệu','6'],['Ngày tháng','3'],['Bỏ dấu câu lặp','0']];
+    const rules = ruleDefs.map(([label, n], i) => {
+      const on = this.state.rules[i];
+      return { label, n, on, off: !on,
+        bg: on ? 'var(--acc-soft)' : 'transparent',
+        bd: on ? 'var(--acc)' : 'var(--stroke2)',
+        fg: on ? 'var(--acc)' : 'var(--txt3)',
+        toggle: () => { const r = this.state.rules.slice(); r[i] = !r[i]; this.setState({ rules: r }); } };
+    });
+
+    const rows = this.normData().map(([no, src, changed, pre, mark, post, plain]) => ({
+      no, src, changed, same: !changed, pre, mark, post, out: plain,
+      bg: no === this.state.sel ? 'var(--acc-soft)' : 'transparent',
+      pick: () => this.setState({ sel: no })
+    }));
+
+    const filterDefs = [['Tất cả (9)', 'var(--txt3)'], ['Lỗi (2)', 'var(--err)'], ['Cảnh báo (7)', 'var(--warn)']];
+    const filters = filterDefs.map(([label, dot], i) => ({
+      label, dot,
+      bg: this.state.filter === i ? 'var(--acc-soft)' : 'transparent',
+      bd: this.state.filter === i ? 'var(--acc)' : 'var(--stroke2)',
+      fg: this.state.filter === i ? 'var(--acc)' : 'var(--txt2)',
+      pick: () => this.setState({ filter: i })
+    }));
+
+    const rowDefs = [
+      [1, 'THÔNG BÁO LỊCH NGHỈ LỄ QUỐC KHÁNH ', '2/9', '', 'err', 'đọc thành “hai phần chín”'],
+      [2, 'Kính gửi toàn thể cán bộ, nhân viên Công ty ', 'TNHH', ' Bảo Sơn.', 'warn', 'viết tắt'],
+      [3, 'Căn cứ Bộ luật Lao động 2019 và thông báo của ', 'UBND TP.HCM', ', Ban Giám đốc thông báo lịch nghỉ lễ Quốc khánh năm 2026 như sau.', 'warn', 'viết tắt'],
+      [4, 'Thời gian nghỉ tính từ thứ Hai ngày 31/8/2026 đến hết thứ Tư ngày 2/9/2026, tổng cộng 3 ngày làm việc. Công ty làm việc trở lại bình thường từ sáng thứ Năm ngày 3/9.', '', '', 'warn', 'đoạn dài'],
+      [5, 'Các bộ phận trực tiếp sản xuất bố trí người trực theo lịch đã gửi qua email ngày 12/8. Danh sách trực cụ thể như sau.', '', '', '', ''],
+      [6, 'Phòng Kinh doanh ', '—', ' anh Trần Minh Đức', 'warn', 'ký tự bị bỏ qua'],
+      [7, 'Phòng Kỹ thuật — anh Lê Hoàng Nam', '', '', '', ''],
+      [8, 'Phòng Kho vận — chị Phạm Thu Hà', '', '', '', '']
+    ];
+    const lines = rowDefs.map(([no, pre, bad, post, sev, tag]) => ({
+      no, pre, bad, post, tag,
+      bg: no === this.state.sel ? 'var(--acc-soft)' : 'transparent',
+      mark: sev === 'err' ? 'var(--err)' : (sev === 'warn' ? 'var(--warn)' : 'transparent'),
+      tagFg: sev === 'err' ? 'var(--err)' : 'var(--warn)',
+      pick: () => this.setState({ sel: no })
+    }));
+
+    const issueDefs = [
+      [1, 'Ngày tháng', 'err', '“2/9” trong tiêu đề sẽ đọc là “hai phần chín”', 'Viết thành “mùng 2 tháng 9”', 'Sửa'],
+      [9, 'Giờ', 'err', '“17h00” sẽ đọc là “mười bảy hắt không không”', 'Viết thành “17 giờ”', 'Sửa'],
+      [2, 'Viết tắt', 'warn', '“TNHH” sẽ đọc là “trách nhiệm hữu hạn”', 'Giữ nguyên cách đọc này', 'Nghe'],
+      [3, 'Viết tắt', 'warn', '“UBND TP.HCM” sẽ đọc ở dạng đầy đủ', 'Giữ nguyên cách đọc này', 'Nghe'],
+      [4, 'Đoạn dài', 'warn', 'Đoạn 4 dài 168 ký tự, nên tách để dễ nghe', 'Tách thành 2 đoạn', 'Tách'],
+      [6, 'Ký tự lạ', 'warn', 'Ký tự “—” sẽ bị bỏ qua khi đọc', 'Thay bằng dấu phẩy', 'Sửa'],
+      [10, 'Số điện thoại', 'warn', '“1900 6868” sẽ đọc từng chữ số', 'Đọc theo nhóm 4 số', 'Đổi'],
+      [14, 'Viết tắt', 'warn', '“TM.” sẽ đọc là “tê mờ”', 'Thêm vào từ điển phát âm', 'Thêm'],
+      [16, 'Tên riêng', 'warn', '“Nguyễn Văn Tuyến” có thể đọc sai dấu', 'Thêm vào từ điển phát âm', 'Thêm']
+    ];
+    const issues = issueDefs.map(([line, kind, sev, msg, fix, action]) => ({
+      line, kind, msg, fix, action,
+      dot: sev === 'err' ? 'var(--err)' : 'var(--warn)',
+      bg: line === this.state.sel ? 'var(--acc-soft)' : 'transparent'
+    }));
+
+    return { themeTabs, filters, lines, issues, rules, rows,
+      isAudit, isNorm,
+      pickAudit: () => this.setState({ tab: 0 }),
+      pickNorm: () => this.setState({ tab: 1 }),
+      t0bg: isAudit ? 'var(--acc-soft)' : 'transparent', t0fg: isAudit ? 'var(--acc)' : 'var(--txt)', t0bd: isAudit ? 'var(--acc)' : 'transparent',
+      t1bg: isNorm ? 'var(--acc-soft)' : 'transparent', t1fg: isNorm ? 'var(--acc)' : 'var(--txt)', t1bd: isNorm ? 'var(--acc)' : 'transparent',
+      topRight: isAudit ? 'Lần soát cuối: 14:03 · tự động soát khi mở tệp' : '11 chỗ sẽ được đọc khác văn bản gốc · 16 đoạn',
+      selLabel: this.state.sel,
+      statusDot: isAudit ? 'var(--warn)' : 'var(--acc)',
+      statusRight: isAudit ? '9 chỗ cần chú ý · 2 lỗi nên sửa trước khi xuất' : 'Chuẩn hoá theo 3 quy tắc đang bật' };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/bssaas-adminkit-design-system-60ba9c0b-5497-49a2-b7c1-ba0772d8cf30/fonts/inter.css">
+<style>
+body{margin:0;background:#e6e6e6}
+a{color:var(--acc)}a:hover{color:var(--acc-h)}
+:root{
+--bg:#f3f3f3;--layer:#ffffff;--layer2:#fafafa;--stroke:rgba(0,0,0,.0578);--stroke2:rgba(0,0,0,.16);--divider:#e5e5e5;
+--txt:#1a1a1a;--txt2:#5d5d5d;--txt3:#767676;--dis:#a3a3a3;
+--ctl:#fdfdfd;--ctl-h:#f6f6f6;--sub-h:rgba(0,0,0,.037);
+--acc:#0067c0;--acc-h:#1a75c6;--acc-txt:#ffffff;--acc-soft:rgba(0,103,192,.09);
+--chip-bg:rgba(0,0,0,.055);--chip-bd:rgba(0,0,0,.09);--chip-fg:#4a4a4a;
+--ok:#0f7b0f;--warn:#9d5d00;--rail:#868686;--shadow:0 8px 16px rgba(0,0,0,.14);
+}
+:root[data-theme='dark']{
+--bg:#202020;--layer:#2b2b2b;--layer2:#272727;--stroke:rgba(255,255,255,.07);--stroke2:rgba(255,255,255,.10);--divider:#303030;
+--txt:#ffffff;--txt2:rgba(255,255,255,.73);--txt3:rgba(255,255,255,.60);--dis:rgba(255,255,255,.38);
+--ctl:rgba(255,255,255,.06);--ctl-h:rgba(255,255,255,.084);--sub-h:rgba(255,255,255,.06);
+--acc:#4cc2ff;--acc-h:#47b1e8;--acc-txt:#000000;--acc-soft:rgba(76,194,255,.12);
+--chip-bg:rgba(255,255,255,.09);--chip-bd:rgba(255,255,255,.14);--chip-fg:rgba(255,255,255,.82);
+--ok:#6ccb5f;--warn:#f7b84b;--rail:#9a9a9a;--shadow:0 8px 16px rgba(0,0,0,.36);
+}
+</style>
+</helmet>
+
+<div style="min-height:100vh;padding:20px 24px 40px;background:#e6e6e6;font-family:'Segoe UI Variable Text','Segoe UI',Inter,system-ui,sans-serif;font-size:14px;color:#1a1a1a">
+
+<div style="display:flex;align-items:center;gap:14px;width:1440px;margin:0 auto 14px">
+  <span style="font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:#5d5d5d;font-weight:600">Cài đặt</span>
+  <div style="display:flex;gap:3px;padding:3px;background:#fdfdfd;border:1px solid rgba(0,0,0,.09);border-radius:6px;margin-left:auto">
+    <sc-for list="{{ themeTabs }}" as="t" hint-placeholder-count="2">
+      <button onClick="{{ t.pick }}" style="border:0;cursor:pointer;font:600 13px 'Segoe UI Variable Text','Segoe UI',Inter,sans-serif;padding:7px 12px;border-radius:4px;background:{{ t.bg }};color:{{ t.fg }}">{{ t.label }}</button>
+    </sc-for>
+  </div>
+</div>
+
+<div style="width:1440px;height:900px;margin:0 auto;background:var(--bg);border:1px solid rgba(0,0,0,.22);border-radius:8px;box-shadow:0 16px 32px rgba(0,0,0,.22);overflow:hidden;display:flex;flex-direction:column;color:var(--txt)">
+
+  <div style="height:32px;flex:none;display:flex;align-items:center;padding-left:12px;background:var(--bg)">
+    <div style="display:flex;align-items:center;gap:9px">
+      <div style="width:16px;height:16px;border-radius:3px;background:var(--acc);display:flex;align-items:center;justify-content:center">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--acc-txt)" stroke-width="2.6" stroke-linecap="round"><path d="M4 9v6M9 5v14M14 8v8M19 11v2"/></svg>
+      </div>
+      <span style="font-size:12.5px;color:var(--txt2)">Cài đặt — GiongDoc</span>
+      <a href="GiongDoc%20-%20M%C3%A0n%20h%C3%ACnh%20ch%C3%ADnh%20v2%20%28nghe%20theo%20d%C3%B2ng%29.dc.html" style="display:flex;align-items:center;gap:5px;flex:none;height:22px;padding:0 10px 0 7px;border-radius:11px;background:var(--sub-h);color:var(--txt2);font-size:12px;text-decoration:none;white-space:nowrap" style-hover="color:var(--txt)" title="Quay lại màn hình chính"><svg width="11" height="11" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M14 6l-6 6 6 6"/></svg>Màn hình chính</a>
+    </div>
+    <div style="margin-left:auto;display:flex">
+      <div style="width:46px;height:32px;display:flex;align-items:center;justify-content:center;color:var(--txt);cursor:default" style-hover="background:var(--sub-h)"><svg width="10" height="10" viewBox="0 0 12 12" stroke="currentColor" stroke-width="1"><path d="M1 6h10"/></svg></div>
+      <div style="width:46px;height:32px;display:flex;align-items:center;justify-content:center;color:var(--txt);cursor:default" style-hover="background:var(--sub-h)"><svg width="10" height="10" viewBox="0 0 12 12" stroke="currentColor" stroke-width="1" fill="none"><rect x="1.5" y="1.5" width="9" height="9" rx="1"/></svg></div>
+      <div style="width:46px;height:32px;display:flex;align-items:center;justify-content:center;color:var(--txt);cursor:default" style-hover="background:#c42b1c;color:#fff"><svg width="10" height="10" viewBox="0 0 12 12" stroke="currentColor" stroke-width="1.1"><path d="M1.5 1.5l9 9M10.5 1.5l-9 9"/></svg></div>
+    </div>
+  </div>
+
+  <div style="flex:1;min-height:0;display:flex;padding:0 8px 8px">
+
+    <div style="width:240px;flex:none;display:flex;flex-direction:column;padding-right:8px">
+      <div style="display:flex;align-items:center;gap:9px;height:44px;padding:0 10px">
+        <div style="width:30px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:4px;color:var(--txt);cursor:default" style-hover="background:var(--sub-h)" title="Quay lại màn hình chính">
+          <svg width="16" height="16" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.7" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>
+        </div>
+        <span style="font-size:16px;font-weight:600;color:var(--txt)">Cài đặt</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:2px;margin-top:4px">
+        <sc-for list="{{ navs }}" as="n" hint-placeholder-count="6">
+          <div onClick="{{ n.pick }}" style="position:relative;display:flex;align-items:center;gap:11px;height:38px;padding:0 12px 0 13px;border-radius:5px;cursor:default;background:{{ n.bg }};border:1px solid {{ n.bd }}" style-hover="background:var(--sub-h)">
+            <div style="position:absolute;left:2px;top:50%;margin-top:-9px;width:3px;height:18px;border-radius:2px;background:{{ n.ind }}"></div>
+            <span style="font-size:14px;color:var(--txt);font-weight:{{ n.weight }}">{{ n.label }}</span>
+          </div>
+        </sc-for>
+      </div>
+      <div style="margin-top:auto;padding-top:8px;border-top:1px solid var(--divider);padding-left:4px;font-size:13px;color:var(--txt3);line-height:1.5">
+        GiongDoc 1.4.2<br>Bản quyền đã kích hoạt
+      </div>
+    </div>
+
+    <div style="flex:1;min-width:0;display:flex;flex-direction:column;background:var(--layer);border:1px solid var(--stroke);border-radius:8px;overflow:hidden">
+      <div style="height:56px;flex:none;display:flex;align-items:center;gap:12px;padding:0 20px;border-bottom:1px solid var(--divider)">
+        <span style="font-size:18px;font-weight:600;color:var(--txt)">{{ sectionTitle }}</span>
+        <span style="font-size:13px;color:var(--txt3)">{{ sectionHint }}</span>
+        <div style="margin-left:auto;display:flex;align-items:center;gap:9px;width:260px;height:32px;padding:0 11px;border:1px solid var(--stroke2);border-radius:4px;background:var(--ctl)">
+          <svg width="15" height="15" viewBox="0 0 24 24" stroke="var(--txt3)" stroke-width="1.6" fill="none" stroke-linecap="round"><circle cx="11" cy="11" r="6"/><path d="M15.5 15.5L20 20"/></svg>
+          <span style="font-size:14px;color:var(--txt3)">Tìm cài đặt</span>
+        </div>
+      </div>
+
+      <div style="flex:1;min-height:0;overflow:hidden;padding:16px 20px;display:flex;flex-direction:column;gap:10px">
+        <sc-for list="{{ rows }}" as="r" hint-placeholder-count="7">
+          <div style="flex:none;display:flex;align-items:center;gap:14px;min-height:60px;padding:12px 16px;background:var(--layer2);border:1px solid var(--stroke);border-radius:6px">
+            <span style="display:flex;flex:none;width:22px;justify-content:center;color:var(--txt2)">
+              <sc-if value="{{ r.iconDot }}" hint-placeholder-val="{{ true }}"><span style="width:8px;height:8px;border-radius:4px;background:var(--acc-soft);border:2px solid var(--acc)"></span></sc-if>
+            </span>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:14px;font-weight:600;color:var(--txt)">{{ r.label }}</div>
+              <div style="font-size:13px;color:var(--txt3);margin-top:2px">{{ r.hint }}</div>
+            </div>
+
+            <sc-if value="{{ r.isToggle }}">
+              <div onClick="{{ r.toggle }}" style="width:44px;height:22px;flex:none;border-radius:11px;background:{{ r.trackBg }};border:1px solid {{ r.trackBd }};display:flex;align-items:center;padding:0 3px;cursor:default;justify-content:{{ r.justify }}">
+                <span style="width:14px;height:14px;border-radius:7px;background:{{ r.knob }}"></span>
+              </div>
+            </sc-if>
+            <sc-if value="{{ r.isSelect }}">
+              <div style="width:210px;flex:none;display:flex;align-items:center;gap:8px;height:34px;padding:0 8px 0 11px;border:1px solid var(--stroke2);border-radius:4px;background:var(--ctl);cursor:default" style-hover="background:var(--ctl-h)">
+                <span style="flex:1;font-size:14px;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.value }}</span>
+                <svg width="13" height="13" viewBox="0 0 24 24" stroke="var(--txt2)" stroke-width="1.8" fill="none" stroke-linecap="round"><path d="M6 9.5l6 6 6-6"/></svg>
+              </div>
+            </sc-if>
+            <sc-if value="{{ r.isPath }}">
+              <div style="display:flex;align-items:center;gap:8px;flex:none">
+                <span style="font-size:13px;color:var(--txt2);max-width:260px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.value }}</span>
+                <div style="display:flex;align-items:center;height:32px;padding:0 13px;border-radius:4px;background:var(--ctl);border:1px solid var(--stroke2);font-size:14px;color:var(--txt);cursor:default" style-hover="background:var(--ctl-h)">Đổi…</div>
+              </div>
+            </sc-if>
+            <sc-if value="{{ r.isMeter }}">
+              <div style="width:280px;flex:none">
+                <div style="height:6px;border-radius:3px;background:var(--rail);opacity:.9;overflow:hidden">
+                  <div style="height:6px;border-radius:3px;background:var(--acc);width:{{ r.pct }}"></div>
+                </div>
+                <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:12.5px;color:var(--txt3);font-variant-numeric:tabular-nums">
+                  <span>{{ r.used }}</span><span>{{ r.free }}</span>
+                </div>
+              </div>
+            </sc-if>
+          </div>
+        </sc-for>
+      </div>
+
+      <div style="height:52px;flex:none;display:flex;align-items:center;gap:10px;padding:0 20px;border-top:1px solid var(--divider);background:var(--layer2)">
+        <span style="font-size:13px;color:var(--txt3)">Thay đổi được lưu ngay.</span>
+        <div style="margin-left:auto;display:flex;gap:8px">
+          <div style="display:flex;align-items:center;height:34px;padding:0 14px;border-radius:4px;font-size:14px;color:var(--txt2);cursor:default" style-hover="background:var(--sub-h)">Đặt lại mặc định</div>
+          <div style="display:flex;align-items:center;height:34px;padding:0 16px;border-radius:4px;background:var(--acc);color:var(--acc-txt);font-size:14px;font-weight:600;cursor:default" style-hover="background:var(--acc-h)">Đóng</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;sang&quot;,&quot;toi&quot;],&quot;default&quot;:&quot;sang&quot;,&quot;tsType&quot;:&quot;'sang'|'toi'&quot;,&quot;section&quot;:&quot;Trạng thái&quot;}}">
+class Component extends DCLogic {
+  state = { theme: null, nav: 0, toggles: {} };
+  get theme() { return this.state.theme || this.props.theme || 'sang'; }
+  componentDidMount() { this.applyTheme(); }
+  componentDidUpdate() { this.applyTheme(); }
+  applyTheme() { document.documentElement.setAttribute('data-theme', this.theme === 'toi' ? 'dark' : 'light'); }
+
+  sections() {
+    return [
+      ['Chung', 'Ngôn ngữ, khởi động, giao diện', [
+        ['select', 'Ngôn ngữ giao diện', 'Áp dụng cho toàn bộ ứng dụng', 'Tiếng Việt'],
+        ['select', 'Chủ đề', 'Theo hệ thống, sáng hoặc tối', 'Theo hệ thống Windows'],
+        ['toggle', 'Mở tệp gần nhất khi khởi động', 'Tự mở lại tệp bạn đang làm việc', true],
+        ['toggle', 'Thu nhỏ xuống khay hệ thống', 'Giữ ứng dụng chạy nền khi đóng cửa sổ', false],
+        ['select', 'Cỡ chữ vùng soạn thảo', 'Ảnh hưởng đến vùng soạn thảo, không đổi giao diện', '18 px (mặc định)'],
+        ['toggle', 'Tự động soát văn bản khi mở tệp', 'Báo lỗi số tiền, tên riêng, ký tự lạ', true]
+      ]],
+      ['Giọng & mô hình', 'Mô hình đọc, tăng tốc phần cứng', [
+        ['select', 'Mô hình mặc định', 'Dùng khi tạo hồ sơ mới', 'VieNeu v3 Turbo'],
+        ['toggle', 'Tải mô hình sẵn khi mở ứng dụng', 'Mất thêm ~40 giây khi khởi động, bù lại phát nhanh', true],
+        ['toggle', 'Tăng tốc bằng GPU (NVIDIA)', 'Phát hiện: RTX 3060 · nhanh hơn khoảng 3 lần', true],
+        ['select', 'Số luồng CPU', 'Nhiều luồng xử lý nhanh hơn nhưng máy nóng hơn', '8 luồng'],
+        ['path', 'Nơi lưu mô hình', 'Mỗi mô hình chiếm 0,6–3,2 GB', 'D:\\GiongDoc\\Models'],
+        ['toggle', 'Giải phóng mô hình khi rảnh 10 phút', 'Trả lại RAM cho các ứng dụng khác', false]
+      ]],
+      ['Xuất file', 'Định dạng, nơi lưu, đặt tên', [
+        ['select', 'Định dạng mặc định', 'Dùng cho mọi lần xuất', 'WAV 24 bit · 24.000 Hz'],
+        ['path', 'Thư mục xuất mặc định', 'Có thể đổi ở từng lần xuất', 'Documents\\GiongDoc\\Xuất'],
+        ['select', 'Quy tắc đặt tên', 'Tránh ghi đè tệp cũ', '{tên tệp}-{ngày}'],
+        ['toggle', 'Mở thư mục sau khi xuất', '', true],
+        ['toggle', 'Thông báo khay hệ thống khi xuất xong', '', true],
+        ['select', 'Khoảng lặng giữa các mục', 'Áp dụng cho văn bản dạng danh sách', '0,5 giây']
+      ]],
+      ['Phím tắt', 'Xem và đổi phím tắt', [
+        ['select', 'Phát / tạm dừng', '', 'Space'],
+        ['select', 'Câu trước / câu sau', '', 'Ctrl + ← / →'],
+        ['select', 'Xuất file âm thanh', '', 'Ctrl + E'],
+        ['select', 'Soát văn bản', '', 'Ctrl + Shift + K'],
+        ['select', 'Chèn thẻ cảm xúc', '', 'Alt + 1…3'],
+        ['toggle', 'Cho phép phím tắt khi cửa sổ chạy nền', 'Điều khiển phát mà không cần mở cửa sổ', false]
+      ]],
+      ['Bộ nhớ', 'Dung lượng mô hình và bộ đệm', [
+        ['meter', 'Mô hình giọng đã tải', '3 mô hình · 6,4 GB', '6,4 GB đã dùng', 'còn 128 GB', '5%'],
+        ['path', 'Bộ đệm audio tạm', 'Xoá được an toàn', '1,2 GB'],
+        ['toggle', 'Tự xoá bộ đệm khi đóng ứng dụng', '', false],
+        ['select', 'Giới hạn RAM cho mô hình', 'Đặt thấp nếu máy hay bị đầy bộ nhớ', '4 GB'],
+        ['toggle', 'Cảnh báo khi RAM trống dưới 2 GB', 'Tránh lỗi không tải được mô hình', true]
+      ]],
+      ['Về GiongDoc', 'Phiên bản, cập nhật, giấy phép', [
+        ['select', 'Kênh cập nhật', 'Ổn định hoặc thử nghiệm', 'Ổn định'],
+        ['toggle', 'Tự kiểm tra cập nhật', '', true],
+        ['path', 'Giấy phép', 'Kích hoạt cho 1 máy', 'GD-2026-XXXX-4821'],
+        ['toggle', 'Gửi báo cáo lỗi ẩn danh', 'Không gửi nội dung văn bản của bạn', false]
+      ]]
+    ];
+  }
+
+  renderVals() {
+    const themeTabs = [['sang','Sáng'],['toi','Tối']].map(([id,label]) => ({
+      label, bg: this.theme === id ? '#0067c0' : 'transparent', fg: this.theme === id ? '#fff' : '#5d5d5d',
+      pick: () => this.setState({ theme: id })
+    }));
+
+    const secs = this.sections();
+    const navs = secs.map(([label], i) => {
+      const on = this.state.nav === i;
+      return { label, weight: on ? '600' : '400',
+        bg: on ? 'var(--layer)' : 'transparent', bd: on ? 'var(--stroke)' : 'transparent',
+        ind: on ? 'var(--acc)' : 'transparent', pick: () => this.setState({ nav: i }) };
+    });
+
+    const cur = secs[this.state.nav];
+    const rows = cur[2].map((r, i) => {
+      const kind = r[0], key = this.state.nav + ':' + i;
+      const base = { label: r[1], hint: r[2], iconDot: true,
+        isToggle: kind === 'toggle', isSelect: kind === 'select', isPath: kind === 'path', isMeter: kind === 'meter' };
+      if (kind === 'toggle') {
+        const on = this.state.toggles[key] === undefined ? r[3] : this.state.toggles[key];
+        return Object.assign(base, {
+          trackBg: on ? 'var(--acc)' : 'transparent',
+          trackBd: on ? 'var(--acc)' : 'var(--stroke2)',
+          knob: on ? 'var(--acc-txt)' : 'var(--txt2)',
+          justify: on ? 'flex-end' : 'flex-start',
+          toggle: () => { const t = Object.assign({}, this.state.toggles); t[key] = !on; this.setState({ toggles: t }); }
+        });
+      }
+      if (kind === 'meter') return Object.assign(base, { used: r[3], free: r[4], pct: r[5] });
+      return Object.assign(base, { value: r[3] });
+    });
+
+    return { themeTabs, navs, rows, sectionTitle: cur[0], sectionHint: cur[1] };
+  }
+}
+</script>
+</body>
+</html>

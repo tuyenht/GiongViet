@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/bssaas-adminkit-design-system-60ba9c0b-5497-49a2-b7c1-ba0772d8cf30/fonts/inter.css">
+<style>
+body{margin:0;background:#e6e6e6}
+a{color:var(--acc)}a:hover{color:var(--acc-h)}
+:root{
+--bg:#f3f3f3;--layer:#ffffff;--layer2:#fafafa;--stroke:rgba(0,0,0,.0578);--stroke2:rgba(0,0,0,.16);--divider:#e5e5e5;
+--txt:#1a1a1a;--txt2:#5d5d5d;--txt3:#767676;--dis:#a3a3a3;
+--ctl:#fdfdfd;--ctl-h:#f6f6f6;--sub-h:rgba(0,0,0,.037);
+--acc:#0067c0;--acc-h:#1a75c6;--acc-txt:#ffffff;--acc-soft:rgba(0,103,192,.09);
+--chip-bg:rgba(0,0,0,.055);--chip-bd:rgba(0,0,0,.09);--chip-fg:#4a4a4a;
+--ok:#0f7b0f;--err:#c42b1c;--rail:#868686;--close:#c42b1c;--shadow:0 8px 16px rgba(0,0,0,.14);
+--scrim:rgba(0,0,0,.32);
+}
+:root[data-theme='dark']{
+--bg:#202020;--layer:#2b2b2b;--layer2:#272727;--stroke:rgba(255,255,255,.07);--stroke2:rgba(255,255,255,.10);--divider:#303030;
+--txt:#ffffff;--txt2:rgba(255,255,255,.73);--txt3:rgba(255,255,255,.60);--dis:rgba(255,255,255,.38);
+--ctl:rgba(255,255,255,.06);--ctl-h:rgba(255,255,255,.084);--sub-h:rgba(255,255,255,.06);
+--acc:#4cc2ff;--acc-h:#47b1e8;--acc-txt:#000000;--acc-soft:rgba(76,194,255,.12);
+--chip-bg:rgba(255,255,255,.09);--chip-bd:rgba(255,255,255,.14);--chip-fg:rgba(255,255,255,.82);
+--ok:#6ccb5f;--err:#ff99a4;--rail:#9a9a9a;--close:#c42b1c;--shadow:0 8px 16px rgba(0,0,0,.36);
+--scrim:rgba(0,0,0,.45);
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</helmet>
+
+<div style="min-height:100vh;padding:20px 24px 40px;background:#e6e6e6;font-family:'Segoe UI Variable Text','Segoe UI',Inter,system-ui,sans-serif;font-size:14px;color:#1a1a1a">
+
+<div style="display:flex;align-items:center;gap:14px;width:1440px;margin:0 auto 14px;flex-wrap:wrap">
+  <span style="font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:#5d5d5d;font-weight:600">Hộp thoại xuất file</span>
+  <div style="display:flex;gap:3px;padding:3px;background:#fdfdfd;border:1px solid rgba(0,0,0,.09);border-radius:6px">
+    <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="3">
+      <button onClick="{{ t.pick }}" style="border:0;cursor:pointer;font:600 13px 'Segoe UI Variable Text','Segoe UI',Inter,sans-serif;padding:7px 12px;border-radius:4px;background:{{ t.bg }};color:{{ t.fg }}">{{ t.label }}</button>
+    </sc-for>
+  </div>
+  <div style="display:flex;gap:3px;padding:3px;background:#fdfdfd;border:1px solid rgba(0,0,0,.09);border-radius:6px;margin-left:auto">
+    <sc-for list="{{ themeTabs }}" as="t" hint-placeholder-count="2">
+      <button onClick="{{ t.pick }}" style="border:0;cursor:pointer;font:600 13px 'Segoe UI Variable Text','Segoe UI',Inter,sans-serif;padding:7px 12px;border-radius:4px;background:{{ t.bg }};color:{{ t.fg }}">{{ t.label }}</button>
+    </sc-for>
+  </div>
+</div>
+
+<div style="position:relative;width:1440px;height:900px;margin:0 auto;background:var(--bg);border:1px solid rgba(0,0,0,.22);border-radius:8px;box-shadow:0 16px 32px rgba(0,0,0,.22);overflow:hidden;display:flex;flex-direction:column;color:var(--txt)">
+
+  <div style="height:32px;flex:none;display:flex;align-items:center;padding-left:12px;background:var(--bg)">
+    <div style="display:flex;align-items:center;gap:9px">
+      <div style="width:16px;height:16px;border-radius:3px;background:var(--acc);display:flex;align-items:center;justify-content:center">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--acc-txt)" stroke-width="2.6" stroke-linecap="round"><path d="M4 9v6M9 5v14M14 8v8M19 11v2"/></svg>
+      </div>
+      <span style="font-size:12.5px;color:var(--txt2)">thongbao-quoc-khanh.txt — GiongDoc</span>
+      <a href="GiongDoc%20-%20M%C3%A0n%20h%C3%ACnh%20ch%C3%ADnh%20v2%20%28nghe%20theo%20d%C3%B2ng%29.dc.html" style="display:flex;align-items:center;gap:5px;flex:none;height:22px;padding:0 10px 0 7px;border-radius:11px;background:var(--sub-h);color:var(--txt2);font-size:12px;text-decoration:none;white-space:nowrap" style-hover="color:var(--txt)" title="Quay lại màn hình chính"><svg width="11" height="11" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M14 6l-6 6 6 6"/></svg>Màn hình chính</a>
+    </div>
+    <div style="margin-left:auto;display:flex">
+      <div style="width:46px;height:32px;display:flex;align-items:center;justify-content:center;color:var(--txt3)"><svg width="10" height="10" viewBox="0 0 12 12" stroke="currentColor" stroke-width="1"><path d="M1 6h10"/></svg></div>
+      <div style="width:46px;height:32px;display:flex;align-items:center;justify-content:center;color:var(--txt3)"><svg width="10" height="10" viewBox="0 0 12 12" stroke="currentColor" stroke-width="1" fill="none"><rect x="1.5" y="1.5" width="9" height="9" rx="1"/></svg></div>
+      <div style="width:46px;height:32px;display:flex;align-items:center;justify-content:center;color:var(--txt3)"><svg width="10" height="10" viewBox="0 0 12 12" stroke="currentColor" stroke-width="1.1"><path d="M1.5 1.5l9 9M10.5 1.5l-9 9"/></svg></div>
+    </div>
+  </div>
+
+  <div style="flex:1;min-height:0;display:flex;padding:8px 8px 0;opacity:.5">
+    <div style="width:240px;flex:none;display:flex;flex-direction:column;gap:6px;padding-right:8px">
+      <div style="height:34px;background:var(--layer);border:1px solid var(--stroke);border-radius:5px"></div>
+      <div style="height:52px;background:var(--layer);border:1px solid var(--stroke);border-radius:5px"></div>
+      <div style="height:52px;background:var(--sub-h);border-radius:5px"></div>
+      <div style="height:52px;background:var(--sub-h);border-radius:5px"></div>
+    </div>
+    <div style="flex:1;background:var(--layer);border:1px solid var(--stroke);border-radius:8px;padding:14px 16px;display:flex;flex-direction:column;gap:14px">
+      <sc-for list="{{ ghostLines }}" as="g" hint-placeholder-count="14">
+        <div style="height:10px;border-radius:3px;background:var(--sub-h);width:{{ g.w }}"></div>
+      </sc-for>
+    </div>
+    <div style="width:320px;flex:none;padding-left:8px">
+      <div style="height:320px;background:var(--layer);border:1px solid var(--stroke);border-radius:8px"></div>
+    </div>
+  </div>
+
+  <div style="height:72px;flex:none;border-top:1px solid var(--divider);background:var(--bg);opacity:.5"></div>
+
+  <div style="position:absolute;inset:0;background:var(--scrim);display:flex;align-items:center;justify-content:center">
+
+    <sc-if value="{{ isConfig }}" hint-placeholder-val="{{ true }}">
+      <div style="width:600px;background:var(--layer);border:1px solid var(--stroke2);border-radius:8px;box-shadow:0 32px 64px rgba(0,0,0,.32);overflow:hidden">
+        <div style="padding:22px 24px 4px">
+          <div style="font-size:20px;font-weight:600;color:var(--txt)">Xuất file âm thanh</div>
+          <div style="font-size:14px;color:var(--txt2);margin-top:4px">thongbao-quoc-khanh.txt · 16 đoạn · giọng Ngọc Linh</div>
+        </div>
+
+        <div style="padding:16px 24px 20px;display:flex;flex-direction:column;gap:16px">
+          <div style="display:flex;gap:12px">
+            <div style="flex:1">
+              <div style="font-size:14px;color:var(--txt2);margin-bottom:6px">Tên tệp</div>
+              <div style="display:flex;align-items:center;height:36px;padding:0 10px;border:1px solid var(--stroke2);border-bottom-width:2px;border-bottom-color:var(--acc);border-radius:4px;background:var(--ctl);font-size:14px;color:var(--txt)">thongbao-quoc-khanh<span style="color:var(--txt3)">.wav</span></div>
+            </div>
+            <div style="width:150px">
+              <div style="font-size:14px;color:var(--txt2);margin-bottom:6px">Định dạng</div>
+              <div style="display:flex;align-items:center;height:36px;padding:0 8px 0 10px;border:1px solid var(--stroke2);border-radius:4px;background:var(--ctl);font-size:14px;color:var(--txt)">
+                <span style="flex:1">WAV 24 bit</span>
+                <svg width="13" height="13" viewBox="0 0 24 24" stroke="var(--txt2)" stroke-width="1.8" fill="none" stroke-linecap="round"><path d="M6 9.5l6 6 6-6"/></svg>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div style="font-size:14px;color:var(--txt2);margin-bottom:6px">Lưu vào</div>
+            <div style="display:flex;gap:8px">
+              <div style="flex:1;display:flex;align-items:center;height:36px;padding:0 10px;border:1px solid var(--stroke2);border-radius:4px;background:var(--ctl);font-size:14px;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">C:\Users\Tuan\Documents\GiongDoc\Xuất</div>
+              <div style="display:flex;align-items:center;height:36px;padding:0 14px;border:1px solid var(--stroke2);border-radius:4px;background:var(--ctl);font-size:14px;color:var(--txt);cursor:default" style-hover="background:var(--ctl-h)">Chọn…</div>
+            </div>
+          </div>
+
+          <div>
+            <div style="font-size:14px;color:var(--txt2);margin-bottom:7px">Tách tệp</div>
+            <div style="display:flex;flex-direction:column;gap:2px">
+              <sc-for list="{{ splitOpts }}" as="o" hint-placeholder-count="3">
+                <div onClick="{{ o.pick }}" style="display:flex;align-items:center;gap:10px;height:34px;padding:0 8px;border-radius:4px;cursor:default" style-hover="background:var(--sub-h)">
+                  <span style="width:18px;height:18px;flex:none;border-radius:9px;border:1.5px solid {{ o.ring }};display:flex;align-items:center;justify-content:center">
+                    <span style="width:8px;height:8px;border-radius:4px;background:{{ o.dot }}"></span>
+                  </span>
+                  <span style="font-size:14px;color:var(--txt)">{{ o.label }}</span>
+                  <span style="font-size:13px;color:var(--txt3)">{{ o.hint }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:16px;align-items:flex-end">
+            <div style="flex:1">
+              <div style="display:flex;justify-content:space-between;font-size:14px;color:var(--txt2);margin-bottom:4px">
+                <span>Khoảng lặng giữa các đoạn</span>
+                <span style="font-weight:600;color:var(--txt);font-variant-numeric:tabular-nums">{{ gapLabel }}</span>
+              </div>
+              <div onClick="{{ setGap }}" style="position:relative;height:20px;display:flex;align-items:center;cursor:default">
+                <div style="position:absolute;left:0;right:0;height:4px;border-radius:2px;background:var(--rail);opacity:.5"></div>
+                <div style="position:absolute;left:0;height:4px;border-radius:2px;background:var(--acc);width:{{ gapPct }}"></div>
+                <div style="position:absolute;width:20px;height:20px;border-radius:10px;background:var(--layer);border:1px solid var(--stroke2);box-shadow:0 1px 3px rgba(0,0,0,.18);margin-left:-10px;left:{{ gapPct }};display:flex;align-items:center;justify-content:center">
+                  <span style="width:11px;height:11px;border-radius:6px;background:var(--acc)"></span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:2px">
+            <sc-for list="{{ checks }}" as="c" hint-placeholder-count="3">
+              <div onClick="{{ c.toggle }}" style="display:flex;align-items:center;gap:10px;height:34px;padding:0 8px;border-radius:4px;cursor:default" style-hover="background:var(--sub-h)">
+                <span style="width:18px;height:18px;flex:none;border-radius:3px;border:1.5px solid {{ c.ring }};background:{{ c.fill }};display:flex;align-items:center;justify-content:center;color:var(--acc-txt)">
+                  <sc-if value="{{ c.on }}"><svg width="12" height="12" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></svg></sc-if>
+                </span>
+                <span style="font-size:14px;color:var(--txt)">{{ c.label }}</span>
+              </div>
+            </sc-for>
+          </div>
+
+          <div style="display:flex;align-items:center;gap:9px;padding:11px 12px;background:var(--acc-soft);border-radius:4px">
+            <span style="display:flex;flex:none;color:var(--acc)"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm1 15h-2v-6h2zm0-8h-2V7h2z"/></svg></span>
+            <span style="font-size:14px;color:var(--txt)">{{ estimate }}</span>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:8px;padding:16px 24px;background:var(--layer2);border-top:1px solid var(--divider)">
+          <div onClick="{{ start }}" style="flex:1;display:flex;align-items:center;justify-content:center;height:38px;border-radius:4px;background:var(--acc);color:var(--acc-txt);font-size:15px;font-weight:600;cursor:default" style-hover="background:var(--acc-h)">Bắt đầu xuất</div>
+          <div style="flex:1;display:flex;align-items:center;justify-content:center;height:38px;border-radius:4px;background:var(--ctl);border:1px solid var(--stroke2);color:var(--txt);font-size:15px;cursor:default" style-hover="background:var(--ctl-h)">Huỷ</div>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isRunning }}">
+      <div style="width:520px;background:var(--layer);border:1px solid var(--stroke2);border-radius:8px;box-shadow:0 32px 64px rgba(0,0,0,.32);overflow:hidden">
+        <div style="padding:22px 24px 20px">
+          <div style="display:flex;align-items:center;gap:11px">
+            <span style="width:16px;height:16px;flex:none;border-radius:8px;border:2px solid var(--stroke2);border-top-color:var(--acc);animation:spin .8s linear infinite"></span>
+            <span style="font-size:20px;font-weight:600;color:var(--txt)">Đang xuất thongbao-quoc-khanh.wav</span>
+          </div>
+          <div style="margin-top:18px;height:5px;border-radius:3px;background:var(--rail);opacity:.9;overflow:hidden">
+            <div style="height:5px;border-radius:3px;background:var(--acc);width:38%"></div>
+          </div>
+          <div style="margin-top:9px;display:flex;justify-content:space-between;font-size:14px;color:var(--txt2);font-variant-numeric:tabular-nums">
+            <span>Đang xử lý đoạn 6/16</span><span>38%</span>
+          </div>
+          <div style="margin-top:18px;display:flex;flex-direction:column;gap:9px">
+            <div style="display:flex;justify-content:space-between;font-size:14px;color:var(--txt2)"><span>Đã trôi qua</span><span style="color:var(--txt);font-variant-numeric:tabular-nums">00:38</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:14px;color:var(--txt2)"><span>Còn lại (ước tính)</span><span style="color:var(--txt);font-variant-numeric:tabular-nums">01:02</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:14px;color:var(--txt2)"><span>Đã ghi</span><span style="color:var(--txt);font-variant-numeric:tabular-nums">16,2 MB</span></div>
+          </div>
+          <div style="margin-top:16px;font-size:13px;color:var(--txt3)">Có thể tiếp tục soạn thảo trong lúc xuất. Không tắt máy.</div>
+        </div>
+        <div style="display:flex;gap:8px;padding:16px 24px;background:var(--layer2);border-top:1px solid var(--divider)">
+          <div onClick="{{ finish }}" style="flex:1;display:flex;align-items:center;justify-content:center;height:38px;border-radius:4px;background:var(--ctl);border:1px solid var(--stroke2);color:var(--txt);font-size:15px;cursor:default" style-hover="background:var(--ctl-h)">Chạy nền</div>
+          <div style="flex:1;display:flex;align-items:center;justify-content:center;height:38px;border-radius:4px;background:var(--ctl);border:1px solid var(--stroke2);color:var(--txt);font-size:15px;cursor:default" style-hover="background:var(--ctl-h)">Huỷ xuất</div>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isDone }}">
+      <div style="width:520px;background:var(--layer);border:1px solid var(--stroke2);border-radius:8px;box-shadow:0 32px 64px rgba(0,0,0,.32);overflow:hidden">
+        <div style="padding:22px 24px 20px">
+          <div style="display:flex;align-items:center;gap:11px">
+            <span style="width:22px;height:22px;flex:none;border-radius:11px;background:var(--ok);display:flex;align-items:center;justify-content:center;color:#fff"><svg width="14" height="14" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></svg></span>
+            <span style="font-size:20px;font-weight:600;color:var(--txt)">Đã xuất xong</span>
+          </div>
+          <div style="margin-top:16px;border:1px solid var(--stroke);border-radius:6px;background:var(--layer2);padding:13px">
+            <div style="font-size:14px;font-weight:600;color:var(--txt)">thongbao-quoc-khanh.wav</div>
+            <div style="margin-top:6px;display:flex;flex-direction:column;gap:5px;font-size:14px;color:var(--txt2)">
+              <div style="display:flex;justify-content:space-between"><span>Thời lượng</span><span style="color:var(--txt);font-variant-numeric:tabular-nums">1 phút 28 giây</span></div>
+              <div style="display:flex;justify-content:space-between"><span>Kích thước</span><span style="color:var(--txt);font-variant-numeric:tabular-nums">11,6 MB</span></div>
+              <div style="display:flex;justify-content:space-between"><span>Thời gian xử lý</span><span style="color:var(--txt);font-variant-numeric:tabular-nums">00:27</span></div>
+            </div>
+          </div>
+          <div style="margin-top:12px;font-size:13px;color:var(--txt3);word-break:break-all">C:\Users\Tuan\Documents\GiongDoc\Xuất\thongbao-quoc-khanh.wav</div>
+        </div>
+        <div style="display:flex;gap:8px;padding:16px 24px;background:var(--layer2);border-top:1px solid var(--divider)">
+          <div style="flex:1;display:flex;align-items:center;justify-content:center;height:38px;border-radius:4px;background:var(--acc);color:var(--acc-txt);font-size:15px;font-weight:600;cursor:default" style-hover="background:var(--acc-h)">Mở thư mục</div>
+          <div onClick="{{ reset }}" style="flex:1;display:flex;align-items:center;justify-content:center;height:38px;border-radius:4px;background:var(--ctl);border:1px solid var(--stroke2);color:var(--txt);font-size:15px;cursor:default" style-hover="background:var(--ctl-h)">Đóng</div>
+        </div>
+      </div>
+    </sc-if>
+  </div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;state&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;cau_hinh&quot;,&quot;dang_xuat&quot;,&quot;hoan_tat&quot;],&quot;default&quot;:&quot;cau_hinh&quot;,&quot;tsType&quot;:&quot;'cau_hinh'|'dang_xuat'|'hoan_tat'&quot;,&quot;section&quot;:&quot;Trạng thái&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;sang&quot;,&quot;toi&quot;],&quot;default&quot;:&quot;sang&quot;,&quot;tsType&quot;:&quot;'sang'|'toi'&quot;,&quot;section&quot;:&quot;Trạng thái&quot;}}">
+class Component extends DCLogic {
+  state = { view: null, theme: null, split: 0, gap: 5, checks: [true, false, true] };
+  get view() { return this.state.view || this.props.state || 'cau_hinh'; }
+  get theme() { return this.state.theme || this.props.theme || 'sang'; }
+  componentDidMount() { this.applyTheme(); }
+  componentDidUpdate() { this.applyTheme(); }
+  applyTheme() { document.documentElement.setAttribute('data-theme', this.theme === 'toi' ? 'dark' : 'light'); }
+
+  renderVals() {
+    const v = this.view;
+    const tabs = [['cau_hinh','Cấu hình'],['dang_xuat','Đang xuất'],['hoan_tat','Hoàn tất']].map(([id,label]) => ({
+      label, bg: v === id ? '#0067c0' : 'transparent', fg: v === id ? '#fff' : '#5d5d5d',
+      pick: () => this.setState({ view: id })
+    }));
+    const themeTabs = [['sang','Sáng'],['toi','Tối']].map(([id,label]) => ({
+      label, bg: this.theme === id ? '#0067c0' : 'transparent', fg: this.theme === id ? '#fff' : '#5d5d5d',
+      pick: () => this.setState({ theme: id })
+    }));
+
+    const splitDefs = [['Một tệp duy nhất','11,6 MB'],['Mỗi đoạn một tệp','16 tệp'],['Cắt theo độ dài','mỗi 10 phút một tệp']];
+    const splitOpts = splitDefs.map(([label, hint], i) => ({
+      label, hint,
+      ring: this.state.split === i ? 'var(--acc)' : 'var(--stroke2)',
+      dot: this.state.split === i ? 'var(--acc)' : 'transparent',
+      pick: () => this.setState({ split: i })
+    }));
+
+    const checkDefs = ['Đọc số tiền thành chữ (500.000 → năm trăm nghìn)', 'Đọc thẻ cảm xúc thành âm thanh', 'Chèn 1 giây im lặng ở đầu tệp'];
+    const checks = checkDefs.map((label, i) => ({
+      label, on: this.state.checks[i],
+      ring: this.state.checks[i] ? 'var(--acc)' : 'var(--stroke2)',
+      fill: this.state.checks[i] ? 'var(--acc)' : 'transparent',
+      toggle: () => { const c = this.state.checks.slice(); c[i] = !c[i]; this.setState({ checks: c }); }
+    }));
+
+    const ghostW = ['62%','48%','8%','54%','72%','30%','30%','30%','30%','30%','30%','30%','30%','30%'];
+    const est = [ 'Ước tính: 1 tệp · 11,6 MB · khoảng 27 giây xử lý',
+      'Ước tính: 16 tệp · tổng 11,9 MB · khoảng 34 giây xử lý',
+      'Ước tính: 1 tệp · 11,6 MB · chưa tới 10 phút nên không cắt' ][this.state.split];
+
+    return {
+      tabs, themeTabs, splitOpts, checks,
+      ghostLines: ghostW.map(w => ({ w })),
+      isConfig: v === 'cau_hinh', isRunning: v === 'dang_xuat', isDone: v === 'hoan_tat',
+      gapLabel: (this.state.gap / 10).toFixed(1).replace('.', ',') + ' giây',
+      gapPct: Math.round(this.state.gap / 20 * 100) + '%',
+      setGap: (e) => {
+        const r = e.currentTarget.getBoundingClientRect();
+        const f = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
+        this.setState({ gap: Math.round(f * 20) });
+      },
+      estimate: est,
+      start: () => this.setState({ view: 'dang_xuat' }),
+      finish: () => this.setState({ view: 'hoan_tat' }),
+      reset: () => this.setState({ view: 'cau_hinh' })
+    };
+  }
+}
+</script>
+</body>
+</html>

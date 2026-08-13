@@ -1,0 +1,205 @@
+CHƯƠNG TRÌNH ĐỌC TIẾNG VIỆT - BẢN 4.0
+(chỉ dùng VieNeu-TTS, đã bỏ hẳn Microsoft Edge TTS)
+
+====================================================================
+1. THAY ĐỔI LỚN NHẤT SO VỚI CÁC BẢN TRƯỚC
+====================================================================
+
+Từ bản 4.0, chương trình CHỈ dùng VieNeu-TTS - chạy hoàn toàn tại
+máy (CPU, không cần card đồ hoạ), không cần Internet mỗi lần đọc.
+Đã bỏ hẳn Microsoft Edge TTS - không còn ô "Nguồn giọng", không còn
+"Tốc độ"/"Cao độ" kiểu cũ.
+
+Đánh đổi cần biết:
+  - ✅ Không cần Internet lúc đọc (sau khi đã cài đặt xong).
+  - ✅ Không phụ thuộc dịch vụ bên ngoài, không lo gián đoạn giữa lễ.
+  - ⚠ Cài đặt nặng hơn nhiều: khoảng 150-250MB thư viện + vài trăm MB
+    mô hình giọng nói (trước đây Edge TTS gần như không cần cài gì).
+  - ⚠ Nếu đóng gói thành .exe, file sẽ nặng khoảng 300-500MB (một thư
+    mục, không còn 1 file .exe nhẹ 14MB như bản Edge TTS cũ).
+  - ⚠ Chỉ dùng được giọng DỰNG SẴN của VieNeu-TTS - không nhân bản
+    được giọng riêng (tính năng đó cần GPU, máy không card đồ hoạ
+    không dùng được, xem lại phần trao đổi trước nếu cần).
+
+
+====================================================================
+2. CÀI ĐẶT - CHẠY MỘT LẦN LÀ XONG, KHÔNG CẦN TẢI THÊM
+====================================================================
+
+Chạy CaiDat.bat. File này sẽ:
+  1. Cài thư viện `vieneu` + PyInstaller.
+  2. Tự tải FFmpeg (ffplay.exe) nếu chưa có.
+  3. TẢI SẴN mô hình giọng nói vào thư mục vieneu_models\ ngay lúc
+     cài đặt (không đợi tới lúc mở chương trình mới tải) - và thử
+     tổng hợp một câu để xác nhận mọi thứ hoạt động đúng.
+
+Sau khi CaiDat.bat chạy xong báo "CAI DAT THANH CONG", mở chương
+trình lên là dùng được ngay, đọc hoàn toàn offline, không cần mạng.
+
+Cần Internet ổn định lúc chạy CaiDat.bat (5-15 phút tuỳ mạng, tải
+khoảng 150-250MB thư viện + vài trăm MB mô hình).
+
+Nếu bước tải mô hình thất bại (mất mạng giữa chừng), chương trình
+vẫn cài xong bình thường - chỉ là sẽ phải tải mô hình vào lần đầu
+tiên mở lên và dùng đến giọng đọc (chậm hơn một lần duy nhất). Có
+thể chạy lại riêng bước này bất cứ lúc nào:
+    py DocCongDuc.py --tai-vieneu
+
+
+====================================================================
+3. ĐÓNG GÓI THÀNH .EXE
+====================================================================
+
+Chạy DongGoi.bat. Khác bản cũ:
+  - Dùng chế độ --onedir (một THƯ MỤC chứa GiongDoc.exe + thư mục
+    _internal\ chứa thư viện) thay vì --onefile (1 file duy nhất) -
+    để mở nhanh hơn, không phải tự giải nén mỗi lần chạy. Đánh đổi:
+    không còn là "1 file duy nhất" mang đi đâu cũng được nữa.
+  - KHÔNG loại trừ VieNeu-TTS ra khỏi bản đóng gói nữa (khác bản
+    trước) - vì giờ nó là engine DUY NHẤT, bắt buộc phải có trong
+    file .exe thì mới đọc được.
+  - File sẽ nặng khoảng 300-500MB, build có thể mất 5-15 phút.
+
+Sau khi build xong, D:\GiongDoc\GiongDoc.exe cùng thư mục
+_internal\ cạnh nó là chương trình chạy được - KHÔNG tách rời
+GiongDoc.exe ra khỏi thư mục _internal\, sẽ không chạy được nếu
+tách riêng.
+
+KHÔNG XOA (dù build .exe hay chạy trực tiếp bằng Python):
+  congduc.txt, cauhinh.ini, noidung.ini, tudien.ini,
+  ffmpeg\, vieneu_models\, _internal\ (nếu đã build .exe)
+
+
+====================================================================
+4. DÙNG HÀNG NGÀY
+====================================================================
+
+Giống các bản trước: 2 thẻ Danh sách công đức / Đọc văn bản, nút
+▶ ĐỌC LIÊN TỤC / ⏸ TẠM DỪNG / ⏹ DỪNG, giữ vị trí riêng từng thẻ.
+
+Thanh trên cùng giờ chỉ còn:
+  Giọng        - chọn trong danh sách giọng dựng sẵn của VieNeu-TTS
+                 (tên, giới tính, miền, phong cách - dò thật từ mô
+                 hình, không đoán cứng)
+  Phong cách   - Tự nhiên / Tin tức - thông báo / Kể chuyện (đúng 3
+                 phong cách thật VieNeu-TTS hỗ trợ qua tham số style)
+  🔈 Nghe thử  - nghe thử giọng + phong cách đang chọn
+
+Menu Giọng đọc > 🔄 Tải / làm mới danh sách giọng VieNeu-TTS - dùng
+khi tác giả bổ sung giọng mới.
+
+Menu Tệp > Lưu giọng đọc văn bản ra WAV - lưu file WAV (không còn
+MP3, vì VieNeu-TTS tạo ra WAV).
+
+
+====================================================================
+5. CÁC FILE TRONG THƯ MỤC
+====================================================================
+
+  GiongDoc.py / GiongDoc.exe       chương trình
+  DocCongDuc.py                    bộ máy đọc dùng chung - ĐỪNG XOÁ
+  congduc.txt                      danh sách công đức
+  noidung.ini                      lời mở đầu / giữa / kết / mẫu câu
+  tudien.ini                       từ điển cách đọc
+  cauhinh.ini                      giọng, phong cách, khoảng nghỉ
+  vieneu_models\                   mô hình giọng nói VieNeu-TTS
+                                    (vài trăm MB - ĐỪNG XOÁ)
+  ffmpeg\bin\ffplay.exe             bộ phát âm thanh
+  _internal\                        (chỉ có nếu đã build .exe)
+                                    thư viện đi kèm .exe - ĐỪNG XOÁ,
+                                    ĐỪNG TÁCH RIÊNG khỏi GiongDoc.exe
+
+Đọc sai chữ nào: Menu Công cụ > Sửa từ điển cách đọc, thêm một dòng
+    Chữ trong văn bản = Cách đọc mong muốn
+
+
+====================================================================
+6. NẾU MUỐN QUAY LẠI DÙNG EDGE TTS
+====================================================================
+
+Bản 4.0 đã bỏ hẳn code Edge TTS, không phải chỉ tắt đi. Nếu sau này
+muốn dùng lại Edge TTS (ví dụ máy không đủ mạnh chạy VieNeu-TTS mượt,
+hoặc muốn giọng dự phòng khi không có mạng để tải mô hình VieNeu lần
+đầu), cần quay lại bản 3.1 (trước khi bỏ Edge TTS) hoặc yêu cầu thêm
+lại tính năng đó.
+
+
+====================================================================
+7. TẠO GIỌNG RIÊNG TỪ FILE MẪU (giọng của anh, hoặc người khác đã xin phép)
+====================================================================
+
+Menu Giọng đọc > 🎙️ Tạo giọng riêng từ file mẫu…
+
+CÁCH DÙNG:
+  1. Chọn file mẫu giọng nói - khuyến nghị 3-5 giây, rõ tiếng, ít tạp
+     âm (.wav/.mp3/.flac/.m4a).
+  2. Đặt tên cho giọng (vd: "Giọng của tôi", "Giọng bác Tuấn").
+  3. Bấm 🎙️ Tạo giọng, đợi vài giây tới vài chục giây.
+
+Giọng tạo xong:
+  - Tự động được CHỌN LUÔN để dùng ngay.
+  - Xuất hiện trong ô "Giọng" mọi lần sau, đánh dấu rõ:
+        🎙️ Tên anh đặt  (giọng riêng)
+    để không nhầm với giọng dựng sẵn của VieNeu-TTS.
+  - Lưu lại vĩnh viễn trong thư mục giong_rieng\ - dùng được mãi, kể
+    cả sau khi tắt/mở lại chương trình hay khởi động lại máy.
+
+QUẢN LÝ / XOÁ:
+  Menu Giọng đọc > 🗑️ Quản lý / xoá giọng riêng… - xem danh sách, xoá
+  giọng không cần nữa. Nếu xoá đúng giọng đang dùng, chương trình tự
+  chuyển sang giọng khác, không bị lỗi.
+
+⚠ CHỈ dùng giọng của chính anh, hoặc của người khác khi đã được họ
+đồng ý - dialog có nhắc lại điều này mỗi lần tạo giọng mới.
+
+⚠ RỦI RO KỸ THUẬT THẬT (không phải giả định): máy không có card đồ
+hoạ. Theo tài liệu chính thức của VieNeu-TTS, tính năng nhân bản
+giọng của bản mặc định (v3 Turbo) YÊU CẦU GPU THẬT. Có dấu hiệu bản
+cũ hơn (v2 Turbo, GGUF) hỗ trợ trên CPU nhưng CHƯA kiểm chứng được
+trên máy thật. Nếu bấm "Tạo giọng" mà báo lỗi, đây nhiều khả năng là
+nguyên nhân - chương trình báo lỗi rõ ràng, không giả vờ thành công.
+
+Nếu gặp lỗi này, các hướng có thể thử (chưa kiểm chứng, cần anh tự
+xác nhận):
+  - Cài thêm bản GPU: py -m pip install "vieneu[gpu]"
+  - Hoặc thử chỉ định chế độ v2 Turbo (GGUF, có dấu hiệu hỗ trợ CPU)
+    - cần sửa code để dùng Vieneu(mode="turbo") riêng cho việc tạo
+    giọng, báo lại nếu cần tôi làm việc này.
+
+
+====================================================================
+8. CÁC FILE TRONG THƯ MỤC (CẬP NHẬT)
+====================================================================
+
+Thêm vào danh sách ở mục 5:
+  giong_rieng\           chứa file mẫu + danh sách giọng riêng đã tạo
+                          (danhsach.json + các file âm thanh mẫu) -
+                          ĐỪNG XOÁ nếu còn muốn dùng các giọng riêng
+
+
+====================================================================
+9. TẠO GIỌNG RIÊNG BÁO "No module named 'torch'" - CÁCH SỬA
+====================================================================
+
+TỪ BẢN NÀY, CaiDat.bat ĐÃ CÀI SẴN PyTorch (bản CPU) - không cần tự
+cài tay như trước nữa. Nếu anh cài từ bản CaiDat.bat cũ hơn (chưa có
+bước cài PyTorch), hoặc bấm "Tạo giọng riêng" mà vẫn báo lỗi có chữ
+"torch", tự cài lại bằng:
+
+    py -m pip install torch --index-url https://download.pytorch.org/whl/cpu
+
+Lệnh trên tải bản CPU-only (không kèm CUDA), khoảng 150-200MB. PyTorch
+chạy TỐT trên CPU thường, không bắt buộc phải có card đồ hoạ rời
+(NVIDIA/AMD) - card đồ hoạ tích hợp (Intel, AMD APU) và NPU AI (Intel
+AI Boost...) KHÔNG được PyTorch chuẩn dùng để tăng tốc, nhưng không
+ảnh hưởng - máy vẫn chạy được bằng CPU thường, chỉ là không tận dụng
+được phần cứng AI chuyên dụng đó.
+
+Nếu cài đủ PyTorch mà "Tạo giọng riêng" vẫn báo lỗi, nhưng lần này
+thông báo KHÔNG còn chữ "torch" trong đó nữa - lúc đó mới thật sự là
+giới hạn khác, báo lại để tôi xử lý tiếp (ví dụ thử chuyển sang bản
+v2 Turbo/GGUF).
+
+LƯU Ý: vì PyTorch giờ được cài sẵn, bản đóng gói .exe qua DongGoi.bat
+cũng nặng hơn trước (khoảng 500-700MB thay vì 300-500MB), vì PyTorch
+bị nhét vào cùng.

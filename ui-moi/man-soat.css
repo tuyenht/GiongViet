@@ -1,0 +1,103 @@
+/* Màn hình 2 — Soát văn bản.
+   Phủ lên phần GIỮA của màn chính; cột trái và cột phải vẫn thấy nhưng mờ đi,
+   để người dùng biết mình vẫn đang ở trong cùng một cửa sổ. */
+
+.soat {
+  flex: 1; min-width: 0; display: flex; flex-direction: column;
+  background: var(--bg); overflow: hidden;
+}
+
+.soat__thanh {
+  height: 42px; flex: none; display: flex; align-items: center; gap: 8px;
+  padding: 0 12px; border-bottom: 1px solid var(--stroke); background: var(--sub-h);
+}
+.soat__tab {
+  height: 28px; padding: 0 12px; border-radius: 5px; font-size: 13px;
+  border: 1px solid transparent; background: none; color: var(--txt2);
+  cursor: pointer;
+}
+.soat__tab:hover { background: var(--sel); }
+.soat__tab.mo { background: var(--acc-soft); border-color: var(--acc); color: var(--acc); }
+.soat__phu { margin-left: auto; font-size: 12px; color: var(--txt3); }
+.soat__thanh .nut { margin-left: 8px; }
+
+.soat__dau {
+  flex: none; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  padding: 10px 12px; border-bottom: 1px solid var(--stroke);
+}
+.soat__nhan {
+  font-size: 11px; font-weight: 600; letter-spacing: .04em;
+  text-transform: uppercase; color: var(--txt3); margin-right: 4px;
+}
+
+.soat__chip {
+  height: 26px; padding: 0 10px; border-radius: 13px; font-size: 12.5px;
+  display: inline-flex; align-items: center; gap: 6px;
+  border: 1px solid var(--stroke2); background: none; color: var(--txt2);
+  cursor: pointer;
+}
+.soat__chip:hover { background: var(--sel); }
+.soat__chip.mo { background: var(--acc-soft); border-color: var(--acc); color: var(--acc); }
+/* Quy tắc không tắt được: KHÔNG phải nút, nên không có con trỏ bàn tay và
+   không đổi màu khi rê chuột - đừng mời người ta bấm vào thứ không bấm được. */
+.soat__chip--tinh { cursor: default; color: var(--txt3); }
+.soat__chip--tinh:hover { background: none; }
+
+.soat__bang { flex: 1; min-height: 0; overflow: auto; }
+
+.soat__hang {
+  display: flex; align-items: center; gap: 10px; min-height: 38px;
+  padding: 4px 12px; border-bottom: 1px solid var(--divider); font-size: 13px;
+}
+.soat__hang--dau {
+  position: sticky; top: 0; z-index: 2; min-height: 32px;
+  background: var(--sub-h); color: var(--txt3);
+  font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase;
+}
+.soat__hang.chon { background: var(--acc-soft); }
+.soat__hang[data-soatdoan]:not(.soat__hang--dau):hover { background: var(--sel); }
+
+.soat__c1 { flex: none; width: 44px; color: var(--txt3); }
+.soat__c2 { flex: none; width: 150px; display: flex; align-items: center; gap: 6px; }
+.soat__c3 { flex: 1; min-width: 0; }
+.soat__c4 { flex: none; width: 300px; color: var(--txt2); font-size: 12.5px; }
+.soat__c5 { flex: none; width: 170px; display: flex; align-items: center; gap: 8px; }
+
+/* Bảng hai cột của tab 2 */
+.soat__d1 { flex: none; width: 44px; color: var(--txt3); }
+.soat__d2, .soat__d3 { flex: 1; min-width: 0; }
+.soat__d3 { border-left: 1px solid var(--stroke); padding-left: 12px; }
+.soat__d3 mark {
+  background: var(--mark, rgba(0, 103, 192, .14)); color: inherit;
+  border-radius: 3px; font-weight: 600; padding: 0 2px;
+}
+.mo-nhat { color: var(--txt3); }
+
+.soat__chan {
+  flex: none; padding: 10px 12px; font-size: 12px; color: var(--txt3);
+  border-top: 1px solid var(--stroke);
+}
+
+.soat__trong {
+  flex: 1; display: flex; align-items: center; justify-content: center;
+  text-align: center; padding: 32px; color: var(--txt3); font-size: 14px;
+  line-height: 1.7;
+}
+.soat__trong--vui { color: var(--txt2); }
+
+@media (prefers-reduced-motion: reduce) {
+  .soat__tab, .soat__chip { transition: none; }
+}
+
+/* Cửa sổ hẹp: giấu cột phải khi đang ở màn phụ.
+   Bảng Soát cần chừng 660 px cho năm cột; cộng cột trái 240 và cột phải 300
+   là quá 1200 px. Màn phụ không dùng đến cột phải (giọng, thanh điều chỉnh)
+   nên nhường chỗ cho bảng, thay vì bắt người dùng cuộn ngang - cuộn ngang là
+   thứ người lớn tuổi gần như không bao giờ tìm ra. */
+@media (max-width: 1200px) {
+  .thanchinh--phu .phai { display: none; }
+}
+@media (max-width: 980px) {
+  .thanchinh--phu .trai { display: none; }
+  .soat__c4 { display: none; }        /* cột Đề xuất nhường chỗ trước tiên */
+}
