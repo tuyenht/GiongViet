@@ -207,6 +207,16 @@ TUDIEN_MAC_DINH = {
     "GĐ": "Gia đình", "Cty": "Công ty", "TT": "Thị trấn", "TP": "Thành phố",
     "TX": "Thị xã", "NCT": "Người cao tuổi", "CCB": "Cựu chiến binh",
     "PN": "Phụ nữ", "TN": "Thanh niên", "VN": "Việt Nam", "Bt": "Bí thư",
+    # Chữ ký cuối văn bản hành chính: "TM. Ban Giám đốc", "KT. Giám đốc".
+    # Không có mục này thì máy đánh vần "tê em", chủ dự án bấm thử đã gặp.
+    #
+    # PHẢI có cả bản KÈM DẤU CHẤM. _ap_dung_tudien sắp khoá theo độ dài giảm
+    # dần nên "TM." khớp trước "TM" và nuốt luôn dấu chấm; chỉ khai "TM" thì
+    # ra "Thay mặt. Ban Giám đốc" - máy đọc thành hai câu, nghe như hụt hơi
+    # giữa chừng.
+    "TM.": "Thay mặt", "KT.": "Ký thay", "TL.": "Thừa lệnh",
+    "TUQ.": "Thừa uỷ quyền", "TM": "Thay mặt", "KT": "Ký thay",
+    "TL": "Thừa lệnh", "TUQ": "Thừa uỷ quyền",
     "PGS": "Phó giáo sư", "GS": "Giáo sư", "TS": "Tiến sĩ", "ThS": "Thạc sĩ",
     "BS": "Bác sĩ", "KS": "Kỹ sư", "NXB": "Nhà xuất bản",
     "TDTT": "Thể dục thể thao", "ATGT": "An toàn giao thông",

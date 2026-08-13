@@ -640,5 +640,46 @@ console.log('\n--- Z. Chín lệnh menu mới chạy thật, không chỉ có t�
      goiSangPython.map((g) => g[0]).join(', ') || '(không gọi gì)');
 }
 
+/* Ba thanh chỉnh: kiểm GIÁ TRỊ gửi sang Python, không chỉ kiểm "có gọi".
+
+   Bộ kiểm cũ chỉ canh `moi_dat_chinh_am` có được gọi hay không, nên nó xanh
+   suốt trong khi tính năng chết hẳn: guiChinhAm() đọc h.tocDo, mà datChinh()
+   ghi vào h.chinh.tocDo — cả ba ra undefined, Python nhận giá trị rỗng nên
+   dựng chuỗi lọc rỗng. Kéo Tốc độ lên +95% mà tiếng y nguyên. Chủ dự án bấm
+   thử mới lộ. Từ nay phải soi đúng con số đi qua dây. */
+console.log('\n--- Y. Ba thanh chỉnh gửi ĐÚNG GIÁ TRỊ sang Python ---');
+{
+  chay("dat({ ...S, man: 'chinh' })");
+  goiSangPython.length = 0;
+  chay("dat(datChinh(S, 'tocDo', 80))");
+  await new Promise((r) => setTimeout(r, 0));
+
+  const g = goiSangPython.find((x) => x[0] === 'moi_dat_chinh_am');
+  ok(!!g, 'kéo thanh Tốc độ thì có gọi sang Python');
+  const d = g ? g[1] : {};
+  ok(d.tocDo === 80, 'gửi ĐÚNG con số vừa kéo, không phải undefined',
+     `tocDo = ${JSON.stringify(d.tocDo)}`);
+  ok(d.caoDo !== undefined && d.amLuong !== undefined,
+     'hai thanh còn lại cũng có giá trị thật',
+     `caoDo=${JSON.stringify(d.caoDo)} amLuong=${JSON.stringify(d.amLuong)}`);
+
+  // Kéo tiếp giá trị khác thì phải gửi lại, không được nghĩ là "chưa đổi".
+  goiSangPython.length = 0;
+  chay("dat(datChinh(S, 'tocDo', -30))");
+  await new Promise((r) => setTimeout(r, 0));
+  const g2 = goiSangPython.find((x) => x[0] === 'moi_dat_chinh_am');
+  ok(!!g2 && g2[1].tocDo === -30, 'kéo lần nữa thì gửi lại giá trị mới',
+     g2 ? String(g2[1].tocDo) : '(không gọi)');
+
+  // Không đổi gì thì đừng gọi lại — dat() chạy mỗi lần bấm bất cứ thứ gì.
+  goiSangPython.length = 0;
+  chay("dat({ ...S })");
+  await new Promise((r) => setTimeout(r, 0));
+  ok(!goiSangPython.some((x) => x[0] === 'moi_dat_chinh_am'),
+     'không đổi gì thì KHÔNG gọi lại, tránh dội Python');
+
+  chay("dat(datChinh(S, 'tocDo', 0))");
+}
+
 console.log(`\n${loi === 0 ? 'XANH — khớp hết' : `ĐỎ — ${loi} chỗ lệch`}`);
 process.exit(loi ? 1 : 0);

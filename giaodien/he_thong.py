@@ -36,7 +36,10 @@ def luu_tuy_chon(tuy_chon: dict):
 
 
 def thu_muc_xuat_mac_dinh() -> Path:
-    return Path.home() / "Documents" / "GiongViet" / "Xuất"
+    # "Export" chứ không phải "Xuất": tên thư mục không dấu thì gõ được trong
+    # cmd, dán được vào ô đường dẫn, và không vỡ khi chép sang máy đặt bảng mã
+    # khác. Người dùng nhìn thấy nó trong Explorer nên vẫn phải dễ hiểu.
+    return Path.home() / "Documents" / "GiongViet" / "Export"
 
 
 def doc_clipboard() -> str:

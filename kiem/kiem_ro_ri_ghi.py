@@ -184,13 +184,15 @@ print("\n--- D. Cac module khac cua ban moi khong tu ghi vao du lieu cu ---")
 # nham la "may ban". Chinh chung moi la nhom nguy hiem nhat: bai do CHAY THAT
 # tren may, phat tieng that, nen ghi ban du lieu la ghi that.
 for p in sorted(list((GOC / "giaodien_moi").glob("*.py")) + list((GOC / "kiem").glob("*.py"))):
-    # BO KIEM duoc phep nhac ten tep - viec cua no la canh chung khong bi cham
-    # va tro chung sang %TEMP%. Nhan dien bang chu "kiem" trong ten, bat duoc
-    # ca kiem_*.py lan KiemBanExe.py va TuKiemGiaoDien.py.
+    # BO KIEM / NGHIEM THU duoc phep nhac ten tep - viec cua chung la CANH cho
+    # cac tep ay khong bi cham, va tro chung sang %TEMP%. Nhan dien bang chu
+    # "kiem" hoac "nghiemthu" trong ten: bat duoc kiem_*.py, KiemBanExe.py,
+    # TuKiemGiaoDien.py va NghiemThu.py.
     #
     # BAI DO (do_*.py, chay_thu_tieng.py) thi KHONG duoc mien: chung chay that
     # tren may, phat tieng that, nen nhac ten tep du lieu la co nguy co ghi that.
-    if "kiem" in p.stem.lower() or p.stem == "khoa_du_lieu":
+    ten = p.stem.lower()
+    if "kiem" in ten or "nghiemthu" in ten or p.stem == "khoa_du_lieu":
         continue
     nguon = p.read_text(encoding="utf-8")
     xau = [t for t in TEP_DU_LIEU if f'"{t}"' in nguon or f"'{t}'" in nguon]

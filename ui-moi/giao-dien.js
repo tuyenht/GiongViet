@@ -528,12 +528,22 @@ let chinhAmDaGui = null;
 function guiChinhAm() {
   const h = hoSoDangDung(S);
   if (!h) return;
-  const khoa = `${h.tocDo}|${h.caoDo}|${h.amLuong}`;
+  /* Ba con số nằm trong h.chinh, KHÔNG phải h trực tiếp — datChinh() ghi vào
+     `{ ...h, chinh: { ...h.chinh, [khoa]: gt } }`.
+
+     Đọc nhầm thành h.tocDo là cả ba ra undefined, khoá thành
+     "undefined|undefined|undefined" nên chỉ gửi đúng một lần, và Python nhận
+     được ba giá trị rỗng nên dựng ra chuỗi lọc RỖNG. Kết quả: kéo thanh Tốc
+     độ lên +95% mà tiếng không nhanh hơn một chút nào. Chủ dự án bấm thử mới
+     lộ ra — bộ kiểm cũ chỉ canh "có gọi sang Python", không canh GIÁ TRỊ gửi
+     đi, nên nó xanh trong khi tính năng chết. */
+  const c = h.chinh || {};
+  const khoa = `${c.tocDo}|${c.caoDo}|${c.amLuong}`;
   if (khoa === chinhAmDaGui) return;
   chinhAmDaGui = khoa;
   if (coPython()) {
     api('moi_dat_chinh_am',
-        { tocDo: h.tocDo, caoDo: h.caoDo, amLuong: h.amLuong });
+        { tocDo: c.tocDo ?? 0, caoDo: c.caoDo ?? 0, amLuong: c.amLuong ?? 100 });
   }
 }
 
@@ -999,7 +1009,7 @@ async function moHopXuat() {
     ten: (goi && goi.ten) || ten.replace(/\.[^.]+$/, ''),
     duoi: '.wav',
     dinhDang: 'wav24',
-    thuMuc: (goi && goi.thu_muc) || 'Tài liệu\\GiongViet\\Xuất',
+    thuMuc: (goi && goi.thu_muc) || 'Tài liệu\\GiongViet\\Export',
     tach: 'mot',
   };
   dat({ ...dongHetMenu(S), exportOpen: true });
@@ -1025,7 +1035,15 @@ function veLopNoi() {
     // Chạy nền chỉ giấu hộp đi; việc xuất vẫn chạy và phần trăm chuyển xuống
     // thanh trạng thái. Xong lúc đang chạy nền thì báo bằng thông báo góc.
     g('xChayNen').onclick = () => dat({ ...S, xuatGiaiDoan: null });
-    g('xHuyXuat').onclick = () => huyXuat();
+    g('xHuyXuat').onclick = (e) => {
+      /* Đổi nhãn NGAY, đừng đợi Python trả lời. Mẩu đang tổng hợp có thể còn
+         chạy tới 40 giây nữa mới tới chốt kiểm huỷ được — trong khoảng đó
+         người dùng bấm Huỷ mà không thấy gì đổi sẽ bấm tiếp mấy lần rồi tưởng
+         máy treo. Chủ dự án bấm thử đã nhận xét "lâu mới đóng". */
+      e.target.disabled = true;
+      e.target.textContent = 'Đang dừng…';
+      huyXuat();
+    };
     return;
   }
   if (S.xuatGiaiDoan === 'xong') {
@@ -1166,8 +1184,12 @@ datKhiXuat(
   });
 
 /** Thông báo ngắn cho các lỗi nhẹ. Dùng lại khung thông báo góc. */
-function moBao(chu) {
-  dat({ ...S, toast: { ten: chu, thoiLuong: '', dungLuong: '', thuMuc: '' } });
+/* Thông báo ngắn. PHẢI truyền tiêu đề riêng: khung thông báo góc vốn có tiêu
+   đề đóng cứng "Đã xuất xong tệp âm thanh", nên trước đây bấm Huỷ xuất xong
+   lại hiện ra đúng dòng "Đã xuất xong" — trái ngược hẳn việc vừa làm. Chủ dự
+   án bấm thử mới thấy. */
+function moBao(chu, tieuDe = 'Thông báo') {
+  dat({ ...S, toast: { tieuDe, ten: chu, thoiLuong: '', dungLuong: '', thuMuc: '' } });
 }
 
 // ---------------------------------------------------------------- bảng lệnh
@@ -1428,7 +1450,14 @@ document.addEventListener('click', (e) => {
     const ty = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
     return dat(datChinh(S, n.dataset.truot, Math.round(min + ty * (max - min))));
   }
-  if (!t('.menu, .roi')) dat(dongHetMenu(S));    // bấm ra ngoài đóng hết menu
+  /* Bấm ra ngoài thì đóng hết menu — NHƯNG phải chừa hộp thoại và mọi ô nhập.
+     dat() dựng lại toàn bộ HTML, nên bấm vào <select> là nó bị thay bằng một
+     thẻ mới ngay lúc trình duyệt sắp bung danh sách xuống: ô "Định dạng" bấm
+     mãi không mở được. Cùng họ với cái bẫy đã ghi trong CLAUDE.md — sự kiện
+     nổi lên document rồi đóng ngay thứ vừa mở. */
+  if (!t('.menu, .roi, .hop, .bao, select, input, textarea, button')) {
+    dat(dongHetMenu(S));
+  }
 });
 
 /* Gõ trong ô Tìm thì chạy tìm ngay, không phải bấm nút. Nhớ chữ vào S để lần

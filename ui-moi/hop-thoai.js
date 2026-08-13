@@ -178,12 +178,16 @@ function veHopTin(d) {
 function veBaoXuatXong(d) {
   const e = (s) => String(s == null ? '' : s)
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  // Khung này dùng cho HAI việc: báo xuất xong, và thông báo ngắn bất kỳ.
+  // Nên tiêu đề phải theo dữ liệu, đừng đóng cứng — đóng cứng thì bấm Huỷ
+  // xuất xong cũng hiện ra dòng "Đã xuất xong tệp âm thanh".
+  const nhe = !d.thoiLuong && !d.dungLuong;
   return `<div class="bao" id="baoXuat">
-    <div class="bao__ten">Đã xuất xong tệp âm thanh</div>
-    <div class="bao__noi">${e(d.ten)} · ${e(d.thoiLuong)} · ${e(d.dungLuong)}<br>
-      Lưu tại: ${e(d.thuMuc)}</div>
+    <div class="bao__ten">${e(d.tieuDe || 'Đã xuất xong tệp âm thanh')}</div>
+    <div class="bao__noi">${nhe ? e(d.ten)
+      : `${e(d.ten)} · ${e(d.thoiLuong)} · ${e(d.dungLuong)}<br>Lưu tại: ${e(d.thuMuc)}`}</div>
     <div class="bao__nut">
-      <button class="nut nut--vien" id="bMoThuMuc">Mở thư mục</button>
+      ${nhe ? '' : '<button class="nut nut--vien" id="bMoThuMuc">Mở thư mục</button>'}
       <button class="nut" id="bDong">Đóng</button>
     </div>
   </div>`;
