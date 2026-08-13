@@ -33,9 +33,30 @@ if not exist "%ROOT%ui-moi\index.html" (
     echo [LOI] Khong tim thay ui-moi\index.html - giao dien moi khong the thieu.
     goto :fail
 )
+rem ffmpeg va mo hinh VieNeu KHONG nam trong kho git - chung nang ~530 MB va
+rem co tep vuot gioi han 100 MB cua GitHub. Nguoi clone kho ve chay thang
+rem file nay thi phai tu tai duoc, khong duoc dung lai bat nguoi ta di tim.
+rem Engine da co san hai nhanh dong lenh cho dung viec nay.
 if not exist "%ROOT%ffmpeg\bin\ffplay.exe" (
-    echo [LOI] Thieu ffmpeg\bin\ffplay.exe.
+    echo [!] Chua co ffmpeg - dang tu dong tai ve...
+    py "%ROOT%DocCongDuc.py" --tai-ffmpeg
+    if not exist "%ROOT%ffmpeg\bin\ffplay.exe" (
+        echo [LOI] Tai ffmpeg khong thanh cong. Chay CaiDat.bat roi thu lai.
+        goto :fail
+    )
+)
+if not exist "%ROOT%ffmpeg\bin\ffmpeg.exe" (
+    echo [LOI] Co ffplay.exe nhung thieu ffmpeg.exe - MP3 va WAV 24 bit se hong.
+    echo       Xoa thu muc ffmpeg roi chay lai de tai day du.
     goto :fail
+)
+if not exist "%ROOT%vieneu_models" (
+    echo [!] Chua co mo hinh VieNeu - dang tu dong tai ve ^(vai tram MB^)...
+    py "%ROOT%DocCongDuc.py" --tai-vieneu
+    if not exist "%ROOT%vieneu_models" (
+        echo [LOI] Tai mo hinh khong thanh cong. Chay CaiDat.bat roi thu lai.
+        goto :fail
+    )
 )
 
 echo [1/5] Don thu muc build cu...

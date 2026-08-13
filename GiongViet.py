@@ -67,7 +67,49 @@ def thu_muc_giao_dien() -> Path:
     return ung_vien[-1]
 
 
+def bao_dam_ffmpeg():
+    """Chạy lần đầu sau khi tải kho về thì chưa có ffmpeg — tự tải luôn.
+
+    ffmpeg không nằm trong kho git (nặng ~200 MB, có tệp vượt giới hạn 100 MB
+    của GitHub), nên máy mới tinh là thiếu. Thiếu nó thì không phát được tiếng
+    nào, mà bắt người dùng đích - người lớn tuổi - đi tìm bản build ffmpeg trên
+    mạng rồi tự chép vào đúng thư mục là chuyện không thể.
+
+    Bản đóng gói đã có ffmpeg nối sẵn qua junction nên hàm này không làm gì;
+    nó chỉ tốn đúng hai lần kiểm tệp có tồn tại.
+
+    KIỂM CẢ ffmpeg.exe chứ không chỉ ffplay.exe: ffplay lo phát tiếng, còn
+    ffmpeg lo xuất MP3, WAV 24 bit và ba thanh chỉnh Tốc độ/Cao độ/Âm lượng.
+    Có cái này thiếu cái kia là hỏng đúng một nửa chương trình.
+    """
+    bin_dir = BASE_DIR / "ffmpeg" / "bin"
+    if (bin_dir / "ffplay.exe").exists() and (bin_dir / "ffmpeg.exe").exists():
+        return
+
+    import DocCongDuc as engine
+    from giaodien import nhat_ky
+
+    def bao(chu):
+        # Bản --windowed không có stdout; ghi ra đâu cũng phải an toàn.
+        try:
+            print(chu)
+            sys.stdout.flush()
+        except (OSError, ValueError, AttributeError):
+            pass
+
+    bao("Lần đầu chạy: đang tải ffmpeg về, xin đợi vài phút...")
+    try:
+        engine.tai_ffmpeg_tu_dong(bin_dir, bao)
+        bao("Đã tải xong ffmpeg.")
+    except Exception as e:
+        # Không chặn đường vào chương trình: người dùng vẫn mở được để soạn và
+        # sửa văn bản, chỉ là chưa nghe được. Chặn ở đây thì họ không vào nổi.
+        nhat_ky.ghi_loi("tải ffmpeg lần đầu", e)
+        bao("Chưa tải được ffmpeg. Hãy chạy CaiDat.bat rồi mở lại.")
+
+
 def main():
+    bao_dam_ffmpeg()
     from giaodien_moi.cau_noi_moi import ApiMoi
 
     api = ApiMoi(VUNG_LAM_VIEC)

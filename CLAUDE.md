@@ -1,7 +1,17 @@
-# DocCongDuc / Giọng Việt — Kim chỉ nam
+# Giọng Việt — Kim chỉ nam
 
-Chương trình đọc văn bản tiếng Việt thành tiếng nói, dùng ở chùa. Người dùng cuối phần lớn
-**lớn tuổi, không rành máy tính**. Mọi quyết định lấy đó làm gốc.
+Chương trình đọc văn bản tiếng Việt thành tiếng nói, chạy hoàn toàn trên máy.
+
+**Định vị (chủ dự án chốt 13/8/2026):** cốt lõi là đọc được **dữ liệu sống** —
+nội dung ghép từ phần cố định (tệp, chữ dán) và phần thay đổi theo thời gian
+(nguồn động lấy từ URL/Drive). Format là thứ mở rộng được: chương trình nhận
+một *khuôn đọc* rồi áp lên dữ liệu.
+
+**Danh sách công đức đọc ở chùa chỉ là MỘT khuôn mẫu có sẵn**, không phải mục
+đích của chương trình. Đừng thiết kế thứ gì gắn cứng vào riêng nó.
+
+Người dùng cuối phần lớn **lớn tuổi, không rành máy tính**. Mọi quyết định lấy
+đó làm gốc.
 
 ## 1. CORE KPI
 
