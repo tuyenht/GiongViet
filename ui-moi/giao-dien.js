@@ -458,7 +458,7 @@ function ve() {
 
   $('#goc').innerHTML = `
     <div class="tieude">
-      <span class="tieude__dau">
+      <span class="tieude__dau pywebview-drag-region">
         <span class="dau-hieu">${ic('hieu', 10)}</span>
         <span class="tieude__ten">${esc(ten)} — Giọng Việt</span>
       </span>

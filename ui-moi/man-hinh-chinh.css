@@ -15,6 +15,16 @@
             display: flex; align-items: center; justify-content: center; color: var(--acc-txt); }
 .tieude__ten { font-size: 12.5px; color: var(--txt2); }
 .tieude__keo { flex: 1; height: 100%; }
+
+/* CẢ dải logo + tên tệp cũng phải kéo được cửa sổ — lớp pywebview-drag-region
+   gắn trong giao-dien.js. Trước đây chỉ khoảng trống ở giữa mới kéo được, nên
+   bấm đúng vào chữ tiêu đề thì không có gì xảy ra; chủ dự án thử và báo
+   "click khu vực tiêu đề chưa thấy được". Mọi cửa sổ Windows đều kéo được
+   trên cả dải tiêu đề.
+
+   KHÔNG dùng -webkit-app-region: đó là của Electron, WebView2 qua pywebview
+   không hiểu thuộc tính ấy. */
+.tieude__dau { cursor: default; user-select: none; }
 .cuaso { width: 46px; height: 32px; border: 0; background: transparent; color: var(--txt);
          display: flex; align-items: center; justify-content: center; transition: background .15s; }
 .cuaso:hover { background: var(--sub-h); }

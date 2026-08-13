@@ -43,25 +43,40 @@
 .soat__chip--tinh { cursor: default; color: var(--txt3); }
 .soat__chip--tinh:hover { background: none; }
 
-.soat__bang { flex: 1; min-height: 0; overflow: auto; }
+/* CUỘN DỌC THÔI. Để overflow:auto là có thanh cuộn ngang, và khi bảng rộng
+   hơn khung thì các ô co lại, chữ xuống dòng, hàng phình ra và đè lên nhau -
+   đúng cảnh chủ dự án chụp lại: "NỘI DUNG CẢNH BÁO" chồng lên "ĐỀ XUẤT".
+   Bản mẫu designs/GiongDoc - Soát văn bản dùng overflow:hidden. */
+.soat__bang { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; }
 
+/* Hàng cao CỐ ĐỊNH 38px như bản mẫu, không phải min-height: chữ dài thì cắt
+   bằng dấu ba chấm, đừng đẩy hàng cao lên. Bảng mà hàng cao thấp khác nhau
+   là mắt người lớn tuổi rất khó dò theo. */
 .soat__hang {
-  display: flex; align-items: center; gap: 10px; min-height: 38px;
-  padding: 4px 12px; border-bottom: 1px solid var(--divider); font-size: 13px;
+  display: flex; align-items: center; height: 38px; flex: none;
+  padding: 0 12px; border-bottom: 1px solid var(--divider); font-size: 13px;
 }
 .soat__hang--dau {
-  position: sticky; top: 0; z-index: 2; min-height: 32px;
+  position: sticky; top: 0; z-index: 2; height: 32px;
   background: var(--sub-h); color: var(--txt3);
   font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase;
 }
 .soat__hang.chon { background: var(--acc-soft); }
 .soat__hang[data-soatdoan]:not(.soat__hang--dau):hover { background: var(--sel); }
 
-.soat__c1 { flex: none; width: 44px; color: var(--txt3); }
-.soat__c2 { flex: none; width: 150px; display: flex; align-items: center; gap: 6px; }
-.soat__c3 { flex: 1; min-width: 0; }
-.soat__c4 { flex: none; width: 300px; color: var(--txt2); font-size: 12.5px; }
-.soat__c5 { flex: none; width: 170px; display: flex; align-items: center; gap: 8px; }
+/* Bề rộng lấy đúng bản mẫu: 64 · 150 · co giãn · 300 · 150. */
+.soat__c1 { flex: none; width: 64px; text-align: right; padding-right: 12px; color: var(--txt3); }
+.soat__c2 { flex: none; width: 150px; display: flex; align-items: center; gap: 8px; }
+.soat__c3 { flex: 1; min-width: 0; padding-right: 12px; }
+.soat__c4 { flex: none; width: 300px; padding-right: 12px; color: var(--txt2); }
+.soat__c5 { flex: none; width: 150px; display: flex; align-items: center;
+            justify-content: flex-end; gap: 6px; }
+
+/* CẮT BẰNG BA CHẤM — thứ bản mẫu có mà code thiếu, và là gốc của việc vỡ
+   layout. Không có nó thì một câu cảnh báo dài làm cả hàng xô lệch. */
+.soat__c2 > span:last-child, .soat__c3, .soat__c4 {
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
 
 /* Bảng hai cột của tab 2 */
 .soat__d1 { flex: none; width: 44px; color: var(--txt3); }

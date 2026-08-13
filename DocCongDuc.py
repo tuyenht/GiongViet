@@ -14,6 +14,7 @@ card đồ hoạ), không cần Internet sau khi cài đặt và tải mô hình
 đầu (xem CaiDat.bat). Không còn dùng Edge TTS / Microsoft.
 """
 
+import collections
 import concurrent.futures
 import configparser
 import json
@@ -1547,7 +1548,14 @@ class Speaker:
         self.player = None
         self._lock = threading.Lock()
         self._pool = concurrent.futures.ThreadPoolExecutor(max_workers=1)
+        # Hàng đợi NẠP TRƯỚC: {khoá vị trí -> Future}. Lấy ra là xoá.
         self._cache = {}
+        # KHO theo nội dung: {(giọng, khuếch đại, chữ) -> (bytes, định dạng)}.
+        # Giữ lại để nghe lại và xuất lại không phải tổng hợp lần nữa.
+        # OrderedDict để bỏ được mẩu lâu không đụng tới nhất khi đầy.
+        self._kho = collections.OrderedDict()
+        self._kho_byte = 0
+        self._khoa_kho_lock = threading.Lock()
 
     def _synth_blocking(self, text: str, khuech_dai: float = 1.0):
         if not (text or "").strip():
@@ -1562,18 +1570,77 @@ class Speaker:
             return
         self._cache[key] = self._pool.submit(self._synth_blocking, text, khuech_dai)
 
+    # Kho âm thanh đã tổng hợp, tra theo NỘI DUNG. Xem giải thích ở get_audio.
+    # 250 MB ≈ 43 phút tiếng — thừa sức chứa vài chục tài liệu thường gặp, mà
+    # vẫn nhỏ so với RAM máy phổ thông.
+    KHO_TOI_DA_BYTE = 250 * 1024 * 1024
+
+    def _khoa_kho(self, text: str, khuech_dai: float):
+        return (self.cfg.get("vieneu_voice_id", ""), round(khuech_dai, 3), text)
+
     def get_audio(self, key, text, khuech_dai: float = 1.0):
-        """Trả về (bytes, dinh_dang)."""
+        """Trả về (bytes, dinh_dang).
+
+        BA TẦNG, tra từ rẻ tới đắt:
+
+          1. KHO theo nội dung — cùng một câu, cùng giọng, cùng khuếch đại thì
+             lấy lại bản cũ, mất vài mili giây.
+          2. Hàng đợi nạp trước (_cache) — mẩu đã hẹn tổng hợp sẵn.
+          3. Tổng hợp thật — chậm nhất, khoảng 4 lần thời lượng tiếng.
+
+        Vì sao cần tầng 1: trước đây `_cache.pop()` LẤY RA RỒI XOÁ, nên nó chỉ
+        là hàng đợi nạp trước chứ không phải kho. Nghe lại một đoạn vừa nghe,
+        hay bấm Xuất sau khi đã nghe cả bài, đều tổng hợp lại từ đầu - chủ dự
+        án bấm thử và nhận xét "đoạn dài quay quay lâu mới đọc" cùng "thời
+        gian xuất lâu". Cả hai là một gốc.
+
+        Kho tra theo NỘI DUNG chứ không theo số thứ tự đoạn: sửa một dòng giữa
+        bài thì các đoạn còn lại vẫn dùng lại được, chỉ dòng vừa sửa phải tổng
+        hợp mới. Đây cũng là thứ khiến nguồn động sau này dùng được - dữ liệu
+        đổi vài dòng thì chỉ đọc lại vài dòng.
+        """
+        kho_key = self._khoa_kho(text, khuech_dai)
+        with self._khoa_kho_lock:
+            san = self._kho.get(kho_key)
+            if san is not None:
+                self._kho.move_to_end(kho_key)
+                return san
+
         fut = self._cache.pop(key, None)
+        kq = None
         if fut is not None:
             try:
-                return fut.result()
+                kq = fut.result()
             except Exception:
-                pass
-        return self._synth_blocking(text, khuech_dai)
+                kq = None
+        if kq is None:
+            kq = self._synth_blocking(text, khuech_dai)
+
+        audio = kq[0] if isinstance(kq, tuple) else None
+        if audio:
+            with self._khoa_kho_lock:
+                self._kho[kho_key] = kq
+                self._kho_byte += len(audio)
+                # Đầy thì bỏ mẩu lâu không đụng tới nhất.
+                while self._kho_byte > self.KHO_TOI_DA_BYTE and len(self._kho) > 1:
+                    _, cu = self._kho.popitem(last=False)
+                    self._kho_byte -= len(cu[0]) if cu and cu[0] else 0
+        return kq
 
     def clear_cache(self):
+        """Xoá HÀNG ĐỢI nạp trước, GIỮ NGUYÊN kho theo nội dung.
+
+        Đổi playlist thì mấy lượt nạp trước đã hẹn thành vô nghĩa, nhưng tiếng
+        đã tổng hợp xong thì vẫn đúng - nội dung nào ra tiếng nấy. Xoá luôn kho
+        là vứt đi đúng thứ vừa tốn hàng phút để có.
+        """
         self._cache.clear()
+
+    def xoa_kho(self):
+        """Dọn sạch kho âm thanh. Chỉ dùng khi đổi giọng hoặc cần lấy lại RAM."""
+        with self._khoa_kho_lock:
+            self._kho.clear()
+            self._kho_byte = 0
 
     def play(self, audio: bytes, stop_event: threading.Event,
              dinh_dang: str = "wav", loc: str = "") -> bool:
