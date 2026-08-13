@@ -7,7 +7,11 @@ import sys
 import tempfile
 from pathlib import Path
 
-sys.path.insert(0, r"C:\Projects\DocCongDuc")
+
+# Goc du an, tinh tu chinh vi tri tep nay. KHONG viet cung duong dan:
+# kho da len GitHub, ai tai ve cho khac la vo het bo kiem.
+_GOC = str(Path(__file__).resolve().parent.parent)
+sys.path.insert(0, _GOC)
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
 
 from giaodien_moi import ho_so_v2 as H
@@ -109,7 +113,7 @@ ok(raw["phienBan"] == H.PHIEN_BAN, "co so phien ban", raw["phienBan"])
 
 print("\n--- I. Duong dan that phai la hoso-v2.json, KHONG phai hoso.json ---")
 # H.TEP da bi tro sang thu muc tam o dau bai, nen doc lai tu ma nguon.
-that = Path(r"C:\Projects\DocCongDuc\giaodien_moi\ho_so_v2.py").read_text(encoding="utf-8")
+that = Path(_GOC + r"\giaodien_moi\ho_so_v2.py").read_text(encoding="utf-8")
 ok('"hoso-v2.json"' in that, "ma nguon tro toi hoso-v2.json")
 ok('"hoso.json"' not in that, "ma nguon KHONG nhac toi hoso.json cua ban cu")
 

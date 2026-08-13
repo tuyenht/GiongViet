@@ -7,7 +7,11 @@ Khong nap mo hinh VieNeu: thay engine.Speaker bang mot vat gia tra WAV that
 import io, re, shutil, sys, tempfile, time, wave
 from pathlib import Path
 
-sys.path.insert(0, r"C:\Projects\DocCongDuc")
+
+# Goc du an, tinh tu chinh vi tri tep nay. KHONG viet cung duong dan:
+# kho da len GitHub, ai tai ve cho khac la vo het bo kiem.
+_GOC = str(Path(__file__).resolve().parent.parent)
+sys.path.insert(0, _GOC)
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
 
 from giaodien_moi import xuat_moi as X
@@ -192,7 +196,7 @@ ok(not h.tien_do, "phien cu day tien do -> bi bo qua", h.tien_do)
 ok(not b._con_hieu_luc(3) and b._con_hieu_luc(7), "chi phien hien hanh con hieu luc")
 
 print("\n--- I. Vat gia du giong that (khong so None voi None) ---")
-nguon = Path(r"C:\Projects\DocCongDuc\giaodien_moi\xuat_moi.py").read_text(encoding="utf-8")
+nguon = Path(_GOC + r"\giaodien_moi\xuat_moi.py").read_text(encoding="utf-8")
 goi = set(re.findall(r"speaker\.(\w+)", nguon))
 thieu = {g for g in goi if not hasattr(SpeakerGia(CFG), g)}
 ok(not thieu, f"SpeakerGia co du {len(goi)} thu xuat_moi go vao", thieu or sorted(goi))
@@ -210,18 +214,18 @@ ok(X.duong_ffmpeg(CFG).name == "ffmpeg.exe"
    "ffmpeg tim canh ffplay, khong do lai tu dau", X.duong_ffmpeg(CFG))
 
 print("\n--- K. Cau goi nguoc: window.gd phai co du bon duong xuat ---")
-js = Path(r"C:\Projects\DocCongDuc\ui-moi\cau-noi.js").read_text(encoding="utf-8")
+js = Path(_GOC + r"\ui-moi\cau-noi.js").read_text(encoding="utf-8")
 for ten in ["tienDoXuat", "xuatXong", "xuatLoi", "xuatHuy"]:
     ok(re.search(r"^\s*" + ten + r"\s*\(", js, re.M) is not None,
        f"window.gd.{ten} co that")
-py = Path(r"C:\Projects\DocCongDuc\giaodien\cau_noi.py").read_text(encoding="utf-8")
+py = Path(_GOC + r"\giaodien\cau_noi.py").read_text(encoding="utf-8")
 goi_py = set(re.findall(r"window\.gd\.(\w+)", py))
 thieu_js = {g for g in goi_py if not re.search(r"^\s*" + g + r"\s*\(", js, re.M)}
 ok(not thieu_js, f"khong ham nao Python goi ma JS thieu ({len(goi_py)} ham)",
    thieu_js or sorted(goi_py))
 
 print("\n--- L. Nut Xuat khong con la nut gia ---")
-gd = Path(r"C:\Projects\DocCongDuc\ui-moi\giao-dien.js").read_text(encoding="utf-8")
+gd = Path(_GOC + r"\ui-moi\giao-dien.js").read_text(encoding="utf-8")
 ok("moi_bat_dau_xuat" in gd, "co goi sang Python de xuat that")
 ok("moi_huy_xuat" in gd, "co duong huy")
 ok(gd.count("'11,6 MB'") <= 1,
@@ -230,7 +234,7 @@ sau = gd[gd.find("async function batDauXuat"):]
 ok("api('moi_bat_dau_xuat'" in sau[:800], "batDauXuat goi Python truoc tien")
 
 print("\n--- M. MP3 va WAV 24 bit chay THAT bang ffmpeg cua du an ---")
-ff = Path(r"C:\Projects\DocCongDuc\ffmpeg\bin\ffmpeg.exe")
+ff = Path(_GOC + r"\ffmpeg\bin\ffmpeg.exe")
 if not ff.exists():
     print("  BO QUA — khong thay", ff)
 else:
@@ -291,7 +295,7 @@ ok(bool(h.xong) and h.xong[0]["ten"].endswith(".wav"),
    h.xong[0]["ten"] if h.xong else "")
 
 print("\n--- P. Tep tam .goc.wav cua nguoi dung KHONG bi de ---")
-ff = Path(r"C:\Projects\DocCongDuc\ffmpeg\bin\ffmpeg.exe")
+ff = Path(_GOC + r"\ffmpeg\bin\ffmpeg.exe")
 if not ff.exists():
     print("  BO QUA — khong co ffmpeg")
 else:

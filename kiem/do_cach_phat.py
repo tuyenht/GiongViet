@@ -25,15 +25,20 @@ import statistics
 import struct
 import subprocess
 import sys
+from pathlib import Path
 import threading
 import time
 import wave
 
-sys.path.insert(0, r"C:\Projects\DocCongDuc")
+# Goc du an, tinh tu chinh vi tri tep nay. KHONG viet cung duong dan:
+# kho da len GitHub, ai tai ve cho khac la vo het bo kiem.
+_GOC = str(Path(__file__).resolve().parent.parent)
+sys.path.insert(0, _GOC)
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8",
                               line_buffering=True)
 
 import DocCongDuc as engine  # noqa: E402
+
 
 DAI_GIAY = 2.0
 TAN_SO = 24000          # VieNeu tra ve 24 kHz

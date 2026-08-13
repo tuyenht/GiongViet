@@ -12,7 +12,10 @@ import sys
 import tempfile
 from pathlib import Path
 
-sys.path.insert(0, r"C:\Projects\DocCongDuc")
+# Goc du an, tinh tu chinh vi tri tep nay. KHONG viet cung duong dan:
+# kho da len GitHub, ai tai ve cho khac la vo het bo kiem.
+_GOC = str(Path(__file__).resolve().parent.parent)
+sys.path.insert(0, _GOC)
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
 
 from giaodien import nhat_ky
@@ -298,7 +301,7 @@ try:
        "KHONG con giu future cua Speaker (bo phu thuoc thuoc tinh rieng)")
     # Cam LOI GOI, khong cam nhac ten: phan giai thich vi sao bo no van duoc
     # phep noi den `_cache`, va nen noi - de nguoi sau khong dam vao lan nua.
-    _nguon = Path(r"C:\Projects\DocCongDuc\giaodien_moi\cau_noi_moi.py") \
+    _nguon = Path(_GOC + r"\giaodien_moi\cau_noi_moi.py") \
         .read_text(encoding="utf-8")
     ok("speaker._cache" not in _nguon and "._cache.get" not in _nguon,
        "ma nguon khong con GOI vao speaker._cache")
@@ -315,6 +318,7 @@ ok(api._am_tiet_tung_chu(_cau) == [1] * len(_cau.split()),
 ok(api._can_dem_ky("Nghi tu 31/8/2026"), "mau co chu so -> phai dem ky")
 ok(not api._can_dem_ky("Kính gửi quý vị"), "mau thuong -> khong can dem ky")
 import time as _tt
+
 _b = _tt.perf_counter()
 api._am_tiet_tung_chu(" ".join(["Kính gửi toàn thể cán bộ nhân viên"] * 40))
 _nhanh = (_tt.perf_counter() - _b) * 1000

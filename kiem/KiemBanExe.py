@@ -27,7 +27,7 @@ from pathlib import Path
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8",
                               line_buffering=True)
 
-GOC = Path(__file__).resolve().parent
+GOC = Path(__file__).resolve().parent.parent
 THU_MUC = GOC / "GiongViet"
 EXE = THU_MUC / "GiongViet.exe"
 LOG = THU_MUC / "GiongViet-loi.log"

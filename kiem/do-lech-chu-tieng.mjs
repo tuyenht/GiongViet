@@ -18,16 +18,18 @@ import { fileURLToPath } from 'url';
 import { createContext, runInContext } from 'vm';
 
 const DIR = dirname(fileURLToPath(import.meta.url));
+// Bộ kiểm nằm trong kiem/, mã nguồn giao diện ở ui-moi/ bên cạnh.
+const UI = join(DIR, '..', 'ui-moi');
 
 /* Chỉ cần hai hàm thuần: chiaTu (trang-thai.js) và trangThaiChu
    (giao-dien.js). Nạp cả giao-dien.js thì kéo theo DOM, nên bốc riêng hàm ra. */
 const ctx = { console, module: undefined };
 ctx.globalThis = ctx;
 createContext(ctx);
-runInContext(readFileSync(join(DIR, 'trang-thai.js'), 'utf8'), ctx);
+runInContext(readFileSync(join(UI, 'trang-thai.js'), 'utf8'), ctx);
 // Chuẩn hoá xuống dòng trước khi cắt: giao-dien.js lưu CRLF, tìm '\n}\n' trong
 // đó thì không bao giờ khớp và cắt ra chuỗi rỗng.
-const nguon = readFileSync(join(DIR, 'giao-dien.js'), 'utf8').replace(/\r\n/g, '\n');
+const nguon = readFileSync(join(UI, 'giao-dien.js'), 'utf8').replace(/\r\n/g, '\n');
 const batDau = nguon.indexOf('function trangThaiChu(');
 const ketThuc = nguon.indexOf('\n}\n', batDau);
 if (batDau < 0 || ketThuc < 0) {

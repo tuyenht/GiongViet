@@ -28,7 +28,10 @@ import threading
 import time
 from pathlib import Path
 
-sys.path.insert(0, r"C:\Projects\DocCongDuc")
+# Goc du an, tinh tu chinh vi tri tep nay. KHONG viet cung duong dan:
+# kho da len GitHub, ai tai ve cho khac la vo het bo kiem.
+_GOC = str(Path(__file__).resolve().parent.parent)
+sys.path.insert(0, _GOC)
 # line_buffering BAT BUOC: ket thuc bang os._exit (PyTorch de lai luong nen
 # khong phai daemon), ma os._exit khong xa dem - khong bat thi mat sach output.
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8",
@@ -42,6 +45,7 @@ from giaodien_moi.cau_noi_moi import ApiMoi  # noqa: E402
 # tung nam trong log that.
 import tempfile as _tf
 from pathlib import Path as _P
+
 from giaodien import nhat_ky as _nk
 _nk.TEP_LOG = _P(_tf.gettempdir()) / "gd-kiem-loi.log"
 

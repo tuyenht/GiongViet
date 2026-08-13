@@ -23,7 +23,11 @@ import sys
 import threading
 import time
 
-sys.path.insert(0, r"C:\Projects\DocCongDuc")
+from pathlib import Path
+# Goc du an, tinh tu chinh vi tri tep nay. KHONG viet cung duong dan:
+# kho da len GitHub, ai tai ve cho khac la vo het bo kiem.
+_GOC = str(Path(__file__).resolve().parent.parent)
+sys.path.insert(0, _GOC)
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8",
                               line_buffering=True)
 
@@ -35,6 +39,7 @@ from giaodien_moi.cau_noi_moi import ApiMoi  # noqa: E402
 # tung nam trong log that.
 import tempfile as _tf
 from pathlib import Path as _P
+
 from giaodien import nhat_ky as _nk
 _nk.TEP_LOG = _P(_tf.gettempdir()) / "gd-kiem-loi.log"
 

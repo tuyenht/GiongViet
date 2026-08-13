@@ -2,12 +2,15 @@
 """Kiem am_thanh_loc bang cach CHAY THAT qua ffmpeg roi do ket qua."""
 import io, subprocess, sys, tempfile
 from pathlib import Path
-sys.path.insert(0, r"C:\Projects\DocCongDuc")
+# Goc du an, tinh tu chinh vi tri tep nay. KHONG viet cung duong dan:
+# kho da len GitHub, ai tai ve cho khac la vo het bo kiem.
+_GOC = str(Path(__file__).resolve().parent.parent)
+sys.path.insert(0, _GOC)
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
 from giaodien_moi import am_thanh_loc as A
 
-FF = Path(r"C:\Projects\DocCongDuc\ffmpeg\bin\ffmpeg.exe")
-FP = Path(r"C:\Projects\DocCongDuc\ffmpeg\bin\ffprobe.exe")
+FF = Path(_GOC + r"\ffmpeg\bin\ffmpeg.exe")
+FP = Path(_GOC + r"\ffmpeg\bin\ffprobe.exe")
 T = Path(tempfile.gettempdir()) / "gd-loc"; T.mkdir(exist_ok=True)
 GOC = T / "goc.wav"
 
@@ -61,6 +64,7 @@ for chinh, mong, nhan in BO:
 
 print("\n--- C. Âm lượng đúng decibel lý thuyết ---")
 import math
+
 for am in (90, 50, 25):
     ra = T / f"v{am}.wav"
     subprocess.run(A.them_vao_lenh([str(FF), "-hide_banner", "-loglevel", "error", "-y",

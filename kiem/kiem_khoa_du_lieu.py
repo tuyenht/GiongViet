@@ -16,17 +16,21 @@ import sys
 import tempfile
 from pathlib import Path
 
-sys.path.insert(0, r"C:\Projects\DocCongDuc")
+# Goc du an, tinh tu chinh vi tri tep nay. KHONG viet cung duong dan:
+# kho da len GitHub, ai tai ve cho khac la vo het bo kiem.
+_GOC = str(Path(__file__).resolve().parent.parent)
+sys.path.insert(0, _GOC)
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
 
 import DocCongDuc as engine
+
 from giaodien import he_thong, ho_so
 from giaodien_moi import khoa_du_lieu
 
 # 6 tep du lieu that. Chup mtime dau bai, so lai cuoi bai.
 TEP_THAT = ["cauhinh.ini", "hoso.json", "congduc.txt", "noidung.ini",
             "tudien.ini", "giaodien.json"]
-GOC = Path(r"C:\Projects\DocCongDuc")
+GOC = Path(_GOC)
 truoc = {t: (GOC / t).stat().st_mtime_ns for t in TEP_THAT if (GOC / t).exists()}
 
 T = Path(tempfile.gettempdir()) / "gd-kiem-khoa"

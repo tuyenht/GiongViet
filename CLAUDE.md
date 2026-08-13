@@ -41,15 +41,25 @@ giaodien/              THƯ VIỆN DÙNG CHUNG — cả 15 tệp đều đang đ
   mo_hinh.py · du_lieu.py · thu_vien_giong.py · he_thong.py · ho_so.py
   soat.py · tu_dien.py · cai_dat.py
 
-giaodien_moi/          TẦNG ỨNG DỤNG (tên "moi" là di sản, bản cũ đã vào _luutru)
+giaodien_moi/          TẦNG ỨNG DỤNG — 11 tệp, toàn bộ là mã chạy thật
   cau_noi_moi.py         ApiMoi kế thừa Api
   xuat_moi.py            bộ xuất WAV/MP3            | có SỐ PHIÊN
   am_thanh_loc.py        chuỗi -af cho ba thanh chỉnh
-  kiem_*.py              14 bộ kiểm
+  ho_so_v2.py · soat_moi.py · luu_tep.py · so_dien_thoai.py · khoa_du_lieu.py
 
-ui-moi/                giao diện (index.html · app.css · giao-dien.js · …)
+ui-moi/                giao diện — 16 tệp (index.html · app.css · giao-dien.js …)
+
+kiem/                  TOÀN BỘ bộ kiểm và bài đo — 28 tệp, không tệp nào vào
+                       bản đóng gói. Đường dẫn tính từ vị trí tệp, KHÔNG viết
+                       cứng: kho đã lên GitHub, viết cứng là ai tải về chỗ
+                       khác cũng vỡ hết.
 _luutru/               bản cũ đã ngừng dùng: GiongDoc.py · ui/ · GiongDoc.exe · DongGoi.bat cũ
 ```
+
+**Tên ba thư mục `giaodien/` · `giaodien_moi/` · `ui-moi/` còn gây nhầm** — "moi"
+là di sản từ hồi chạy song song hai bản. Đã chốt đổi thành `loi/` · `ungdung/` ·
+`web/`, nhưng HOÃN đến khi build được `.exe` để kiểm chứng: việc đó đụng ~100
+chỗ import cộng `--hidden-import` và `--add-data`, mà rủi ro thật nằm ở đóng gói.
 
 **Có git từ 13/8/2026** — kho riêng tư `github.com/tuyenht/GiongViet`. Trước đó
 dự án không dùng git; các ghi chép cũ nói "không dùng git" là đã lỗi thời.

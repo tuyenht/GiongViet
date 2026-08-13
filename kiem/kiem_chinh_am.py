@@ -21,12 +21,16 @@ import tempfile
 import wave
 from pathlib import Path
 
-sys.path.insert(0, r"C:\Projects\DocCongDuc")
+
+# Goc du an, tinh tu chinh vi tri tep nay. KHONG viet cung duong dan:
+# kho da len GitHub, ai tai ve cho khac la vo het bo kiem.
+_GOC = str(Path(__file__).resolve().parent.parent)
+sys.path.insert(0, _GOC)
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
 
 from giaodien_moi import am_thanh_loc as A
 
-G = Path(r"C:\Projects\DocCongDuc")
+G = Path(_GOC)
 loi = 0
 def ok(dk, nhan, them=""):
     global loi

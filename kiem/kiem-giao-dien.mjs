@@ -11,6 +11,8 @@ import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 
 const DIR = dirname(fileURLToPath(import.meta.url));
+// Bộ kiểm nằm trong kiem/, mã nguồn giao diện ở ui-moi/ bên cạnh.
+const UI = join(DIR, '..', 'ui-moi');
 let HTML = '';
 let batSuKien = {};
 
@@ -50,7 +52,7 @@ ctx.globalThis = ctx;
 createContext(ctx);
 
 for (const f of ['du-lieu-mau.js', 'trang-thai.js', 'tinh-huong.js', 'cau-noi.js', 'hop-thoai.js', 'giao-dien.js']) {
-  runInContext(readFileSync(join(DIR, f), 'utf8'), ctx, { filename: f });
+  runInContext(readFileSync(join(UI, f), 'utf8'), ctx, { filename: f });
 }
 
 let loi = 0;

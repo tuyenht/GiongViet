@@ -17,9 +17,13 @@ import re
 import sys
 from pathlib import Path
 
+
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
 
-G = Path(r"C:\Projects\DocCongDuc")
+# Goc du an, tinh tu chinh vi tri tep nay. KHONG viet cung duong dan:
+# kho da len GitHub, ai tai ve cho khac la vo het bo kiem.
+_GOC = str(Path(__file__).resolve().parent.parent)
+G = Path(_GOC)
 PY = (G / "giaodien_moi" / "cau_noi_moi.py").read_text(encoding="utf-8")
 JS = (G / "ui-moi" / "giao-dien.js").read_text(encoding="utf-8")
 CSS = (G / "ui-moi" / "man-hinh-chinh.css").read_text(encoding="utf-8")

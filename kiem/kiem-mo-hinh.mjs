@@ -1,7 +1,7 @@
 import { createRequire } from 'module';
 const req = createRequire(import.meta.url);
-const D = req('./du-lieu-mau.js');
-const T = req('./trang-thai.js');
+const D = req('../ui-moi/du-lieu-mau.js');
+const T = req('../ui-moi/trang-thai.js');
 
 let loi = 0;
 const ok = (dk, nhan, them = '') => {

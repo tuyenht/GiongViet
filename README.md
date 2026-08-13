@@ -91,25 +91,34 @@ mấu chốt — thiếu cái nào hỏng theo một kiểu riêng, nên `DongGo
 GiongViet.py           điểm vào — cửa sổ pywebview + WebView2, không khung
 DocCongDuc.py          ENGINE: VieNeu-TTS, chuẩn hoá tiền/tên/số, giọng riêng
 
-giaodien/              THƯ VIỆN DÙNG CHUNG — cả 15 tệp đều đang được gọi
+giaodien/              THƯ VIỆN DÙNG CHUNG — cả 15 tệp đều đang được gọi.
+                       Đây KHÔNG phải bản cũ; xoá là vỡ toàn bộ chương trình.
   cau_noi.py             lớp Api, cầu JS ↔ Python
   bo_doc.py              vòng đọc playlist        │ có SỐ PHIÊN
   nghe_thu.py            phát thử một giọng       │ có SỐ PHIÊN
   du_lieu.py · ho_so.py · soat.py · tu_dien.py · cai_dat.py · mo_hinh.py
   ds_giong.py · thu_vien_giong.py · he_thong.py · nhat_ky.py · xuat_file.py
 
-giaodien_moi/          TẦNG ỨNG DỤNG
+giaodien_moi/          TẦNG ỨNG DỤNG — 11 tệp, toàn bộ là mã chạy thật
   cau_noi_moi.py         ApiMoi — kế thừa Api, thêm cửa cho giao diện
   xuat_moi.py            bộ xuất WAV/MP3          │ có SỐ PHIÊN
   am_thanh_loc.py        dựng chuỗi lọc cho ba thanh chỉnh
-  ho_so_v2.py · soat_moi.py · luu_tep.py · so_dien_thoai.py
-  kiem_*.py              14 bộ kiểm
+  ho_so_v2.py · soat_moi.py · luu_tep.py · so_dien_thoai.py · khoa_du_lieu.py
 
-ui-moi/                GIAO DIỆN — index.html · app.css · giao-dien.js
+ui-moi/                GIAO DIỆN — 16 tệp
+  index.html · app.css · man-hinh-chinh.css
+  giao-dien.js           lớp vẽ và bắt sự kiện
   trang-thai.js          mô hình trạng thái thuần, không DOM
   cau-noi.js             cầu JS ↔ Python
   man-soat.js · man-giong.js · man-tudien.js · man-caidat.js · hop-thoai.js
-  kiem-*.mjs             4 bộ kiểm giao diện
+
+kiem/                  TOÀN BỘ bộ kiểm và bài đo — 28 tệp, tách hẳn khỏi mã
+                       sản phẩm. Không tệp nào ở đây vào bản đóng gói.
+  kiem_*.py              14 bộ kiểm Python
+  kiem-*.mjs             3 bộ kiểm giao diện
+  do_*.py · do-*.mjs     bài đo độ trễ, nhịp đọc, độ lệch chữ-tiếng
+  KiemBanExe.py          kiểm chính bản .exe
+  TuKiemGiaoDien.py      tự bấm thử giao diện
 
 design_handoff_giongdoc/   đặc tả và bản mẫu thiết kế (bản gốc, không sửa)
 plans/                     nhật ký các phiên làm việc
@@ -124,10 +133,13 @@ _luutru/                   bản cũ đã ngừng dùng, giữ để đối chi�
 nhật ký thật.
 
 ```bat
-py giaodien_moi\kiem_xuat_moi.py       rem  và 13 bộ .py khác
-node ui-moi\kiem-giao-dien.mjs         rem  và 3 bộ .mjs khác
-py KiemBanExe.py                       rem  kiểm chính bản .exe
+py kiem\kiem_xuat_moi.py       rem  và 13 bộ .py khác
+node kiem\kiem-giao-dien.mjs   rem  và 3 bộ .mjs khác
+py kiem\KiemBanExe.py          rem  kiểm chính bản .exe
 ```
+
+Đường dẫn trong bộ kiểm tính từ vị trí tệp, không viết cứng — tải kho về thư
+mục nào cũng chạy được.
 
 Ba nguyên tắc rút từ những lần vấp thật, nay chính bộ kiểm canh:
 

@@ -2,7 +2,11 @@
 """Kiem duong luu Ctrl+S. Chay HOAN TOAN tren thu muc tam, khong dung tep that."""
 import io, os, shutil, sys, tempfile, time
 from pathlib import Path
-sys.path.insert(0, r"C:\Projects\DocCongDuc")
+
+# Goc du an, tinh tu chinh vi tri tep nay. KHONG viet cung duong dan:
+# kho da len GitHub, ai tai ve cho khac la vo het bo kiem.
+_GOC = str(Path(__file__).resolve().parent.parent)
+sys.path.insert(0, _GOC)
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
 from giaodien_moi import luu_tep as L
 

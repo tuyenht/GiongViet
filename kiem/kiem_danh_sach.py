@@ -9,7 +9,10 @@ import sys
 import tempfile
 from pathlib import Path
 
-sys.path.insert(0, r"C:\Projects\DocCongDuc")
+# Goc du an, tinh tu chinh vi tri tep nay. KHONG viet cung duong dan:
+# kho da len GitHub, ai tai ve cho khac la vo het bo kiem.
+_GOC = str(Path(__file__).resolve().parent.parent)
+sys.path.insert(0, _GOC)
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8",
                               line_buffering=True)
 
@@ -103,6 +106,7 @@ ok(len(kq2["canhBao"]) >= 1, "co canh bao ve dong khong hieu so tien",
 api._huy_hen_nap_truoc()
 api._don_dep()
 import shutil
+
 shutil.rmtree(T, ignore_errors=True)
 print(f"\n{'XANH — khớp hết' if loi == 0 else f'ĐỎ — {loi} chỗ lệch'}")
 sys.exit(1 if loi else 0)
