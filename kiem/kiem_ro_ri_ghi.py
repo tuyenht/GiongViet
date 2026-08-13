@@ -13,6 +13,7 @@ Cach lam:
 """
 import ast
 import io
+import re
 import sys
 from pathlib import Path
 
@@ -173,18 +174,51 @@ print("\n--- C. Moi muc trong CUA_RA_GHI deu con ton tai that ---")
 for m, t, _, tep in khoa_du_lieu.CUA_RA_GHI:
     ok(hasattr(m, t), f"{m.__name__}.{t} van ton tai  ({tep})")
 
+TEP_DU_LIEU = ("cauhinh.ini", "hoso.json", "noidung.ini", "tudien.ini",
+               "giaodien.json", "congduc.txt")
+
 print("\n--- D. Cac module khac cua ban moi khong tu ghi vao du lieu cu ---")
-for p in sorted((GOC / "giaodien_moi").glob("*.py")):
-    if p.stem.startswith("kiem_"):
+# QUET CA kiem/: bon bai do (do_*.py, chay_thu_tieng.py) da chuyen sang do
+# ngay 13/8, va khi chuyen thi tuot khoi luoi nay - mat dung 4 phep kiem ma
+# khong ai thay, vi con so tong chi tut tu 757 xuong 753 va da bi giai thich
+# nham la "may ban". Chinh chung moi la nhom nguy hiem nhat: bai do CHAY THAT
+# tren may, phat tieng that, nen ghi ban du lieu la ghi that.
+for p in sorted(list((GOC / "giaodien_moi").glob("*.py")) + list((GOC / "kiem").glob("*.py"))):
+    # BO KIEM duoc phep nhac ten tep - viec cua no la canh chung khong bi cham
+    # va tro chung sang %TEMP%. Nhan dien bang chu "kiem" trong ten, bat duoc
+    # ca kiem_*.py lan KiemBanExe.py va TuKiemGiaoDien.py.
+    #
+    # BAI DO (do_*.py, chay_thu_tieng.py) thi KHONG duoc mien: chung chay that
+    # tren may, phat tieng that, nen nhac ten tep du lieu la co nguy co ghi that.
+    if "kiem" in p.stem.lower() or p.stem == "khoa_du_lieu":
         continue
     nguon = p.read_text(encoding="utf-8")
-    xau = [t for t in ("cauhinh.ini", "hoso.json", "noidung.ini", "tudien.ini",
-                       "giaodien.json", "congduc.txt")
-           if f'"{t}"' in nguon or f"'{t}'" in nguon]
-    # khoa_du_lieu.py va cac bo kiem duoc phep nhac ten tep - do la viec cua no.
-    if p.stem == "khoa_du_lieu":
-        continue
+    xau = [t for t in TEP_DU_LIEU if f'"{t}"' in nguon or f"'{t}'" in nguon]
     ok(not xau, f"{p.name} khong nhac ten tep du lieu cu", xau or "sach")
+
+print("\n--- E. Bo kiem va bai do khong duoc ghi vao NHAT KY that ---")
+# Da xay ra ngay 13/8: kiem_xuat_moi co tinh lam ffmpeg hong de thu, moi lan
+# nhu the xuat_moi goi nhat_ky.ghi_loi -> 10 dong rac vao GiongViet-loi.log
+# THAT o thu muc du an, va tai suyt ket luan nham la chuong trinh co loi.
+for p in sorted((GOC / "kiem").glob("*.py")):
+    nguon = p.read_text(encoding="utf-8")
+    # Goi thang nhat_ky.ghi_loi la ghi vao log that. Bit mieng no thi khong sao.
+    goi_that = re.search(r"^\s*nhat_ky\.ghi_loi\(", nguon, re.M) is not None
+    bit = "ghi_loi = lambda" in nguon
+    ok(not goi_that or bit,
+       f"{p.name} khong lam ban nhat ky that",
+       "co bit mieng" if bit else "sach")
+
+print("\n--- F. Khong tep nao trong kiem/ viet cung duong dan may nay ---")
+# Kho da len GitHub. Viet cung "C:\\Projects\\..." la ai tai ve cho khac cung
+# vo het bo kiem, ma vo theo kieu im lang: FileNotFoundError giua chung.
+# Ghep chuoi de chinh tep nay khong tu bao lech: viet thang "C:\\Projects" vao
+# day thi dong kiem tro thanh cai ma no dang di tim.
+_O_DIA = "C" + ":"
+for p in sorted(list((GOC / "kiem").glob("*.py")) + list((GOC / "kiem").glob("*.mjs"))):
+    nguon = p.read_text(encoding="utf-8", errors="replace")
+    ok(_O_DIA + "\\Projects" not in nguon and _O_DIA + "/Projects" not in nguon,
+       f"{p.name} khong viet cung duong dan")
 
 print(f"\n{'XANH — khớp hết' if loi == 0 else f'ĐỎ — {loi} chỗ lệch'}")
 sys.exit(1 if loi else 0)
