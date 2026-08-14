@@ -91,7 +91,7 @@ ok(co('Nghe toàn bộ') && co('Xuất file âm thanh'), 'có cặp Nghe / Xuấ
 ok(HTML.indexOf('nut--acc nut--cao') > 0, 'chỉ Xuất là nút accent');
 
 console.log('\n--- C. Vùng đọc ---');
-ok(co('215 từ') || /\d+ từ · 16 đoạn/.test(HTML), 'dòng thống kê',
+ok(/\d+ từ · 15 đoạn/.test(HTML), 'dòng thống kê',
    (HTML.match(/\d+ từ · \d+ đoạn · khoảng [^<]+/) || [''])[0]);
 /* Gợi ý phải tả đúng thao tác đang có. Máng số đã thôi làm nút, nên câu cũ
    "Bấm số đoạn..." là chỉ đường sai - canh để nó không lẻn về. */
@@ -99,10 +99,11 @@ ok(co('Bấm vào chữ để sửa như Notepad · nút ▶ bên phải để n
    'gợi ý bên phải đầu vùng đọc');
 ok(!co('Bấm số đoạn'), 'KHÔNG còn gợi ý cũ bảo bấm vào số đoạn');
 ok(!co('THỜI LƯỢNG') && !co('doan__dur'), 'KHÔNG còn cột/nhãn thời lượng');
-ok(dem('data-doan=') === 16, '16 đoạn', String(dem('data-doan=')));
+ok(dem('data-doan=') === 15, '15 đoạn, KHÔNG còn dòng trống đánh số',
+   String(dem('data-doan=')));
 ok(co('doan--tieude'), 'có đoạn tiêu đề');
-ok(co('doan--trong'), 'có đoạn rỗng (blank)');
-ok(co('[hắng giọng]'), 'thẻ cảm xúc ở đoạn 11');
+ok(!co('doan--trong'), 'KHÔNG còn đoạn rỗng nào - bản thiết kế cấm dòng trống đánh số');
+ok(co('[hắng giọng]'), 'thẻ cảm xúc hiện ra');
 /* Nghe riêng đoạn nay đi bằng nút ▶ nổi bên phải mỗi dòng, hiện lúc đưa chuột
    vào. Máng số trở lại đúng vai bản mẫu: chỉ là số, KHÔNG phải nút — nên nó
    không được mang data-nghe nữa, không thì lại thành hai nút chồng vai. */
@@ -296,19 +297,19 @@ ok(/title="Đọc tiếp từ đoạn \d+/.test(HTML), 'tooltip nói rõ đọc 
 chay('daTamDung = false; dat(dungHan(S))');
 ok(co('>Nghe toàn bộ<'), 'dừng hẳn → quay lại "Nghe toàn bộ"');
 
-console.log('\n--- O. Sang đoạn kế tiếp thì bỏ qua đoạn rỗng ---');
+console.log('\n--- O. Sang đoạn kế tiếp ---');
 {
-  const doan = chay("doanDangXem(S, TAI_LIEU)");
-  // Tài liệu mẫu: đoạn 2, 4, 8, 13, 15 là blank
-  ok(chay('doanKeTiep(doanDangXem(S, TAI_LIEU), 1)') === 3,
-     'từ đoạn 1 (tiêu đề) nhảy qua đoạn 2 rỗng, sang đoạn 3',
+  /* Bản thiết kế cập nhật CẤM đoạn rỗng, nên không còn cảnh phải nhảy cóc:
+     đoạn kế tiếp luôn là đoạn ngay dưới. Phép kiểm cũ canh việc nhảy qua đoạn
+     rỗng - giữ lại là canh một hành vi không còn tồn tại. */
+  const doan = chay('doanDangXem(S, TAI_LIEU)');
+  ok(doan.every((d) => d.kieu !== 'blank'), 'tài liệu mẫu KHÔNG còn đoạn rỗng nào');
+  ok(chay('doanKeTiep(doanDangXem(S, TAI_LIEU), 1)') === 2,
+     'đoạn kế tiếp là đoạn ngay dưới, không phải nhảy cóc',
      String(chay('doanKeTiep(doanDangXem(S, TAI_LIEU), 1)')));
-  ok(chay('doanKeTiep(doanDangXem(S, TAI_LIEU), 3)') === 5,
-     'từ đoạn 3 nhảy qua đoạn 4 rỗng, sang đoạn 5');
   ok(chay(`doanKeTiep(doanDangXem(S, TAI_LIEU), ${doan.length})`) === 0,
      'hết bài trả 0 để dừng');
-  ok(chay('doDaiDoan(doanDangXem(S, TAI_LIEU)[1])') === 0, 'đoạn rỗng dài 0 giây');
-  ok(chay('doDaiDoan(doanDangXem(S, TAI_LIEU)[2])') > 0, 'đoạn có chữ dài hơn 0');
+  ok(chay('doDaiDoan(doanDangXem(S, TAI_LIEU)[0])') > 0, 'đoạn có chữ dài hơn 0');
 }
 
 console.log('\n--- P. Màn Soát: đánh dấu đã xử lý ---');

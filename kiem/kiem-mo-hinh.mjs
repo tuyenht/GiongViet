@@ -14,13 +14,14 @@ const A = D.TAI_LIEU['thongbao-quoc-khanh.txt'].doan;
 const tu = T.soTu(A), giay = T.soGiay(A), tk = T.thongKe(A);
 console.log(`  thống kê dựng ra: "${tk}"`);
 console.log(`  (thô: ${tu} từ · ${A.length} đoạn · ${giay.toFixed(1)} giây · ${A.reduce((t,d)=>t+d.chu.length,0)} ký tự)`);
-ok(A.length === 16, '16 đoạn', String(A.length));
+ok(A.length === 15, '15 đoạn (bản thiết kế cấm dòng trống)', String(A.length));
 ok(Math.abs(tu - 215) <= 4, '≈215 từ (sai số ±4)', String(tu));
 ok(tk.includes('1 phút 28 giây'), 'thời lượng "1 phút 28 giây"');
 
 console.log('\n--- B. Loại đoạn và thẻ cảm xúc ---');
 const kieu = new Set(A.map(d => d.kieu));
-ok(kieu.has('head') && kieu.has('body') && kieu.has('blank'), 'có đủ head/body/blank',
+ok(kieu.has('head') && kieu.has('body') && !kieu.has('blank'),
+   'có head và body, KHÔNG còn blank',
    [...kieu].join(','));
 let S = T.trangThaiBanDau(D.HO_SO);
 ok(T.theCuaDoan(S, 11) === '[hắng giọng]', 'đoạn 11 có [hắng giọng]', T.theCuaDoan(S,11));

@@ -44,37 +44,29 @@ const TRONG = () => ({ kieu: 'blank', chu: '' });
 const TAI_LIEU = {
   'thongbao-quoc-khanh.txt': {
     doan: [
-      D('head', 'THÔNG BÁO NGHỈ LỄ QUỐC KHÁNH 2/9'),
-      TRONG(),
-      D('body', 'Kính gửi toàn thể cán bộ, nhân viên Công ty TNHH Phúc Lâm.'),
-      TRONG(),
-      D('body', 'Căn cứ thông báo của UBND TP.HCM về lịch nghỉ lễ Quốc khánh năm nay, '
-              + 'Ban Giám đốc Công ty thông báo tới các phòng ban lịch nghỉ cụ thể như sau.'),
-      D('body', 'Thời gian nghỉ tính từ ngày 31/8/2026 cho đến hết ngày 2/9/2026.'),
-      D('body', 'Toàn thể cán bộ, nhân viên trở lại làm việc bình thường vào sáng thứ Năm, '
-              + 'ngày 3 tháng 9.'),
-      TRONG(),
-      D('head', 'MỘT SỐ VIỆC CẦN LÀM TRƯỚC KHI NGHỈ'),
-      D('body', 'Các bộ phận bố trí người trực và gửi danh sách về phòng Hành chính '
-              + 'trước 17h00 ngày 28 tháng 8.'),
-      D('body', 'Trước khi ra về, đề nghị mọi người tắt toàn bộ thiết bị điện, '
-              + 'đóng cửa sổ và khoá cửa phòng làm việc của mình.'),
-      D('body', 'Bộ phận kho và bộ phận kỹ thuật kiểm tra lại hệ thống báo cháy, '
-              + 'niêm phong khu vực chứa vật tư dễ cháy và ghi biên bản bàn giao ca trực.'),
-      D('body', 'Mọi việc phát sinh trong thời gian nghỉ, liên hệ tổng đài 1900 6868.'),
-      TRONG(),
-      D('body', 'Đề nghị trưởng các đơn vị phổ biến tới từng người trong bộ phận mình '
-              + 'và nghiêm túc thực hiện, báo cáo lại trước ngày nghỉ.'),
-      D('body', 'TM. BAN GIÁM ĐỐC'),
+      D('head', "THÔNG BÁO LỊCH NGHỈ LỄ QUỐC KHÁNH 2/9"),
+      D('body', "Kính gửi toàn thể cán bộ, nhân viên Công ty TNHH Bảo Sơn."),
+      D('body', "Căn cứ Bộ luật Lao động 2019 và thông báo của UBND TP.HCM, Ban Giám đốc thông báo lịch nghỉ lễ Quốc khánh năm 2026 như sau."),
+      D('body', "Thời gian nghỉ tính từ thứ Hai ngày 31/8/2026 đến hết thứ Tư ngày 2/9/2026, tổng cộng 3 ngày làm việc. Công ty làm việc trở lại bình thường từ sáng thứ Năm ngày 3/9."),
+      D('body', "Các bộ phận trực tiếp sản xuất bố trí người trực theo lịch đã gửi qua email ngày 12/8. Danh sách trực cụ thể như sau."),
+      D('body', "Phòng Kinh doanh — anh Trần Minh Đức"),
+      D('body', "Phòng Kỹ thuật — anh Lê Hoàng Nam"),
+      D('body', "Phòng Kho vận — chị Phạm Thu Hà"),
+      D('body', "Nhân viên có nhu cầu nghỉ thêm vui lòng đăng ký với Phòng Nhân sự trước 17h00 ngày 25/8/2026 để bộ phận sắp xếp nhân lực thay thế."),
+      D('body', "Trong thời gian nghỉ lễ, mọi sự cố khẩn cấp xin liên hệ số hotline 1900 6868, máy lẻ 2."),
+      D('body', "Kính chúc toàn thể anh chị em cùng gia đình một kỳ nghỉ lễ vui vẻ và an toàn."),
+      D('body', "Trân trọng thông báo."),
+      D('body', "TM. BAN GIÁM ĐỐC"),
+      D('body', "Giám đốc điều hành"),
+      D('body', "Nguyễn Văn Tuyến"),
     ],
     chuY: {
       tomTat: '9 chỗ cần chú ý, trong đó 2 lỗi nên sửa trước khi xuất.',
       loai: [
-        { ten: 'Số đọc dễ sai',                nang: true,  dem: 2, doan: [1, 10] },
-        { ten: 'Viết tắt chưa có trong từ điển', nang: false, dem: 3, doan: [3, 5, 16] },
-        { ten: 'Tên riêng dễ đọc sai',         nang: false, dem: 2, doan: [3, 5] },
-        { ten: 'Ngày tháng viết tắt',          nang: false, dem: 1, doan: [6] },
-        { ten: 'Số điện thoại',                nang: false, dem: 1, doan: [13] },
+        { ten: 'Lỗi phải sửa',             nang: true,  dem: 2, doan: [1] },
+        { ten: 'Từ viết tắt',              nang: false, dem: 4, doan: [2] },
+        { ten: 'Đoạn dài, ký tự lạ',       nang: false, dem: 2, doan: [4] },
+        { ten: 'Tên riêng, số điện thoại', nang: false, dem: 1, doan: [10] },
       ],
     },
   },
@@ -82,20 +74,18 @@ const TAI_LIEU = {
   'bai-viet-nghe-lai.docx': {
     doan: [
       D('head', 'Vì sao người lớn tuổi ngại dùng máy tính'),
-      TRONG(),
       D('body', 'Chữ nhỏ, nút bấm san sát nhau, và mỗi lần bấm nhầm là một thông báo '
               + 'toàn chữ lạ hiện ra. Không phải họ không học được, mà là chương trình '
               + 'chưa từng được viết cho họ.'),
       D('body', 'Người ta bỏ một phần mềm không phải vì thiếu tính năng. '
               + 'Người ta bỏ vì lần đầu mở lên đã thấy sợ.'),
-      TRONG(),
       D('body', 'Cách sửa thì đơn giản đến mức nhàm chán: chữ to lên, nút ít đi, '
               + 'lỗi viết bằng tiếng người.'),
     ],
     chuY: {
       tomTat: '2 chỗ cần chú ý, không có lỗi nào bắt buộc sửa.',
       loai: [
-        { ten: 'Câu quá dài, nên tách',  nang: false, dem: 1, doan: [3] },
+        { ten: 'Câu quá dài, nên tách',  nang: false, dem: 1, doan: [2] },
         { ten: 'Tên riêng dễ đọc sai',   nang: false, dem: 1, doan: [1] },
       ],
     },
@@ -104,7 +94,6 @@ const TAI_LIEU = {
   'thongbao-phun-thuoc.txt': {
     doan: [
       D('head', 'THÔNG BÁO PHUN THUỐC DIỆT MUỖI'),
-      TRONG(),
       D('body', 'Kính mời bà con nhân dân trong khu phố chú ý nghe thông báo.'),
       D('body', 'Sáng mai, từ 6h00 đến 9h00, Trạm Y tế phường sẽ phun thuốc diệt muỗi '
               + 'phòng chống sốt xuất huyết trên toàn địa bàn.'),
@@ -116,7 +105,7 @@ const TAI_LIEU = {
       tomTat: '3 chỗ cần chú ý, trong đó 1 lỗi nên sửa trước khi xuất.',
       loai: [
         { ten: 'Giờ viết tắt',           nang: true,  dem: 1, doan: [4] },
-        { ten: 'Viết tắt chưa có trong từ điển', nang: false, dem: 2, doan: [4, 5] },
+        { ten: 'Viết tắt chưa có trong từ điển', nang: false, dem: 2, doan: [3, 4] },
       ],
     },
   },
@@ -124,12 +113,10 @@ const TAI_LIEU = {
   'chuong-01.docx': {
     doan: [
       D('head', 'Chương một — Người gác đèn'),
-      TRONG(),
       D('body', 'Ngọn hải đăng đứng đó đã bốn mươi năm. Ông Tư cũng vậy.'),
       D('body', 'Mỗi tối, đúng lúc mặt trời chạm mặt biển, ông leo một trăm hai mươi bậc '
               + 'thang xoắn ốc lên đỉnh tháp, lau lại tấm kính, rồi bật đèn.'),
       D('body', 'Chưa một đêm nào ngọn đèn ấy tắt.'),
-      TRONG(),
       D('body', 'Người trong làng bảo ông lẩn thẩn. Ông không cãi. '
               + 'Ông chỉ biết ngoài kia còn thuyền chưa về.'),
     ],
@@ -144,19 +131,17 @@ const TAI_LIEU = {
   'danh-sach-ung-ho.txt': {
     doan: [
       D('head', 'DANH SÁCH ỦNG HỘ ĐỒNG BÀO VÙNG LŨ'),
-      TRONG(),
       D('body', 'Bùi Thị Thanh Tâm — hai triệu đồng'),
       D('body', 'Nguyễn Văn Đức — một triệu năm trăm nghìn đồng'),
       D('body', 'Gia đình bà Phúc Lâm — năm triệu đồng'),
       D('body', 'Tập thể lớp 9A trường Trung học cơ sở Lê Lợi — tám trăm nghìn đồng'),
-      TRONG(),
       D('body', 'Ban vận động xin trân trọng cảm ơn.'),
     ],
     chuY: {
       tomTat: '4 chỗ cần chú ý, không có lỗi nào bắt buộc sửa.',
       loai: [
-        { ten: 'Tên riêng dễ đọc sai', nang: false, dem: 3, doan: [3, 4, 5] },
-        { ten: 'Viết tắt chưa có trong từ điển', nang: false, dem: 1, doan: [6] },
+        { ten: 'Tên riêng dễ đọc sai', nang: false, dem: 3, doan: [2, 3, 4] },
+        { ten: 'Viết tắt chưa có trong từ điển', nang: false, dem: 1, doan: [5] },
       ],
     },
   },

@@ -137,7 +137,7 @@ ok(goiSangPython.some((g) => g[0] === 'moi_dat_doan'),
    'lúc mở đã gửi đoạn sang Python', (goiSangPython[0] || [])[0]);
 {
   const g = goiSangPython.find((x) => x[0] === 'moi_dat_doan');
-  ok(Array.isArray(g[1]) && g[1].length === 16, 'gửi đủ 16 đoạn', String(g[1] && g[1].length));
+  ok(Array.isArray(g[1]) && g[1].length === 15, 'gửi đủ 15 đoạn', String(g[1] && g[1].length));
 }
 
 console.log('\n--- B. Nghe toàn bộ gọi đúng hàm bên Python ---');
@@ -202,7 +202,7 @@ chay('dat(doiHoSo(S, 2)); guiDoanSangPython();');
 {
   const g = goiSangPython.find((x) => x[0] === 'moi_dat_doan');
   ok(!!g, 'gửi lại moi_dat_doan');
-  ok(g && g[1].length === 7, 'gửi đoạn của tài liệu MỚI (chuong-01.docx, 7 đoạn)',
+  ok(g && g[1].length === 5, 'gửi đoạn của tài liệu MỚI (chuong-01.docx, 5 đoạn)',
      g && String(g[1].length));
 }
 
@@ -243,7 +243,12 @@ chay(`datTaiLieu({ ten: 'thu.txt', doan: [
   { kieu: 'blank', chu: '' },
   { kieu: 'body', chu: 'Một câu để tìm và thay thế.' }] })`);
 ok(chay('tenTepDangXem(S)') === 'thu.txt', 'tab đổi sang tệp mới', chay('tenTepDangXem(S)'));
-ok(chay('doanDangXem(S, TAI_LIEU).length') === 3, '3 đoạn', String(chay('doanDangXem(S, TAI_LIEU).length')));
+/* Gửi sang 3 đoạn trong đó có MỘT dòng trống, nhận về phải còn 2: bản thiết
+   kế cấm đoạn rỗng, và datTaiLieu lọc ngay lúc nạp. Đây là chỗ chứng minh việc
+   lọc chạy thật trên đường nạp tệp, không chỉ đúng ở dữ liệu mẫu. */
+ok(chay('doanDangXem(S, TAI_LIEU).length') === 2,
+   'dòng trống bị bỏ ngay khi nạp: 3 đoạn gửi sang còn 2',
+   String(chay('doanDangXem(S, TAI_LIEU).length')));
 ok(chay('S.pos') === 1 && chay('S.sel') === 1, 'về đoạn 1');
 
 console.log('\n--- L. Tìm và thay thế chạy thật ---');
@@ -252,8 +257,8 @@ ok(chay('ketQuaTim.length') === 1, 'tìm thấy 1 chỗ', String(chay('ketQuaTim
 chay("chayTim('KHÔNG CÓ CHỮ NÀY')");
 ok(chay('ketQuaTim.length') === 0, 'không có thì trả 0');
 chay("chayTim('câu'); thayThe('câu', 'dòng', false)");
-ok(chay("TAI_LIEU['thu.txt'].doan[2].chu").includes('dòng'), 'đã thay chữ',
-   chay("TAI_LIEU['thu.txt'].doan[2].chu"));
+ok(chay("TAI_LIEU['thu.txt'].doan[1].chu").includes('dòng'), 'đã thay chữ',
+   chay("TAI_LIEU['thu.txt'].doan[1].chu"));
 ok(chay('S.situation') === 'am_thanh_cu',
    'sửa văn bản xong thì bật tình huống "âm thanh cũ"', chay('S.situation'));
 
@@ -261,7 +266,8 @@ console.log('\n--- M. Hộp thoại xuất ---');
 chay("dat({ ...S, situation: 'binh_thuong' }); moHopXuat();");
 await new Promise((r) => setTimeout(r, 0));
 ok(chay('S.exportOpen') === true, 'bấm Xuất → mở hộp thoại');
-ok(chay('hopXuat.soDoan') === 3, 'hộp thoại biết số đoạn', String(chay('hopXuat.soDoan')));
+// Tài liệu thử gửi sang 3 đoạn nhưng một là dòng trống, đã bị lọc khi nạp.
+ok(chay('hopXuat.soDoan') === 2, 'hộp thoại biết số đoạn', String(chay('hopXuat.soDoan')));
 /* Luồng ĐÃ ĐỔI (2026-08-13, chủ dự án chốt bám bản mẫu
    designs/GiongDoc - Xuất file âm thanh): bấm Bắt đầu xuất KHÔNG đóng hộp
    nữa mà chuyển nó sang giai đoạn 2, vì đó là chỗ duy nhất có nút Huỷ.

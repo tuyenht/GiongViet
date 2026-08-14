@@ -946,7 +946,11 @@ function datTaiLieu(kq) {
 
   const ten = kq.ten || 'Chưa đặt tên';
   TAI_LIEU[ten] = {
-    doan: kq.doan || [],
+    /* KHÔNG có đoạn rỗng - bỏ ngay lúc nạp, đúng bản thiết kế. Giữ lại thì
+       văn bản hiện những dòng đánh số mà không có chữ nào, và mọi thứ bám theo
+       số đoạn (thẻ cảm xúc, dấu đã-bỏ-qua ở màn Soát) phải đếm cả chúng. */
+    doan: (kq.doan || []).filter(
+      (d) => d && d.kieu !== 'blank' && String(d.chu || '').trim() !== ''),
     // Soát văn bản chưa nối; để rỗng chứ không bịa ra con số.
     chuY: { tomTat: '', loai: [] },
   };
