@@ -160,6 +160,22 @@ def main():
     # 2) os._exit: PyTorch và huggingface để lại luồng nền không phải daemon,
     #    không có dòng này thì cửa sổ đóng rồi mà tiến trình vẫn sống, ôm vài GB.
     api._don_dep()
+
+    # Ghi kho ra tệp text trong sao-luu-cu/ mỗi lần đóng chương trình.
+    #
+    # Gom cấu hình vào SQLite lấy mất một thứ đang dùng hằng ngày: mở cấu hình
+    # bằng Notepad để dò lỗi. Bản sao lúc gom chỉ là ảnh chụp ngày đầu, không
+    # theo kịp thiết lập người dùng đổi về sau. Ghi lại lúc thoát thì luôn có
+    # bản đọc được, mà KHÔNG phải bày thêm nút nào cho người lớn tuổi.
+    #
+    # Sáu tệp cỡ vài KB nên tốn không đáng kể, và đặt sau _don_dep() để có
+    # hỏng cũng không cản đường thoát.
+    try:
+        import kho_cau_hinh
+        kho_cau_hinh.xuat_ra_tep(BASE_DIR / kho_cau_hinh.THU_MUC_SAO_LUU)
+    except Exception:                                    # noqa: BLE001
+        pass
+
     sys.stdout.flush()
     sys.stderr.flush()
     os._exit(0)
