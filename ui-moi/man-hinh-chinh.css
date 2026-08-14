@@ -217,13 +217,42 @@
    ăn gì là thứ làm người lớn tuổi loay hoay lâu nhất, còn tệ hơn không có nút. */
 .doan__play.la-khoa { color: var(--dis); cursor: not-allowed; }
 .doan__play.la-khoa:hover { background: transparent; }
+
+/* Nút sửa chữ, nằm cạnh nút nghe. Cùng dáng phẳng, cùng cách hiện lúc rê vào. */
+.doan__sua { position: absolute; right: 44px; top: 50%; z-index: 2;
+             transform: translateY(-50%);
+             width: 28px; height: 28px; display: inline-flex;
+             align-items: center; justify-content: center;
+             border: 0; border-radius: 5px;
+             background: transparent; color: var(--txt3);
+             font-size: 13px; cursor: pointer; opacity: 0;
+             transition: opacity .12s, background .12s, color .12s; }
+.doan:hover .doan__sua { opacity: 1; }
+.doan__sua:focus-visible { opacity: 1; outline: 2px solid var(--acc); outline-offset: 1px; }
+.doan__sua:hover { background: var(--acc-soft); color: var(--acc); }
+
+/* Ô SỬA CHỮ. Cỡ chữ và giãn dòng lấy đúng của vùng đọc, để chữ không nhảy cỡ
+   lúc chuyển giữa đọc và sửa - mắt người lớn tuổi bám theo rất khó. */
+.doan--sua { background: var(--acc-soft); }
+.doan__o {
+  display: block; width: 100%; box-sizing: border-box;
+  min-height: 68px; resize: vertical;
+  padding: 8px 10px; border: 1px solid var(--acc); border-radius: 6px;
+  background: var(--layer); color: var(--txt);
+  font: inherit; font-size: var(--co-doan); line-height: var(--dong-doan);
+}
+.doan__suathanh { display: flex; align-items: center; gap: 8px; margin: 8px 0 4px; }
+.doan__suamach { font-size: 12px; color: var(--txt3); }
 /* Chữ chạy hết bề ngang ô, KHÔNG chặn ở 700px nữa - cửa sổ rộng mà chữ dồn
    vào giữa để trống nửa màn hình thì phí, chữ lại ngắn dòng hơn mức cần.
 
-   Chừa 52px bên phải làm chỗ cho nút ▶ (rộng 28, cách mép 10, còn 14 để thở).
-   Đây là thứ THAY nền đặc dưới nút: trước kia dựa vào trần 700px để chữ không
-   chạm nút, bỏ trần thì phải chừa chỗ, không thì nút lại đè lên chữ. */
-.doan__than { flex: 1; min-width: 0; padding-right: 52px; }
+   Chừa 86px bên phải làm chỗ cho HAI nút ▶ và ✎ (mỗi nút 28, nút ngoài cách
+   mép 10, còn lại để thở). Đây là thứ THAY nền đặc dưới nút: trước kia dựa vào
+   trần 700px để chữ không chạm nút, bỏ trần thì phải chừa chỗ, không thì nút
+   lại đè lên chữ. */
+.doan__than { flex: 1; min-width: 0; padding-right: 86px; }
+/* Đang sửa thì ô nhập chiếm hết bề ngang, không phải né nút nào. */
+.doan--sua .doan__than { padding-right: 12px; }
 /* ==================================================== viền kéo đổi cỡ cửa sổ
 
    Cửa sổ frameless nên phải tự vẽ mép. Dải 6px ở cạnh, 12px ở góc — đủ rộng

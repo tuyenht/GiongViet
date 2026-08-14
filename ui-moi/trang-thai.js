@@ -67,6 +67,11 @@ function trangThaiBanDau(hoSo) {
     soatTab: 'chuy',            // chuy | chuanhoa
     soatLoc: 'tatca',           // tatca | nang | nhe
 
+    /* Đoạn đang mở ô sửa chữ, hoặc null. Một lúc chỉ sửa MỘT đoạn: mở nhiều ô
+       cùng lúc thì người dùng gõ dở ở chỗ này, bỏ đi chỗ khác, rồi không biết
+       cái nào đã lưu cái nào chưa. */
+    suaDoan: null,
+
     /* Những chỗ người dùng đã xem và quyết bỏ qua: { 'loai|tu|đoạn': true }.
        Soát ra chín chỗ mà không đánh dấu được đã xử lý chỗ nào thì càng nhìn
        càng rối - lần nào mở ra cũng thấy y nguyên chín chỗ ấy.
@@ -289,6 +294,24 @@ function datThe(S, the) {
   return { ...dongHetMenu(S), chips: { ...S.chips, [tep]: cua } };
 }
 
+/* Sửa chữ làm số đoạn xê dịch, mà thẻ cảm xúc lại đánh THEO SỐ ĐOẠN. Không
+   dời theo thì tách một đoạn ở giữa bài là mọi thẻ phía dưới nhảy sang nhầm
+   câu, trong khi người dùng không hề đụng tới chúng.
+
+   delta > 0: chèn thêm đoạn, mọi thẻ từ `tuDoan` trở xuống dời xuống.
+   delta < 0: bớt đoạn, thẻ của những đoạn bị xoá bỏ hẳn, phần còn lại dời lên. */
+function dichThe(chips, tep, tuDoan, delta) {
+  const cu = chips[tep] || {};
+  const moi = {};
+  Object.keys(cu).forEach((k) => {
+    const n = +k;
+    if (n < tuDoan) { moi[n] = cu[k]; return; }
+    if (delta < 0 && n < tuDoan - delta) return;   // đoạn này bị xoá mất
+    moi[n + delta] = cu[k];
+  });
+  return { ...chips, [tep]: moi };
+}
+
 /* Chọn giọng và kéo thanh điều chỉnh ghi vào HỒ SƠ ĐANG DÙNG, không phải
    một biến toàn cục dùng chung. Đây là điểm mấu chốt của mô hình hồ sơ. */
 function datGiong(S, maGiong) {
@@ -318,7 +341,7 @@ if (typeof module !== 'undefined') {
     biKhoa, hienNgheVaXuat,
     soGiay, dinhDangThoiLuong, dongHo, chiaTu, soTu, thongKe, tongThoiLuongDangNghe,
     ngheRiengDoan, ngheToanBo, chonDoan, tamDung, dungHan, hetDoan,
-    doiHoSo, doiTab, dongTab, themTab, moMenu, dongHetMenu, datThe,
+    doiHoSo, doiTab, dongTab, themTab, moMenu, dongHetMenu, datThe, dichThe,
     datGiong, datChinh, tomTatChinh,
   };
 }

@@ -49,9 +49,6 @@
    Bản mẫu designs/GiongDoc - Soát văn bản dùng overflow:hidden. */
 .soat__bang { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; }
 
-/* Hàng cao CỐ ĐỊNH 38px như bản mẫu, không phải min-height: chữ dài thì cắt
-   bằng dấu ba chấm, đừng đẩy hàng cao lên. Bảng mà hàng cao thấp khác nhau
-   là mắt người lớn tuổi rất khó dò theo. */
 /* CHIỀU CAO TỐI THIỂU, không phải chiều cao cố định.
 
    Bản mẫu ghi "mỗi hàng cao 38px" và đó đúng cho tab 1, nơi mỗi ô chỉ vài

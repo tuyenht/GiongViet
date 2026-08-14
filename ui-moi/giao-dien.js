@@ -252,6 +252,25 @@ function veDoan(d, n) {
   // Dòng trống không có chữ để đọc nên không treo nút - nút bấm ra lỗi là nút giả.
   const coPlay = d.kieu !== 'blank';
 
+  /* Ô SỬA CHỮ ngay tại chỗ. Dùng textarea chứ không contenteditable: nhịp đọc
+     bọc từng chữ vào <span> để tô sáng, cho người dùng gõ thẳng vào cái DOM ấy
+     là hai bên giẫm chân nhau. Textarea là một hộp chữ phẳng, tách hẳn. */
+  if (S.suaDoan === n) {
+    return `<div class="doan doan--sua" data-doan="${n}">
+      <span class="doan__so">${n}</span>
+      <span class="doan__than">
+        <textarea class="doan__o" id="oSuaDoan" rows="2"
+                  spellcheck="false">${esc(d.chu)}</textarea>
+        <span class="doan__suathanh">
+          <button class="nut nut--acc" data-suaxong="${n}">Xong</button>
+          <button class="nut nut--vien" data-suahuy="1">Huỷ</button>
+          <span class="doan__suamach">Xuống dòng để tách thành đoạn mới ·
+            xoá hết chữ để bỏ đoạn này · Esc để huỷ</span>
+        </span>
+      </span>
+    </div>`;
+  }
+
   return `<div class="${cls.join(' ')}" data-doan="${n}">
     <span class="doan__so">${
       dangCho ? '<span class="xoay xoay--nho" style="display:inline-block"></span>'
@@ -264,6 +283,8 @@ function veDoan(d, n) {
     <button class="doan__play${viKhoa ? ' la-khoa' : ''}" data-nghe="${n}"
             title="${esc(viKhoa
               || `Nghe riêng đoạn ${n}. Đang đọc đoạn này thì bấm để dừng.`)}"></button>` : ''}
+    <button class="doan__sua" data-sua="${n}"
+            title="Sửa chữ trong đoạn ${n}">✎</button>
   </div>`;
 }
 
@@ -1349,6 +1370,13 @@ document.addEventListener('click', (e) => {
                                    return chuyenSang(dongTab(S, +n.dataset.dongtab)); }
   if ((n = t('[data-tab]')))    return chuyenSang(doiTab(S, +n.dataset.tab));
   if (t('#themTab'))            return chuyenSang(themTab(S));
+  if ((n = t('[data-sua]')))    { e.stopPropagation(); return moSuaDoan(+n.dataset.sua); }
+  if ((n = t('[data-suaxong]'))) {
+    e.stopPropagation();
+    const o = $('#oSuaDoan');
+    return luuSuaDoan(+n.dataset.suaxong, o ? o.value : '');
+  }
+  if (t('[data-suahuy]'))       { e.stopPropagation(); return dat({ ...S, suaDoan: null }); }
   if ((n = t('[data-nghe]'))) {
     e.stopPropagation();
     /* Đang đọc chính đoạn này thì nút ấy là nút DỪNG - CSS đã đổi nó thành ■.
@@ -1580,6 +1608,16 @@ document.addEventListener('input', (e) => {
 
 document.addEventListener('keydown', (e) => {
   if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
+    /* Ô sửa chữ có bộ phím riêng. Enter TRƠN để xuống dòng như mọi ô nhập -
+       đó chính là cách tách đoạn - nên phím xác nhận phải là Ctrl+Enter. */
+    if (document.activeElement.id === 'oSuaDoan') {
+      if (e.key === 'Escape') { e.preventDefault(); return dat({ ...S, suaDoan: null }); }
+      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        return luuSuaDoan(S.suaDoan, document.activeElement.value);
+      }
+      return;
+    }
     if (e.key === 'Escape') dat({ ...S, find: false });
     if (e.key === 'Enter' && document.activeElement.id === 'oTim') {
       e.preventDefault(); toiKetQua(e.shiftKey ? -1 : 1);
@@ -1740,6 +1778,45 @@ function vanTayTaiLieu() {
   // đoạn giữ nguyên mà nội dung đã khác, vẫn phải gửi lại.
   return `${tenTepDangXem(S)}|${loaiTepDangXem()}|${doan.length}|`
        + doan.reduce((s, d) => s + d.chu.length, 0);
+}
+
+/* ------------------------------------------------------------- sửa chữ tại chỗ
+
+   Mở ô sửa thì DỪNG đọc trước: playlist bên Python dựng từ bản chữ cũ, để nó
+   chạy tiếp trong lúc người dùng gõ là loa đọc một đằng màn hình một nẻo. */
+function moSuaDoan(n) {
+  if (S.view === 'dang_doc') dungPhat();
+  dat({ ...S, suaDoan: n, sel: n });
+  const o = $('#oSuaDoan');
+  if (o) { o.focus(); o.setSelectionRange(o.value.length, o.value.length); }
+}
+
+/* Lưu ô sửa. Một ô có thể ra NHIỀU đoạn (xuống dòng) hoặc KHÔNG còn đoạn nào
+   (xoá sạch chữ) - tách và gộp đoạn đi cùng một đường với sửa chữ thường.
+
+   Kết quả soát cũ bỏ hết: nó nói về bản chữ trước khi sửa, giữ lại là màn Soát
+   chỉ vào những chỗ không còn tồn tại. */
+function luuSuaDoan(n, chuMoi) {
+  const ten = tenTepDangXem(S);
+  const t = TAI_LIEU[ten];
+  const cu = t && t.doan;
+  if (!cu || !cu[n - 1]) return dat({ ...S, suaDoan: null });
+
+  const dong = String(chuMoi).split(/\r?\n/).map((x) => x.trim()).filter((x) => x);
+  const moi = dong.length
+    ? cu.slice(0, n - 1)
+        .concat(dong.map((chu, i) => (i === 0 ? { ...cu[n - 1], chu } : { kieu: 'body', chu })),
+                cu.slice(n))
+    : cu.slice(0, n - 1).concat(cu.slice(n));
+
+  const delta = moi.length - cu.length;
+  TAI_LIEU[ten] = { ...t, doan: moi };
+  // Thẻ của đoạn n ở nguyên chỗ khi tách (dời từ n+1), nhưng phải bỏ khi xoá.
+  const chips = delta ? dichThe(S.chips, ten, delta > 0 ? n + 1 : n, delta) : S.chips;
+  duLieuSoat = null;
+  dat({ ...S, chips, suaDoan: null, soatBoQua: {},
+        sel: Math.max(1, Math.min(n, moi.length)),
+        pos: Math.max(1, Math.min(S.pos, moi.length)) });
 }
 
 /** Gửi tài liệu của tab đang xem sang Python để dựng playlist. */

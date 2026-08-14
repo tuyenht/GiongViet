@@ -376,5 +376,42 @@ console.log('\n--- P. Màn Soát: đánh dấu đã xử lý ---');
      'đoạn đang chọn không có trong bảng thì KHÔNG bày nút nghe (bấm ra lỗi là nút giả)');
 }
 
+console.log('\n--- Q. Sửa chữ tại chỗ ---');
+{
+  ok(/data-sua="\d+"/.test(HTML), 'mỗi đoạn có nút ✎ sửa chữ');
+
+  const oSua = chay("(() => { const cu = S; S = { ...S, suaDoan: 3 };"
+    + " const r = veDoan({ kieu: 'body', chu: 'thử sửa' }, 3); S = cu; return r; })()");
+  ok(/<textarea class="doan__o"/.test(oSua), 'đoạn đang sửa dựng ô nhập');
+  ok(/data-suaxong="3"/.test(oSua) && /data-suahuy/.test(oSua), 'ô sửa có nút Xong và Huỷ');
+  ok(!/data-nghe=/.test(oSua), 'đang sửa thì KHÔNG bày nút nghe của đoạn đó');
+
+  /* Thẻ cảm xúc đánh theo SỐ ĐOẠN, nên tách hay xoá đoạn là phải dời chúng
+     theo. Không dời thì thẻ nhảy sang nhầm câu mà người dùng không hề đụng. */
+  const themGiua = chay("dichThe({ t: { 2: 'a', 5: 'b' } }, 't', 3, 1)");
+  ok(themGiua.t[2] === 'a' && themGiua.t[6] === 'b' && !themGiua.t[5],
+     'chèn đoạn: thẻ phía trên yên chỗ, thẻ phía dưới dời xuống');
+  const xoa = chay("dichThe({ t: { 2: 'a', 3: 'x', 5: 'b' } }, 't', 3, -1)");
+  ok(xoa.t[2] === 'a' && xoa.t[3] === undefined && xoa.t[4] === 'b',
+     'xoá đoạn: thẻ của đoạn bị xoá bỏ hẳn, phần dưới dời lên');
+
+  // Đường thật: gọi luuSuaDoan rồi đếm lại số đoạn.
+  const truoc = chay('doanDangXem(S, TAI_LIEU).length');
+  chay("luuSuaDoan(3, 'dòng một\\ndòng hai')");
+  const sauTach = chay('doanDangXem(S, TAI_LIEU).length');
+  ok(sauTach === truoc + 1, 'xuống dòng trong ô sửa thì tách thành hai đoạn',
+     `${truoc} → ${sauTach}`);
+  ok(chay('doanDangXem(S, TAI_LIEU)[2].chu') === 'dòng một', 'đoạn đầu giữ chữ đã sửa');
+  ok(chay('doanDangXem(S, TAI_LIEU)[3].chu') === 'dòng hai', 'đoạn tách ra nằm ngay sau');
+
+  chay("luuSuaDoan(4, '')");
+  const sauXoa = chay('doanDangXem(S, TAI_LIEU).length');
+  ok(sauXoa === sauTach - 1, 'xoá sạch chữ thì bỏ hẳn đoạn đó', `${sauTach} → ${sauXoa}`);
+
+  ok(chay('S.suaDoan') === null, 'lưu xong thì đóng ô sửa');
+  ok(Object.keys(chay('S.soatBoQua') || {}).length === 0,
+     'sửa chữ thì bỏ kết quả soát cũ, vì nó nói về bản chữ trước khi sửa');
+}
+
 console.log(`\n${loi === 0 ? 'XANH — khớp hết' : `ĐỎ — ${loi} chỗ lệch`}`);
 process.exit(loi ? 1 : 0);
