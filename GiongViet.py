@@ -118,7 +118,13 @@ def main():
     # tự lùi về tệp rời, chương trình vẫn chạy như chưa có gì.
     try:
         import kho_cau_hinh
-        kho_cau_hinh.nhap_tu_tep_cu()
+        ket = kho_cau_hinh.nhap_tu_tep_cu()
+        # Ghi lại mục nào gom mà chưa dọn được tệp cũ. Không ghi thì lần sau
+        # nhìn thư mục vẫn bừa mà chẳng có manh mối nào.
+        vuong = {k: v for k, v in ket.items() if v != "đã gom"}
+        if vuong:
+            from giaodien import nhat_ky
+            nhat_ky.ghi(f"Gom cấu hình: {vuong}")
     except Exception as loi:                             # noqa: BLE001
         from giaodien import nhat_ky
         nhat_ky.ghi_loi("Gom cấu hình vào kho, dùng tệp rời như cũ", loi)

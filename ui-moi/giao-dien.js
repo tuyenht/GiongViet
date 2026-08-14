@@ -253,8 +253,10 @@ function veDoan(d, n) {
      được. Vẫn bấm được - bấm vào sẽ nói rõ vì sao chưa nghe được, hơn hẳn một
      nút xám ngắt bấm không ăn gì. */
   const viKhoa = lyDoKhoa(S);
-  // Dòng trống không có chữ để đọc nên không treo nút - nút bấm ra lỗi là nút giả.
-  const coPlay = d.kieu !== 'blank';
+  /* Không treo nút ▶ ở đoạn không có chữ - bấm ra lỗi là nút giả. Kể cả đoạn
+     vừa được Enter tạo ra và còn rỗng: nó tồn tại để người dùng gõ tiếp, chưa
+     có gì mà đọc. */
+  const coPlay = d.kieu !== 'blank' && String(d.chu || '').trim() !== '';
 
   /* GÕ THẲNG VÀO CHỮ, không có chế độ vào/ra ô sửa. Chủ dự án bấm thử: phải
      bấm nút rồi mới gõ được là quá nhiều bước, "muốn như Notepad".
@@ -1687,6 +1689,16 @@ document.addEventListener('keydown', (e) => {
         const vt = viTriCaret(oChu);
         const het = oChu.textContent.length;
 
+        /* Enter tách đoạn NGAY tại con trỏ. Không chặn ở đây thì trình duyệt
+           chèn một dấu xuống dòng vào giữa đoạn, và mãi tới lúc rời đoạn mới
+           tách - người dùng bấm Enter xong không thấy gì xảy ra. */
+        if (n && e.key === 'Enter' && !e.shiftKey && !e.ctrlKey && !e.metaKey) {
+          const chu = oChu.textContent;
+          if (tachDoanTaiCho(n, chu.slice(0, vt), chu.slice(vt))) {
+            e.preventDefault();
+            return;
+          }
+        }
         if (n && e.key === 'Backspace' && vt === 0) {
           if (gopLenDoanTren(n)) { e.preventDefault(); return; }
         }
@@ -1965,6 +1977,29 @@ function gopLenDoanTren(n) {
   duLieuSoat = null;
   dat({ ...S, chips: dichThe(S.chips, ten, n, -1), soatBoQua: {}, sel: tren });
   datCaret(document.querySelector(`[data-doan="${tren}"] .doan__chu`), noi.length);
+  return true;
+}
+
+/* Enter TÁCH ĐOẠN NGAY tại con trỏ, không đợi rời đoạn: phần sau con trỏ thành
+   đoạn mới, con trỏ nhảy vào đầu đoạn ấy.
+
+   Enter ở cuối đoạn tạo đoạn RỖNG và giữ nó lại - đặc tả nói rõ, vì người dùng
+   vừa bấm Enter là để gõ tiếp. Đoạn rỗng ấy chỉ mất khi con trỏ rời đi mà vẫn
+   không có chữ, việc đó do luuSuaDoan lo. */
+function tachDoanTaiCho(n, phanTren, phanDuoi) {
+  const ten = tenTepDangXem(S);
+  const t = TAI_LIEU[ten];
+  if (!t || !t.doan[n - 1]) return false;
+
+  const goc = t.doan[n - 1];
+  const moi = t.doan.slice();
+  moi[n - 1] = { ...goc, chu: phanTren };
+  moi.splice(n, 0, { kieu: 'body', chu: phanDuoi });
+  TAI_LIEU[ten] = { ...t, doan: moi };
+
+  duLieuSoat = null;
+  dat({ ...S, chips: dichThe(S.chips, ten, n + 1, 1), soatBoQua: {}, sel: n + 1 });
+  datCaret(document.querySelector(`[data-doan="${n + 1}"] .doan__chu`), 0);
   return true;
 }
 

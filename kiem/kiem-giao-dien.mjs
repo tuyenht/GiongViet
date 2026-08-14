@@ -436,6 +436,31 @@ console.log('\n--- Q. Sửa chữ tại chỗ ---');
      && chay('typeof doanGoDuoc') === 'function'
      && chay('typeof viTriCaret') === 'function',
      'có đủ đường gộp đoạn, tìm đoạn kề và đo vị trí con trỏ');
+  /* Enter phải tách NGAY, không đợi rời đoạn: không chặn thì trình duyệt chỉ
+     chèn một dấu xuống dòng, người dùng bấm Enter xong không thấy gì xảy ra. */
+  ok(chay('typeof tachDoanTaiCho') === 'function', 'có đường tách đoạn tại con trỏ');
+  ok(/e\.key === 'Enter'[\s\S]{0,200}tachDoanTaiCho[\s\S]{0,120}preventDefault/.test(JS),
+     'Enter tách đoạn ngay tại con trỏ, chặn hành vi mặc định');
+  {
+    const truoc = chay('doanDangXem(S, TAI_LIEU).length');
+    const chuGoc = chay('doanDangXem(S, TAI_LIEU)[2].chu');
+    chay(`tachDoanTaiCho(3, ${JSON.stringify('phần trên')}, ${JSON.stringify('phần dưới')})`);
+    ok(chay('doanDangXem(S, TAI_LIEU).length') === truoc + 1, 'tách xong thêm đúng một đoạn',
+       `${truoc} → ${chay('doanDangXem(S, TAI_LIEU).length')}`);
+    ok(chay('doanDangXem(S, TAI_LIEU)[2].chu') === 'phần trên'
+       && chay('doanDangXem(S, TAI_LIEU)[3].chu') === 'phần dưới',
+       'phần sau con trỏ thành đoạn mới ngay dưới', String(chuGoc).slice(0, 20));
+    ok(chay('S.sel') === 4, 'con trỏ chuyển sang đoạn mới');
+    // Enter ở CUỐI đoạn: đoạn rỗng phải được GIỮ để người dùng gõ tiếp.
+    const truoc2 = chay('doanDangXem(S, TAI_LIEU).length');
+    chay(`tachDoanTaiCho(3, ${JSON.stringify('còn nguyên')}, '')`);
+    ok(chay('doanDangXem(S, TAI_LIEU).length') === truoc2 + 1
+       && chay('doanDangXem(S, TAI_LIEU)[3].chu') === '',
+       'Enter ở cuối đoạn tạo đoạn rỗng và GIỮ lại để gõ tiếp');
+  }
+  ok(/coPlay = d\.kieu !== 'blank' && String\(d\.chu/.test(JS),
+     'đoạn chưa có chữ thì không treo nút ▶ (bấm ra lỗi là nút giả)');
+
   ok(/e\.key === 'Backspace' && vt === 0[\s\S]{0,120}gopLenDoanTren/.test(JS),
      'Backspace ở ĐẦU đoạn thì gộp lên đoạn trên');
   ok(/e\.key === 'Delete' && vt === het[\s\S]{0,200}gopLenDoanTren/.test(JS),

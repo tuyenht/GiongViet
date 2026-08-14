@@ -130,23 +130,36 @@ def nhap_tu_tep_cu() -> dict:
     for tep in sorted(_goc.glob("*")):
         if not tep.is_file() or not _ten_can_gom(tep.name):
             continue
-        if co(tep.name):
-            continue
-        try:
-            # utf-8-sig: cauhinh.ini và tudien.ini vốn ghi kèm BOM.
-            noi_dung = tep.read_text(encoding="utf-8-sig")
-        except (OSError, UnicodeDecodeError):
-            continue
-        if not ghi(tep.name, noi_dung):
-            continue
+
+        # TÁCH hai việc: gom vào kho, và dọn tệp cũ. Bản trước gộp làm một, hễ
+        # kho đã có mục ấy là `continue` ngay - nên lần đầu gom được mà dời hụt
+        # (Explorer hay phần mềm diệt virus đang giữ tệp) thì từ đó về sau
+        # KHÔNG BAO GIỜ dọn nữa, tệp kẹt lại vĩnh viễn. Chủ dự án gặp đúng thế:
+        # có giongviet.db mà sáu tệp cũ vẫn nằm nguyên.
+        if not co(tep.name):
+            try:
+                # utf-8-sig: cauhinh.ini và tudien.ini vốn ghi kèm BOM.
+                noi_dung = tep.read_text(encoding="utf-8-sig")
+            except (OSError, UnicodeDecodeError) as loi:
+                ket[tep.name] = f"không đọc được: {loi}"
+                continue
+            if not ghi(tep.name, noi_dung):
+                ket[tep.name] = "ghi vào kho không xong"
+                continue
+
+        # Tới đây kho CHẮC CHẮN đã có nội dung, nên dọn tệp cũ là an toàn.
+        # Thử lại mỗi lần khởi động cho tới khi dọn được.
         try:
             luu.mkdir(exist_ok=True)
-            shutil.move(str(tep), str(luu / tep.name))
+            dich = luu / tep.name
+            if dich.exists():
+                dich.unlink()          # lần trước dời dở, ghi đè bản sao cũ
+            shutil.move(str(tep), str(dich))
             ket[tep.name] = "đã gom"
-        except OSError:
-            # Gom được vào kho rồi mà không dời được tệp thì cũng không sao,
-            # từ giờ kho là nguồn đọc; tệp thừa để đó còn hơn xoá nhầm.
-            ket[tep.name] = "đã gom (tệp cũ còn nguyên)"
+        except OSError as loi:
+            # KHÔNG nuốt im lặng nữa: nuốt là lần sau không ai biết vì sao thư
+            # mục vẫn bừa. Kho đã có nội dung nên chương trình vẫn chạy đúng.
+            ket[tep.name] = f"đã gom, chưa dọn được tệp cũ: {loi}"
     return ket
 
 
