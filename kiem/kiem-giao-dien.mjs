@@ -51,7 +51,10 @@ ctx.__goc = nutGia('goc');
 ctx.globalThis = ctx;
 createContext(ctx);
 
-for (const f of ['du-lieu-mau.js', 'trang-thai.js', 'tinh-huong.js', 'cau-noi.js', 'hop-thoai.js', 'giao-dien.js']) {
+// Đúng thứ tự index.html khai, để bộ kiểm gặp cùng cảnh mà cửa sổ thật gặp.
+for (const f of ['du-lieu-mau.js', 'trang-thai.js', 'tinh-huong.js', 'cau-noi.js',
+                 'hop-thoai.js', 'man-soat.js', 'man-giong.js', 'man-tudien.js',
+                 'man-caidat.js', 'giao-dien.js']) {
   runInContext(readFileSync(join(UI, f), 'utf8'), ctx, { filename: f });
 }
 
@@ -278,6 +281,73 @@ console.log('\n--- O. Sang đoạn kế tiếp thì bỏ qua đoạn rỗng ---'
      'hết bài trả 0 để dừng');
   ok(chay('doDaiDoan(doanDangXem(S, TAI_LIEU)[1])') === 0, 'đoạn rỗng dài 0 giây');
   ok(chay('doDaiDoan(doanDangXem(S, TAI_LIEU)[2])') > 0, 'đoạn có chữ dài hơn 0');
+}
+
+console.log('\n--- P. Màn Soát: đánh dấu đã xử lý ---');
+{
+  /* Soát ra chín chỗ mà không đánh dấu được đã xem chỗ nào thì lần nào mở ra
+     cũng thấy y nguyên chín chỗ. Kiểm bằng cách dựng thật màn Soát trên một
+     bộ dữ liệu nhỏ rồi soi HTML nó sinh ra. */
+  const D = {
+    chuY: {
+      trong: false, nang: 1, nhe: 1, moTa: '2 đoạn có chữ',
+      vanDe: [
+        { muc: 'nang', loai: 'viettat', doan: 3, tu: 'XKLĐ',
+          tieuDe: 'Chưa dạy máy đọc “XKLĐ”', chiTiet: 'Máy sẽ đánh vần.' },
+        { muc: 'nhe', loai: 'kytu', doan: 4, tu: '',
+          tieuDe: 'Có ký tự máy không đọc được', chiTiet: 'Chứa ☎.' },
+      ],
+    },
+    chuanHoa: { dong: [{ doan: 3, goc: 'tổ XKLĐ', doc: 'tổ ích xì kờ lờ đờ', doi: true }],
+                soDoi: 1, tomTat: '1 chỗ sẽ được đọc khác' },
+    quyTac: [],
+  };
+  const ve1 = (them) => chay(
+    `veManSoat({ ...S, man: 'soat', soatTab: 'chuy', soatLoc: 'tatca', ${them} },`
+    + ` ${JSON.stringify(D)})`);
+
+  const chua = ve1('soatBoQua: {}');
+  ok((chua.match(/>Bỏ qua<\/button>/g) || []).length === 2, 'mỗi hàng có nút Bỏ qua',
+     String((chua.match(/>Bỏ qua<\/button>/g) || []).length));
+  ok(/data-soatboqua="tatca"/.test(chua), 'đầu bảng có nút Bỏ qua tất cả');
+  ok(/Tất cả \(2\)/.test(chua), 'chưa bỏ qua gì thì chip đếm đủ 2');
+  ok(!/Hoàn lại/.test(chua), 'chưa bỏ qua gì thì KHÔNG bày lối hoàn lại');
+
+  const roi = ve1(`soatBoQua: { ${JSON.stringify('viettat|XKLĐ|3')}: true }`);
+  ok(!roi.includes('XKLĐ'), 'chỗ đã bỏ qua biến hẳn khỏi bảng');
+  ok(/Tất cả \(1\)/.test(roi), 'chip đếm lại theo số CÒN LẠI, không kêu 2 nữa');
+  ok(/Hoàn lại 1 chỗ đã bỏ qua/.test(roi), 'có lối lấy lại chỗ đã bỏ qua');
+  ok(/data-soathoanlai/.test(roi), 'lối hoàn lại là nút bấm được');
+
+  const het = ve1(`soatBoQua: { ${JSON.stringify('viettat|XKLĐ|3')}: true,`
+                  + ` ${JSON.stringify('kytu||4')}: true }`);
+  ok(/Đã xem xong cả 2 chỗ/.test(het), 'bỏ qua hết thì nói rõ đã xem xong, không để bảng rỗng');
+  ok(/data-soathoanlai/.test(het), 'bỏ qua hết vẫn lấy lại được');
+
+  /* Khoá phải gồm cả `tu`: gop_trung gộp mỗi chữ viết tắt thành một mục, hai
+     chữ khác nhau trong CÙNG một đoạn mà đè khoá lên nhau là bỏ một cái thì
+     cái kia biến mất theo. */
+  const haiTu = JSON.parse(JSON.stringify(D));
+  haiTu.chuY.vanDe = [
+    { muc: 'nang', loai: 'viettat', doan: 3, tu: 'XKLĐ', tieuDe: 'A', chiTiet: '' },
+    { muc: 'nang', loai: 'viettat', doan: 3, tu: 'TĐC', tieuDe: 'B', chiTiet: '' },
+  ];
+  const conTDC = chay(
+    `veManSoat({ ...S, man: 'soat', soatTab: 'chuy', soatLoc: 'tatca',`
+    + ` soatBoQua: { ${JSON.stringify('viettat|XKLĐ|3')}: true } }, ${JSON.stringify(haiTu)})`);
+  ok(!conTDC.includes('XKLĐ') && conTDC.includes('TĐC'),
+     'hai chữ viết tắt cùng đoạn: bỏ chữ này thì chữ kia vẫn còn');
+
+  const tab2 = chay(`veManSoat({ ...S, man: 'soat', soatTab: 'chuanhoa', sel: 3 },`
+                    + ` ${JSON.stringify(D)})`);
+  ok(/data-nghe="3"/.test(tab2) && /Nghe thử đoạn 3/.test(tab2),
+     'chân tab 2 có nút Nghe thử đoạn đang chọn');
+  ok(/data-lenh="Từ điển phát âm"/.test(tab2), 'chân tab 2 có nút Thêm vào từ điển');
+
+  const tab2x = chay(`veManSoat({ ...S, man: 'soat', soatTab: 'chuanhoa', sel: 99 },`
+                     + ` ${JSON.stringify(D)})`);
+  ok(!/data-nghe=/.test(tab2x),
+     'đoạn đang chọn không có trong bảng thì KHÔNG bày nút nghe (bấm ra lỗi là nút giả)');
 }
 
 console.log(`\n${loi === 0 ? 'XANH — khớp hết' : `ĐỎ — ${loi} chỗ lệch`}`);

@@ -35,6 +35,13 @@ const TEN_LOAI_SOAT = {
    không làm gì là đúng thứ KPI dự án cấm. */
 const HANH_DONG_SOAT = { viettat: 'Thêm vào từ điển' };
 
+/* Định danh một chỗ cần chú ý, để nhớ người dùng đã bỏ qua chỗ nào.
+
+   Phải gồm cả `tu`: gop_trung() gộp mọi dòng cùng một chữ viết tắt thành MỘT
+   mục, nên chỉ lấy loại với số đoạn là hai chữ khác nhau trong cùng đoạn lại
+   đè lên nhau, bỏ qua chữ này thì chữ kia biến mất theo. */
+const khoaVanDe = (v) => `${v.loai}|${v.tu || ''}|${v.doan || 0}`;
+
 function veManSoat(S, D) {
   if (!D) {
     return `<div class="soat"><div class="soat__trong">
@@ -74,9 +81,36 @@ function veSoatChuY(S, cy) {
       Không tìm thấy chỗ nào đáng lo. Văn bản này máy đọc được bình thường.</div>`;
   }
 
+  /* Chỗ đã bỏ qua thì ẩn HẲN khỏi bảng, không để lại hàng mờ. Người lớn tuổi
+     nhìn một bảng nửa mờ nửa rõ là lại phải đoán xem hàng mờ còn tính không;
+     ẩn đi rồi gom vào một dòng "đã bỏ qua N chỗ" thì đọc phát hiểu ngay, mà
+     vẫn lấy lại được. */
   const loc = S.soatLoc || 'tatca';
-  const hien = ds.filter((v) => loc === 'tatca' || v.muc === loc);
-  const dem = { tatca: ds.length, nang: cy.nang || 0, nhe: cy.nhe || 0 };
+  const boQua = S.soatBoQua || {};
+  const conLai = ds.filter((v) => !boQua[khoaVanDe(v)]);
+  const soBoQua = ds.length - conLai.length;
+  const hien = conLai.filter((v) => loc === 'tatca' || v.muc === loc);
+  // Đếm lại từ phần còn lại chứ không dùng cy.nang/cy.nhe của Python, không thì
+  // chip vẫn kêu 9 chỗ trong khi bảng chỉ còn 2 hàng.
+  const dem = {
+    tatca: conLai.length,
+    nang: conLai.filter((v) => v.muc === 'nang').length,
+    nhe: conLai.filter((v) => v.muc === 'nhe').length,
+  };
+  const nutHoanLai = soBoQua
+    ? `<button class="lienket" data-soathoanlai="tatca"
+        >Hoàn lại ${soBoQua} chỗ đã bỏ qua</button>`
+    : '';
+
+  if (!conLai.length) {
+    return `
+      <div class="soat__dau">
+        <span class="soat__nhan">Kết quả soát</span>
+        <span class="soat__dauphai">${nutHoanLai}</span>
+      </div>
+      <div class="soat__trong soat__trong--vui">
+        Đã xem xong cả ${ds.length} chỗ. Không còn chỗ nào chờ xử lý.</div>`;
+  }
 
   return `
     <div class="soat__dau">
@@ -86,6 +120,12 @@ function veSoatChuY(S, cy) {
           ${c.cham ? `<span class="cham cham--${c.cham}"></span>` : ''}
           ${c.ten} (${dem[c.ma]})
         </button>`).join('')}
+      <span class="soat__dauphai">
+        ${nutHoanLai}
+        <button class="nut nut--vien" data-soatboqua="tatca"
+                title="Đánh dấu đã xem xong toàn bộ ${conLai.length} chỗ còn lại"
+          >Bỏ qua tất cả</button>
+      </span>
     </div>
     <div class="soat__bang">
       <div class="soat__hang soat__hang--dau">
@@ -114,6 +154,8 @@ function veHangSoat(S, v) {
       ${hd ? `<button class="nut nut--vien" data-soatthem="${esc(v.tu || '')}"
               >${hd}</button>` : ''}
       <button class="lienket" data-soatdi="${v.doan}">Tới đoạn</button>
+      <button class="lienket" data-soatboqua="${esc(khoaVanDe(v))}"
+              title="Đánh dấu đã xem xong chỗ này, ẩn khỏi bảng">Bỏ qua</button>
     </span>
   </div>`;
 }
@@ -126,6 +168,11 @@ function veSoatChuanHoa(S, D) {
   if (!ds.length) {
     return '<div class="soat__trong">Chưa có văn bản nào để so sánh.</div>';
   }
+  /* Chỉ mời nghe khi đoạn đang chọn THẬT SỰ có trong bảng - ds đã bỏ các đoạn
+     trống, nên trỏ nút vào một dòng trống là bấm ra lỗi. Dùng chung data-nghe
+     với nút ▶ ở màn chính nên đi qua đúng cửa lyDoKhoa, không phải làm lại. */
+  const dangChon = ds.find((d) => d.doan === S.sel);
+  const viKhoa = typeof lyDoKhoa === 'function' ? lyDoKhoa(S) : '';
   return `
     <div class="soat__dau">
       <span class="soat__nhan">Quy tắc đang bật</span>
@@ -146,7 +193,16 @@ function veSoatChuanHoa(S, D) {
         </div>`).join('')}
     </div>
     <div class="soat__chan">
-      Chuẩn hoá chỉ ảnh hưởng đến âm thanh, văn bản gốc của bạn không thay đổi.
+      <span>Chuẩn hoá chỉ ảnh hưởng đến âm thanh, văn bản gốc của bạn không thay đổi.</span>
+      <span class="soat__chan__nut">
+        ${dangChon ? `<button class="nut nut--vien${viKhoa ? ' la-khoa' : ''}"
+              data-nghe="${S.sel}"
+              title="${esc(viKhoa || `Nghe riêng đoạn ${S.sel} — nghe hết đoạn thì dừng`)}"
+            >▶ Nghe thử đoạn ${S.sel}</button>`
+          : '<span class="soat__chan__mo">Bấm một dòng ở bảng trên để nghe thử đoạn đó</span>'}
+        <button class="nut nut--vien" data-lenh="Từ điển phát âm"
+          >Thêm vào từ điển phát âm</button>
+      </span>
     </div>`;
 }
 

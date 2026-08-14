@@ -66,6 +66,14 @@ function trangThaiBanDau(hoSo) {
     man: 'chinh',
     soatTab: 'chuy',            // chuy | chuanhoa
     soatLoc: 'tatca',           // tatca | nang | nhe
+
+    /* Những chỗ người dùng đã xem và quyết bỏ qua: { 'loai|tu|đoạn': true }.
+       Soát ra chín chỗ mà không đánh dấu được đã xử lý chỗ nào thì càng nhìn
+       càng rối - lần nào mở ra cũng thấy y nguyên chín chỗ ấy.
+
+       Chỉ giữ trong phiên, KHÔNG ghi xuống hồ sơ: đây là việc đang làm dở
+       trong một lượt soát, không phải thiết lập của người dùng. */
+    soatBoQua: {},
     zoom: 100,                  // cỡ chữ vùng đọc, %
 
     /* Cửa sổ đang lấp kín vùng làm việc chưa. Quyết định nút giữa mang nghĩa
@@ -230,13 +238,16 @@ const dungHan = (S) => ({ ...S, view: 'san_sang', mode: 'all' });
 const hetDoan = (S) =>
   S.mode === 'one' ? { ...S, view: 'san_sang' } : S;
 
+/* Đổi hồ sơ hay đổi tab là đổi sang văn bản khác, nên những chỗ đã bỏ qua của
+   văn bản cũ phải quên đi - giữ lại thì số đoạn trỏ vào một bài không còn nữa. */
 function doiHoSo(S, i) {
-  return { ...dongHetMenu(S), profile: i, view: 'san_sang', pos: 1, sel: 1 };
+  return { ...dongHetMenu(S), profile: i, view: 'san_sang', pos: 1, sel: 1, soatBoQua: {} };
 }
 
 function doiTab(S, i) {
   const m = { ...S.activeByProfile, [S.profile]: i };
-  return { ...dongHetMenu(S), activeByProfile: m, view: 'san_sang', pos: 1, sel: 1 };
+  return { ...dongHetMenu(S), activeByProfile: m,
+           view: 'san_sang', pos: 1, sel: 1, soatBoQua: {} };
 }
 
 /** Đóng tab cuối cùng thì còn lại một tab "Chưa đặt tên" rỗng, không đóng hết. */

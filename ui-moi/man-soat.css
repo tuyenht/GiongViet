@@ -91,7 +91,19 @@
 .soat__chan {
   flex: none; padding: 10px 12px; font-size: 12px; color: var(--txt3);
   border-top: 1px solid var(--stroke);
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
 }
+.soat__chan__nut { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+.soat__chan__mo { color: var(--dis); }
+
+/* Nhóm nút bên phải đầu bảng: Bỏ qua tất cả, và lối lấy lại những chỗ đã bỏ. */
+.soat__dauphai { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+
+/* Nút chung lúc chưa dùng được: mờ đi nhưng VẪN bấm được, bấm ra lời nói rõ
+   vì sao. Không dùng thuộc tính disabled vì trình duyệt nuốt luôn tooltip,
+   mà tooltip chính là chỗ ghi lý do. */
+.nut.la-khoa { color: var(--dis); border-color: var(--stroke); cursor: not-allowed; }
+.nut.la-khoa:hover { background: transparent; border-color: var(--stroke); }
 
 .soat__trong {
   flex: 1; display: flex; align-items: center; justify-content: center;

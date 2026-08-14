@@ -1443,6 +1443,20 @@ document.addEventListener('click', (e) => {
   if (t('#moChinh'))            return dat({ ...S, tune: !S.tune });
   if ((n = t('[data-soattab]')))  return dat({ ...S, soatTab: n.dataset.soattab });
   if ((n = t('[data-soatloc]')))  return dat({ ...S, soatLoc: n.dataset.soatloc });
+  /* Bỏ qua một chỗ, hoặc bỏ qua sạch những chỗ CÒN LẠI. "Còn lại" chứ không
+     phải toàn bộ: bấm Bỏ qua tất cả rồi Hoàn lại thì phải về đúng chỗ cũ. */
+  if ((n = t('[data-soatboqua]'))) {
+    e.stopPropagation();
+    const khoa = n.dataset.soatboqua;
+    const moi = { ...(S.soatBoQua || {}) };
+    if (khoa === 'tatca') {
+      (((duLieuSoat || {}).chuY || {}).vanDe || []).forEach((v) => { moi[khoaVanDe(v)] = true; });
+    } else {
+      moi[khoa] = true;
+    }
+    return dat({ ...S, soatBoQua: moi });
+  }
+  if (t('[data-soathoanlai]')) { e.stopPropagation(); return dat({ ...S, soatBoQua: {} }); }
   if ((n = t('[data-quytac]')))   return datQuyTacSoat(n.dataset.quytac,
                                                        n.dataset.quytacbat === '1');
   if ((n = t('[data-soatthem]'))) { e.stopPropagation();
