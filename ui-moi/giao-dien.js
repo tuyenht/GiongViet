@@ -1776,8 +1776,11 @@ function vanTayTaiLieu() {
   const doan = doanDangXem(S, TAI_LIEU);
   // Kèm loại và tổng số chữ: sửa văn bản bằng Tìm-thay-thế thì tên tệp và số
   // đoạn giữ nguyên mà nội dung đã khác, vẫn phải gửi lại.
+  // Kèm cả thẻ cảm xúc: đặt thêm một thẻ thì chữ không đổi một ký tự nào, mà
+  // playlist bên Python phải dựng lại thì tiếng mới có cảm xúc ấy.
   return `${tenTepDangXem(S)}|${loaiTepDangXem()}|${doan.length}|`
-       + doan.reduce((s, d) => s + d.chu.length, 0);
+       + doan.reduce((s, d) => s + d.chu.length, 0)
+       + '|' + JSON.stringify(S.chips[tenTepDangXem(S)] || {});
 }
 
 /* ------------------------------------------------------------- sửa chữ tại chỗ
@@ -1835,7 +1838,14 @@ async function guiDoanSangPython(ep = false) {
     kq = dd ? await api('moi_doc_danh_sach', dd) : null;
     if (kq && kq.loi) { moBao(kq.loi); kq = null; }
   } else {
-    kq = await api('moi_dat_doan', doanDangXem(S, TAI_LIEU));
+    /* Gửi thẻ cảm xúc kèm từng đoạn, dưới khoá `the` RIÊNG chứ không nhét vào
+       `chu`. Nhét vào chu là mọi vị trí tô chữ lệch đúng bằng độ dài thẻ, vì
+       tach_chunk đếm start/end trên chính chuỗi hiển thị. */
+    const doanGui = doanDangXem(S, TAI_LIEU).map((d, i) => {
+      const the = theCuaDoan(S, i + 1);
+      return the ? { ...d, the } : d;
+    });
+    kq = await api('moi_dat_doan', doanGui);
   }
   // Chỉ ghi nhận khi Python xác nhận. Gửi hỏng mà vẫn đánh dấu là đã gửi thì
   // lần bấm Nghe sau lại bỏ qua, và đọc nhầm tài liệu lần nữa.

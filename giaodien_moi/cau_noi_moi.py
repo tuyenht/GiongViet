@@ -54,6 +54,17 @@ TRE_PHAT_MAC_DINH_MS = 700
 TRE_THAP_NHAT_MS = 150
 TRE_CAO_NHAT_MS = 1500
 
+# ĐÚNG ba thẻ mà VieNeu v3 Turbo hiểu, bằng tiếng Việt. Nguồn: gói vieneu_utils,
+# phonemize_text.py - nó đổi thẳng ba chuỗi này thành token cảm xúc của mô hình:
+#
+#     [cười]       -> <|emotion_1|>
+#     [thở dài]    -> <|emotion_2|>
+#     [hắng giọng] -> <|emotion_3|>
+#
+# Thêm thẻ thứ tư vào đây mà mô hình không biết là nó bị đọc thành CHỮ giữa bài.
+# Danh sách này phải khớp THE_CAM_XUC bên ui-moi/giao-dien.js.
+THE_CAM_XUC = ("[cười]", "[thở dài]", "[hắng giọng]")
+
 # Lấy trung vị của mấy lần gần nhất chứ không lấy trung bình: một lần kẹt CPU
 # kéo trung bình lệch hẳn, còn trung vị thì không nhúc nhích.
 SO_LAN_NHO_TRE = 5
@@ -225,6 +236,12 @@ class ApiMoi(Api):
             if not d or not str(d.get("chu", "")).strip():
                 continue
             goc = str(d["chu"])
+            # Chỉ nhận đúng ba thẻ VieNeu v3 Turbo hiểu. Thẻ lạ mà lọt xuống là
+            # mô hình đọc nó thành chữ giữa bài.
+            the = str(d.get("the") or "").strip()
+            if the not in THE_CAM_XUC:
+                the = ""
+            da_chen_the = False
             # Cắt trên chính chuỗi HIỂN THỊ, không phải chuỗi đã chuẩn hoá:
             # start/end của tach_chunk phải đếm được trên đúng chữ mà người
             # dùng nhìn thấy, không thì tô lệch đúng bằng phần chuẩn hoá đã
@@ -237,6 +254,16 @@ class ApiMoi(Api):
                     so_dien_thoai.chuan_hoa(c["raw"]), self._tudien, self._cfg)
                 if not doc.strip():
                     continue
+                # Thẻ cảm xúc chèn SAU chuẩn hoá, không phải trước: chuan_hoa_van_ban
+                # bóc ngoặc vuông (dòng "[()\[\]{}...]" -> " "), đưa thẻ vào trước là
+                # nó thành chữ thường và mô hình đọc "hắng giọng" ra tiếng.
+                #
+                # Chỉ chèn vào mẩu ĐẦU của đoạn, và chèn vào `text` chứ KHÔNG đụng
+                # `goc`/`tu`/`den` - ba thứ ấy đếm trên chuỗi HIỂN THỊ để tô chữ, thêm
+                # bảy ký tự thẻ vào là tô lệch đúng bằng ngần ấy.
+                if the and not da_chen_the:
+                    doc = f"{the} {doc}"
+                    da_chen_the = True
                 playlist.append({
                     "loai": "cau", "text": doc, "goc": c["raw"], "rec": None,
                     "tu": c["start"], "den": c["end"],
