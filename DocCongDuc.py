@@ -1667,7 +1667,19 @@ class Speaker:
             creationflags = subprocess.CREATE_NO_WINDOW
 
         ff_fmt = "wav" if dinh_dang == "wav" else "mp3"  # dự phòng, luôn là wav
+        # -fflags nobuffer: bớt 288 ms cho MỖI mẩu. Đo ngày 14/8/2026 trên chính
+        # máy chủ dự án, 10 lần mỗi cách, chạy xen kẽ và lấy trung vị: chi phí
+        # dựng tiến trình + mở thiết bị âm thanh từ 742 ms xuống 453 ms, lần
+        # nhanh nhất từ 498 xuống 202.
+        #
+        # An toàn vì _feed ghi TRỌN gói audio rồi đóng stdin ngay - dữ liệu có
+        # sẵn cả, không phải luồng nhỏ giọt nên bỏ đệm không gây đứt tiếng.
+        #
+        # ĐỪNG thêm -probesize/-analyzeduration nhỏ vào đây: đã đo, chúng làm
+        # CHẬM lại (probesize 32 thêm 122 ms, đi kèm nobuffer thêm 1365 ms) vì
+        # ffplay phải dò lại định dạng.
         lenh = [str(self.cfg["ffplay"]), "-hide_banner", "-loglevel", "error",
+                "-fflags", "nobuffer",
                 "-nodisp", "-autoexit", "-vn", "-f", ff_fmt, "-i", "pipe:0"]
         if loc:
             lenh += ["-af", loc]

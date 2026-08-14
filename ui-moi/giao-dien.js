@@ -1629,6 +1629,28 @@ document.addEventListener('keydown', (e) => {
       if (document.activeElement.blur) document.activeElement.blur();
       return LENH['Lưu']();
     }
+    if (dangGoChu) {
+      /* Ctrl+A phải bôi đen CẢ BÀI như Notepad. Để mặc thì nó chỉ bôi trong
+         một đoạn, vì mỗi đoạn là một vùng gõ riêng. */
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'a') {
+        e.preventDefault();
+        const cuon = $('#cuon');
+        const sel = window.getSelection && window.getSelection();
+        if (cuon && sel) {
+          const r = document.createRange();
+          r.selectNodeContents(cuon);
+          sel.removeAllRanges();
+          sel.addRange(r);
+        }
+        return;
+      }
+      /* Xoá khi vùng bôi đen trải nhiều đoạn: trình duyệt chỉ xoá được phần
+         nằm trong đoạn có con trỏ, các đoạn còn lại trơ ra. Tự gom mà xoá. */
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        const ds = doanTrongVungChon();
+        if (ds.length > 1) { e.preventDefault(); return xoaCacDoan(ds); }
+      }
+    }
     if (e.key === 'Escape') dat({ ...S, find: false });
     if (e.key === 'Enter' && document.activeElement.id === 'oTim') {
       e.preventDefault(); toiKetQua(e.shiftKey ? -1 : 1);
@@ -1820,6 +1842,39 @@ function chuDangGo(nut) {
 function roiDoanDangGo(nut) {
   const n = +((nut.closest('[data-doan]') || {}).dataset || {}).doan;
   if (n) luuSuaDoan(n, nut.textContent);
+}
+
+/* Những đoạn mà vùng bôi đen đang chạm tới.
+
+   Mỗi đoạn là một vùng gõ RIÊNG, nên quét chuột qua nhiều đoạn rồi bấm Xoá thì
+   trình duyệt chỉ xoá phần nằm trong đoạn có con trỏ - phải tự gom lấy. */
+function doanTrongVungChon() {
+  const sel = window.getSelection && window.getSelection();
+  if (!sel || sel.isCollapsed || !sel.rangeCount) return [];
+  const r = sel.getRangeAt(0);
+  return Array.from(document.querySelectorAll('#cuon [data-doan]'))
+    .filter((el) => r.intersectsNode(el))
+    .map((el) => +el.dataset.doan);
+}
+
+/* Xoá hẳn một loạt đoạn - đường của Ctrl+A rồi Xoá, và của quét chọn nhiều
+   đoạn. Xoá từ dưới lên để số đoạn phía trên không xê dịch giữa chừng. */
+function xoaCacDoan(ds) {
+  const ten = tenTepDangXem(S);
+  const t = TAI_LIEU[ten];
+  if (!t || !ds.length) return;
+  const bo = new Set(ds);
+  const moi = t.doan.filter((_, i) => !bo.has(i + 1));
+  TAI_LIEU[ten] = { ...t, doan: moi };
+  let chips = S.chips;
+  Array.from(bo).sort((a, b) => b - a).forEach((n) => {
+    chips = dichThe(chips, ten, n, -1);
+  });
+  duLieuSoat = null;
+  dungPhat();
+  dat({ ...S, chips, soatBoQua: {},
+        sel: Math.max(1, Math.min(ds[0], moi.length)),
+        pos: 1 });
 }
 
 /* Chép chữ vào tài liệu, và tách hoặc bỏ đoạn nếu cần. Một đoạn có thể ra

@@ -413,6 +413,21 @@ console.log('\n--- Q. Sửa chữ tại chỗ ---');
   ok(/document\.activeElement\.blur\(\)[\s\S]{0,80}LENH\['Lưu'\]/.test(JS),
      'Ctrl+S lúc đang gõ thì rời ô trước rồi mới lưu, không ghi ra bản thiếu chữ vừa gõ');
 
+  /* Mỗi đoạn là một vùng gõ RIÊNG, nên Ctrl+A để mặc chỉ bôi đen trong một
+     đoạn, và quét nhiều đoạn rồi bấm Xoá thì các đoạn ngoài con trỏ trơ ra. */
+  ok(chay('typeof doanTrongVungChon') === 'function'
+     && chay('typeof xoaCacDoan') === 'function',
+     'có đường gom đoạn trong vùng bôi đen và xoá cả loạt');
+  ok(/selectNodeContents\(cuon\)/.test(JS), 'Ctrl+A bôi đen cả bài, không chỉ một đoạn');
+  ok(/'Delete' \|\| e\.key === 'Backspace'[\s\S]{0,200}xoaCacDoan/.test(JS),
+     'quét nhiều đoạn rồi Xoá thì xoá hết các đoạn ấy');
+
+  const truocXoa = chay('doanDangXem(S, TAI_LIEU).length');
+  chay('xoaCacDoan([1, 2])');
+  ok(chay('doanDangXem(S, TAI_LIEU).length') === truocXoa - 2,
+     'xoá hai đoạn một lượt thì bớt đúng hai',
+     `${truocXoa} → ${chay('doanDangXem(S, TAI_LIEU).length')}`);
+
   /* Thẻ cảm xúc đánh theo SỐ ĐOẠN, nên tách hay xoá đoạn là phải dời chúng
      theo. Không dời thì thẻ nhảy sang nhầm câu mà người dùng không hề đụng. */
   const themGiua = chay("dichThe({ t: { 2: 'a', 5: 'b' } }, 't', 3, 1)");
