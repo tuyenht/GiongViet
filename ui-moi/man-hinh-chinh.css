@@ -153,12 +153,62 @@
 .doan.dang-doc { background: var(--hl); box-shadow: inset 3px 0 0 var(--acc); }
 .doan.doc-xong .doan__chu, .doan.doc-xong .doan__so { color: var(--dis); }
 
+/* Máng số trở lại đúng vai bản mẫu: CHỈ là số thứ tự, không phải nút. Việc
+   nghe riêng đoạn đã chuyển hẳn sang nút ▶ nổi bên phải mỗi dòng. */
 .doan__so { width: 54px; flex: none; padding-right: 14px; text-align: right;
+            white-space: nowrap;
             font-size: 12.5px; line-height: var(--dong-doan); color: var(--txt3);
             font-variant-numeric: tabular-nums; border: 0; background: transparent;
-            border-radius: 4px; transition: background .15s, color .15s; }
-.doan__so:hover { color: var(--acc); background: var(--acc-soft); }
+            cursor: default; }
+/* Mũi tên chỉ để BÁO đoạn đang đọc, không mời bấm. Chiếm chỗ sẵn dù đang trong
+   suốt, để con số không nhảy ngang đúng lúc tới lượt nó. */
+.doan__so::before { content: '▶'; font-size: 9px; margin-right: 5px;
+                    color: var(--acc); opacity: 0; }
 .doan.dang-doc .doan__so { color: var(--acc); font-weight: 700; }
+.doan.dang-doc .doan__so::before { opacity: 1; }
+
+/* Nút nghe riêng đoạn: hiện khi đưa chuột vào dòng, nằm sát mép phải, canh
+   giữa theo chiều cao của cả đoạn nên đoạn dài mấy dòng vẫn tìm thấy ngay.
+
+   Neo absolute vào .doan (đã position:relative) chứ KHÔNG fixed: nút nằm gọn
+   trong lòng đoạn nên cuộn theo đoạn là đúng, không dính cảnh bị .doc__cuon
+   cắt cụt như mấy thứ bung ra ngoài vùng cuộn.
+
+   Dáng PHẲNG theo đúng nút nghe thử giọng ở cột phải (.roi__nghe): bo 5px,
+   không viền, không bóng đổ. Bản đầu làm tròn 50% có viền có bóng, nhìn ra
+   ngay là "rời rạc" - nó mang ngôn ngữ của một app khác dán vào giữa một giao
+   diện phẳng.
+
+   TUYỆT ĐỐI KHÔNG cho nút nền đặc. Nền dòng lúc rê chuột là --sub-h (xám rất
+   nhạt) chứ không phải --layer (trắng), nên nút nền trắng hiện lên thành một
+   ô trắng lộ liễu giữa dòng - đã thử và hỏng đúng như vậy.
+
+   Cũng không cần nền để che chữ: .doan__than chặn ở max-width 700px, cộng
+   máng số 54px là chữ hết chậm nhất ở 754px, trong khi nút bám mép phải vùng
+   đọc. Hai bên cách nhau vài trăm pixel, không hề đè nhau.
+
+   Nền lúc rê vào nút thì dùng --acc-soft: nó là rgba trong suốt nên chồng lên
+   nền dòng nào cũng hoà, không đục ra một mảng khác màu. */
+.doan__play { position: absolute; right: 10px; top: 50%; z-index: 2;
+              transform: translateY(-50%);
+              width: 28px; height: 28px; display: inline-flex;
+              align-items: center; justify-content: center;
+              border: 0; border-radius: 5px;
+              background: transparent; color: var(--acc);
+              font-size: 11px; cursor: pointer; opacity: 0;
+              transition: opacity .12s, background .12s; }
+.doan:hover .doan__play { opacity: 1; }
+/* Đi bằng bàn phím cũng phải thấy nút, không thì chỉ ai dùng chuột mới nghe được. */
+.doan__play:focus-visible { opacity: 1; outline: 2px solid var(--acc); outline-offset: 1px; }
+.doan__play:hover { background: var(--acc-soft); }
+
+/* KHOÁ - lúc giọng đang tải, mất kết nối hoặc hết lượt. Mờ đi, con trỏ báo
+   không dùng được.
+
+   Vẫn cho bấm, và bấm thì hiện lời nói rõ vì sao: một nút xám ngắt bấm không
+   ăn gì là thứ làm người lớn tuổi loay hoay lâu nhất, còn tệ hơn không có nút. */
+.doan__play.la-khoa { color: var(--dis); cursor: not-allowed; }
+.doan__play.la-khoa:hover { background: transparent; }
 .doan__than { flex: 1; min-width: 0; max-width: 700px; padding-right: 24px; }
 /* ==================================================== viền kéo đổi cỡ cửa sổ
 

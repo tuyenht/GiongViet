@@ -90,13 +90,95 @@ ok(HTML.indexOf('nut--acc nut--cao') > 0, 'chỉ Xuất là nút accent');
 console.log('\n--- C. Vùng đọc ---');
 ok(co('215 từ') || /\d+ từ · 16 đoạn/.test(HTML), 'dòng thống kê',
    (HTML.match(/\d+ từ · \d+ đoạn · khoảng [^<]+/) || [''])[0]);
-ok(co('Bấm số đoạn để nghe riêng đoạn đó'), 'gợi ý bên phải đầu vùng đọc');
+/* Gợi ý phải tả đúng thao tác đang có. Máng số đã thôi làm nút, nên câu cũ
+   "Bấm số đoạn..." là chỉ đường sai - canh để nó không lẻn về. */
+ok(co('Đưa chuột vào đoạn rồi bấm ▶ để nghe riêng đoạn đó'), 'gợi ý bên phải đầu vùng đọc');
+ok(!co('Bấm số đoạn'), 'KHÔNG còn gợi ý cũ bảo bấm vào số đoạn');
 ok(!co('THỜI LƯỢNG') && !co('doan__dur'), 'KHÔNG còn cột/nhãn thời lượng');
 ok(dem('data-doan=') === 16, '16 đoạn', String(dem('data-doan=')));
 ok(co('doan--tieude'), 'có đoạn tiêu đề');
 ok(co('doan--trong'), 'có đoạn rỗng (blank)');
 ok(co('[hắng giọng]'), 'thẻ cảm xúc ở đoạn 11');
-ok(co('Nghe riêng đoạn này, nghe hết đoạn thì dừng'), 'tooltip máng số');
+/* Nghe riêng đoạn nay đi bằng nút ▶ nổi bên phải mỗi dòng, hiện lúc đưa chuột
+   vào. Máng số trở lại đúng vai bản mẫu: chỉ là số, KHÔNG phải nút — nên nó
+   không được mang data-nghe nữa, không thì lại thành hai nút chồng vai. */
+ok(/<button class="doan__play"[\s\S]*?data-nghe="\d+"/.test(HTML), 'mỗi đoạn có nút ▶ riêng');
+ok(/Nghe riêng đoạn \d+ — nghe hết đoạn thì dừng/.test(HTML), 'mách nước nút ▶ kèm số đoạn');
+ok(!/class="doan__so[^"]*"[^>]*data-nghe/.test(HTML), 'máng số KHÔNG còn là nút');
+ok(!co('doc__nghe'), 'KHÔNG còn nút Nghe đoạn ở thanh trên');
+/* Dòng trống không có chữ để đọc; treo nút ở đó là bày nút bấm ra lỗi.
+   Đếm thẳng từ HTML chứ không viết cứng con số - tài liệu mẫu đổi một dòng là
+   phép kiểm viết cứng đỏ oan, mà đọc dòng đỏ ấy lại tưởng mã hỏng. */
+const soDoanVe = (HTML.match(/data-doan=/g) || []).length;
+const soTrongVe = (HTML.match(/doan--trong/g) || []).length;
+const soPlayVe = (HTML.match(/doan__play/g) || []).length;
+ok(soPlayVe === soDoanVe - soTrongVe,
+   `dòng trống không có nút ▶ (${soDoanVe} đoạn, ${soTrongVe} trống)`,
+   `${soPlayVe} nút`);
+
+/* Dáng vẻ nút nằm bên CSS nên HTML không nói được, phải soi thẳng tệp. */
+const CSS_CHINH = readFileSync(join(UI, 'man-hinh-chinh.css'), 'utf8');
+ok(/\.doan__play\s*\{[^}]*position:\s*absolute/.test(CSS_CHINH), 'nút ▶ nổi trên nội dung');
+ok(/\.doan__play\s*\{[^}]*top:\s*50%/.test(CSS_CHINH)
+   && /\.doan__play\s*\{[^}]*translateY\(-50%\)/.test(CSS_CHINH),
+   'nút ▶ canh giữa theo chiều cao đoạn');
+ok(/\.doan__play\s*\{[^}]*right:\s*\d/.test(CSS_CHINH), 'nút ▶ nằm sát mép phải');
+ok(/\.doan__play\s*\{[^}]*opacity:\s*0\b/.test(CSS_CHINH)
+   && /\.doan:hover\s+\.doan__play\s*\{[^}]*opacity:\s*1/.test(CSS_CHINH),
+   'nút ▶ ẩn sẵn, hiện khi đưa chuột vào đoạn');
+ok(/\.doan__play\s*\{[^}]*z-index/.test(CSS_CHINH), 'nút ▶ nằm trên nội dung');
+/* Dáng phải theo ngôn ngữ PHẲNG của app (xem .roi__nghe). Bản đầu tròn 50% có
+   viền có bóng, nhìn ra ngay là rời rạc - canh để nó không lẻn về. */
+ok(!/\.doan__play\s*\{[^}]*border-radius:\s*50%/.test(CSS_CHINH)
+   && !/\.doan__play\s*\{[^}]*box-shadow/.test(CSS_CHINH),
+   'nút ▶ giữ dáng phẳng: không bo tròn hẳn, không bóng đổ');
+
+/* Nền đặc dưới nút đẻ ra một Ô TRẮNG giữa dòng, vì nền dòng lúc rê chuột là
+   --sub-h chứ không phải --layer. Đã thử và hỏng đúng thế. Nút phải trong
+   suốt; nền lúc rê vào nút thì dùng rgba (--acc-soft) nên chồng nền nào cũng
+   hoà. Dải mờ dần cũng bỏ - nó chính là mảng trắng thứ hai. */
+ok(/\.doan__play\s*\{[^}]*background:\s*transparent/.test(CSS_CHINH),
+   'nút ▶ trong suốt, KHÔNG đục ra ô trắng giữa dòng');
+ok(!/\.doan__play::before/.test(CSS_CHINH), 'KHÔNG còn dải mờ dần');
+ok(/\.doan__play:hover\s*\{[^}]*var\(--acc-soft\)/.test(CSS_CHINH),
+   'rê vào nút thì nền là màu rgba hoà được với mọi nền dòng');
+/* Lý do bỏ được nền che chữ: vùng chữ có trần, không chạy tới chỗ đặt nút. */
+ok(/\.doan__than\s*\{[^}]*max-width:\s*\d+px/.test(CSS_CHINH),
+   'vùng chữ có max-width nên không đụng nút ở mép phải');
+ok(/\.doan__so\s*\{[^}]*cursor:\s*default/.test(CSS_CHINH), 'máng số trở lại con trỏ thường');
+
+/* ---- HỌ LỖI KHOÁ PHÁT TIẾNG ----------------------------------------------
+   Từng có ba đường vào việc phát (máng số · nút Nghe đoạn · phím Space) mà
+   chỉ nút Nghe toàn bộ bị khoá; hai đường kia lọt, giao diện chạy màn "đang
+   đọc" không có tiếng và không báo gì. Kiểm HÀNH VI bằng cách gọi thẳng hàm
+   trong ngữ cảnh vừa chạy giao diện, không soi chuỗi mã. */
+ok(chay('typeof lyDoKhoa') === 'function', 'có hàm lyDoKhoa dùng chung cho cả ba đường');
+ok(chay('lyDoKhoa(S)') === '', 'lúc bình thường thì không khoá');
+
+const viTai = chay("lyDoKhoa({ ...S, situation: 'giong_dang_tai' })");
+ok(!!viTai && !viTai.includes('{giong}'),
+   'giọng đang tải thì nêu lý do, đã thay {giong} bằng tên giọng', viTai);
+ok(!!chay("lyDoKhoa({ ...S, situation: 'mat_ket_noi' })"), 'mất kết nối thì nêu lý do');
+ok(!!chay("lyDoKhoa({ ...S, situation: 'het_luot' })"), 'hết lượt thì nêu lý do');
+
+const doanKhoa = chay(
+  "(() => { const cu = S; S = { ...S, situation: 'giong_dang_tai' };"
+  + " const r = veDoan({ kieu: 'text', chu: 'thử' }, 3); S = cu; return r; })()");
+ok(/class="doan__play la-khoa"/.test(doanKhoa), 'nút ▶ mang lớp la-khoa khi khoá');
+ok(!doanKhoa.includes('Nghe riêng đoạn 3'), 'lúc khoá, mách nước đổi thành lý do thật');
+
+ok(/\.doan__play\.la-khoa\s*\{[^}]*cursor:\s*not-allowed/.test(CSS_CHINH),
+   'CSS: nút ▶ khoá đổi con trỏ');
+ok(/\.doan__play\.la-khoa:hover\s*\{[^}]*background:\s*transparent/.test(CSS_CHINH),
+   'CSS: khoá thì rê vào nút ▶ KHÔNG sáng lên mời bấm');
+
+const JS_CHINH = readFileSync(join(UI, 'giao-dien.js'), 'utf8');
+ok(/\[data-nghe\][\s\S]{0,400}?lyDoKhoa\(S\)[\s\S]{0,200}?moBao/.test(JS_CHINH),
+   'đường nút ▶ hỏi lyDoKhoa trước khi phát');
+ok(/e\.key === ' '[\s\S]{0,600}?lyDoKhoa\(S\)[\s\S]{0,200}?moBao/.test(JS_CHINH),
+   'phím Space hỏi lyDoKhoa trước khi phát');
+ok(/\.then\(\(kq\)[\s\S]{0,200}?kq\.loi[\s\S]{0,200}?dungPhat\(\)/.test(JS_CHINH),
+   'batDauPhat đọc lỗi Python trả về rồi dừng sạch, không để màn đang đọc chạy suông');
 
 console.log('\n--- D. Cột phải ---');
 ok(co('Hồ sơ đang dùng'), 'nhãn HỒ SƠ ĐANG DÙNG');

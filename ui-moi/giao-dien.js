@@ -146,6 +146,21 @@ const veThanhTim = () => !S.find ? '' : `
     <button class="nut nut--icon tim__dong" id="dongTim">${ic('dong', 10)}</button>
   </div>`;
 
+/* Vì sao lúc này chưa nghe được — trả câu RỖNG khi nghe được bình thường.
+
+   Ba đường vào việc phát (máng số, nút Nghe đoạn, phím Space) đều hỏi qua đây,
+   nên không còn cảnh đường này khoá mà đường kia vẫn lọt. Chữ lấy nguyên từ
+   dải cảnh báo và nhãn máy đọc đang hiện sẵn trên màn hình - người dùng không
+   phải học hai cách gọi cho cùng một chuyện. */
+function lyDoKhoa(S) {
+  if (!moHinhSanSang()) return moHinh.tieuDe || 'Máy đọc chưa sẵn sàng';
+  if (!biKhoa(S)) return '';
+  const d = DAI_CANH_BAO[S.situation];
+  if (!d) return 'Chưa nghe được lúc này';
+  const giong = GIONG.find((g) => g.ma === hoSoDangDung(S).giong);
+  return d.ten.replace('{giong}', giong ? giong.ten : '');
+}
+
 function veCanhBao() {
   const d = DAI_CANH_BAO[S.situation];
   if (!d) return '';
@@ -208,7 +223,9 @@ function veVungDoc() {
   <div class="doc">
     <div class="doc__dau">
       <span class="doc__thongke">${esc(thongKe(doan))}</span>
-      <span class="doc__goiy">Bấm số đoạn để nghe riêng đoạn đó</span>
+      <!-- Gợi ý phải tả đúng thao tác hiện có. Câu cũ bảo "bấm số đoạn" trong
+           khi số đã thôi làm nút là chỉ đường sai, còn hại hơn không ghi gì. -->
+      <span class="doc__goiy">Đưa chuột vào đoạn rồi bấm ▶ để nghe riêng đoạn đó</span>
     </div>
     <div class="doc__cuon" id="cuon">
       ${doan.map((d, i) => veDoan(d, i + 1)).join('')}
@@ -228,16 +245,24 @@ function veDoan(d, n) {
 
   const the = theCuaDoan(S, n);
   const dangCho = S.situation === 'dang_tao' && n === S.pos;
+  /* Khoá thì nút play phải TRÔNG như đang khoá: mờ đi, con trỏ báo không dùng
+     được. Vẫn bấm được - bấm vào sẽ nói rõ vì sao chưa nghe được, hơn hẳn một
+     nút xám ngắt bấm không ăn gì. */
+  const viKhoa = lyDoKhoa(S);
+  // Dòng trống không có chữ để đọc nên không treo nút - nút bấm ra lỗi là nút giả.
+  const coPlay = d.kieu !== 'blank';
 
   return `<div class="${cls.join(' ')}" data-doan="${n}">
-    <button class="doan__so" data-nghe="${n}"
-            title="Nghe riêng đoạn này, nghe hết đoạn thì dừng">${
+    <span class="doan__so">${
       dangCho ? '<span class="xoay xoay--nho" style="display:inline-block"></span>'
-              : (S.view === 'dang_doc' && n === S.pos ? '▶ ' : '') + n}</button>
-    <!-- data-doan + lớp .doan__so đủ để nhịp đọc sờ tới mà không dựng lại DOM -->
+              : n}</span>
+    <!-- data-doan đủ để nhịp đọc gạt lớp trên từng đoạn mà không dựng lại DOM -->
     <span class="doan__than">${d.kieu === 'blank' ? '' :
       `<span class="doan__chu">${n === S.sel && S.view !== 'dang_doc' ? '<span class="nhap"></span>' : ''}${
-        the ? `<span class="doan__the">${esc(the)}</span>` : ''}${esc(d.chu)}</span>`}</span>
+        the ? `<span class="doan__the">${esc(the)}</span>` : ''}${esc(d.chu)}</span>`}</span>${
+    coPlay ? `
+    <button class="doan__play${viKhoa ? ' la-khoa' : ''}" data-nghe="${n}"
+            title="${esc(viKhoa || `Nghe riêng đoạn ${n} — nghe hết đoạn thì dừng`)}">▶</button>` : ''}
   </div>`;
 }
 
@@ -757,11 +782,8 @@ function veNhipDoc() {
       nut.classList.toggle('doc-xong', xong);
       nut.classList.toggle('dang-chon', false);
 
-      // Đổi chữ ở máng số chỉ cho đoạn vừa rời và đoạn vừa tới, không phải cả bài.
-      if (dangDoc || n === posDaVe) {
-        const so = nut.querySelector('.doan__so');
-        if (so) so.textContent = (dangDoc ? '▶ ' : '') + n;
-      }
+      // Mũi tên ▶ nay do CSS vẽ theo lớp .dang-doc vừa gạt ở trên, nên vòng
+      // này không phải sờ vào chữ trong máng số nữa.
     });
 
     // Đoạn vừa rời trả về chữ thường, đoạn vừa tới bọc span rồi chạy tô chữ.
@@ -832,9 +854,21 @@ async function batDauPhat(tiepTuc = false) {
        đang đọc dở, mà đọc tiếp thì vẫn đúng tài liệu ấy. */
     if (!tiepTuc) await guiDoanSangPython();
     pythonLai = true;
-    if (tiepTuc) { api('moi_doc_tiep'); }
-    else if (S.mode === 'one') { api('moi_nghe_doan', S.pos); }
-    else { api('moi_nghe_toan_bo'); }
+    /* Python trả {"loi": ...} khi mô hình chưa sẵn sàng hoặc đoạn không có chữ
+       để đọc. Trước đây không ai đọc giá trị trả về nên lỗi bị nuốt sạch: màn
+       "đang đọc" vẫn hiện, đồng hồ vẫn nhích, mà loa im - người dùng tưởng máy
+       treo. dungPhat() dọn cả nhịp lẫn nguồn phát rồi trả về màn sẵn sàng.
+
+       Dùng .then() chứ KHÔNG await: await ở đây sẽ dời thời điểm khởi nhịp
+       đồng hồ sang sau lượt gọi Python, làm đồng hồ lệch với tiếng. */
+    (tiepTuc ? api('moi_doc_tiep')
+      : S.mode === 'one' ? api('moi_nghe_doan', S.pos)
+        : api('moi_nghe_toan_bo')
+    ).then((kq) => {
+      if (!kq || !kq.loi) return;
+      dungPhat();
+      moBao(kq.loi, 'Chưa nghe được');
+    });
 
     /* Vẫn phải chạy một nhịp, nhưng CHỈ để nhích đồng hồ và thanh tiến trình.
        Việc sang đoạn do Python đẩy về, không phải việc của nhịp này.
@@ -1315,6 +1349,11 @@ document.addEventListener('click', (e) => {
   if ((n = t('[data-tab]')))    return chuyenSang(doiTab(S, +n.dataset.tab));
   if (t('#themTab'))            return chuyenSang(themTab(S));
   if ((n = t('[data-nghe]')))   { e.stopPropagation();
+                                  /* Lớp chặn TRONG: lớp ngoài là nút mờ đi, nhưng
+                                     nút Nghe toàn bộ khoá được mà đường này lọt là
+                                     giao diện chạy màn "đang đọc" không có tiếng. */
+                                  const viKhoa = lyDoKhoa(S);
+                                  if (viKhoa) return moBao(viKhoa, 'Chưa nghe được');
                                   dat(ngheRiengDoan(S, +n.dataset.nghe)); return batDauPhat(); }
   if ((n = t('[data-doan]')))   return dat(chonDoan(S, +n.dataset.doan));
   if (t('#nutXuat'))            return moHopXuat();
@@ -1542,6 +1581,11 @@ document.addEventListener('keydown', (e) => {
     e.preventDefault();
     if (S.view === 'dang_doc') return LENH['Tạm dừng']();
     if (!hienNgheVaXuat(S, TAI_LIEU)) return;
+    /* Nút Nghe toàn bộ mờ đi khi khoá, nhưng phím Space thì không ai làm mờ
+       được - phải tự hỏi lại, không thì bấm Space lúc giọng đang tải là màn
+       "đang đọc" chạy suông. */
+    const viKhoa = lyDoKhoa(S);
+    if (viKhoa) return moBao(viKhoa, 'Chưa nghe được');
     if (daTamDung) { dat({ ...S, view: 'dang_doc' }); return batDauPhat(true); }
     dat(ngheToanBo(S)); batDauPhat();
   }
