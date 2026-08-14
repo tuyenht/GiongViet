@@ -36,11 +36,32 @@ const ctx = {
     documentElement: { dataset: {}, style: { setProperty() {}, removeProperty() {} } },
     body: { appendChild() {} },
     activeElement: { tagName: 'DIV' },
-    querySelector: (s) => (s === '#goc' ? ctx.__goc : (s === '#cuon' ? null : nutGia())),
+    querySelector: (s) => {
+      if (s === '#goc') return ctx.__goc;
+      if (s === '#cuon') return null;
+      /* Trả phần tử BIẾT nó thuộc đoạn nào khi selector có [data-doan="N"].
+         doanGoDuoc() lấy phần tử rồi hỏi ngược .closest('[data-doan]') để biết
+         số đoạn; trả một nút vô danh là chuỗi ấy đứt ngay. */
+      const m = /\[data-doan="(\d+)"\]/.exec(s);
+      if (m) {
+        const n = m[1];
+        const el = nutGia();
+        el.textContent = 'chữ giả';
+        el.closest = (q) => (q === '[data-doan]' ? { dataset: { doan: n } } : null);
+        return el;
+      }
+      return nutGia();
+    },
     // Đường vẽ nhẹ (veNhipDoc) hứng danh sách đoạn qua đây.
     querySelectorAll: () => [],
     getElementById: () => null,
     createElement: () => nutGia(),
+    // datCaret() dựng Range để đặt con trỏ; thiếu cái này là phép kiểm gõ phím
+    // thật ném lỗi ngay ở lần gộp đoạn đầu tiên.
+    createRange: () => ({
+      setStart() {}, setEnd() {}, collapse() {}, selectNodeContents() {},
+      toString: () => '',
+    }),
     addEventListener: (t, f) => { batSuKien[t] = f; },
   },
   window: { addEventListener() {} },
@@ -70,6 +91,38 @@ const dem = (s) => HTML.split(s).length - 1;
    của object ngữ cảnh - nên phải chạy biểu thức bên trong ngữ cảnh mới với
    tới được S, dat(), doiHoSo()… */
 const chay = (ma) => runInContext(ma, ctx, { filename: 'kiem' });
+
+/* GÕ PHÍM THẬT vào handler keydown, thay vì grep mã nguồn tìm dòng chữ.
+
+   Grep chỉ chứng minh trong tệp CÓ dòng ấy - nó xanh kể cả khi nhánh không bao
+   giờ chạy tới, khi điều kiện phía trên đã return, hay khi một quy tắc khác
+   nuốt mất phím. Ba lần tôi kết luận sai trong phiên này đều có bộ kiểm xanh
+   kèm theo, và đều vì canh dấu hiệu thay vì canh hành vi.
+
+   `vt` là vị trí con trỏ trong đoạn; `chu` là chữ của đoạn đang gõ. */
+function goPhim(soDoan, phim, { vt = 0, chu = 'abc', ...them } = {}) {
+  const o = {
+    nodeType: 1, tagName: 'SPAN', isContentEditable: true, textContent: chu,
+    classList: { contains: (c) => c === 'doan__chu' },
+    closest: (s) => (s === '[data-doan]' ? { dataset: { doan: String(soDoan) } } : null),
+    focus() {}, blur() {},
+  };
+  ctx.document.activeElement = o;
+  ctx.window.getSelection = () => ({
+    isCollapsed: true, rangeCount: 1,
+    getRangeAt: () => ({
+      endContainer: o, endOffset: vt,
+      cloneRange: () => ({
+        selectNodeContents() {}, setEnd() {}, toString: () => chu.slice(0, vt),
+      }),
+    }),
+    removeAllRanges() {}, addRange() {},
+  });
+  let daChan = false;
+  batSuKien.keydown({ key: phim, ...them, preventDefault: () => { daChan = true; } });
+  ctx.document.activeElement = { tagName: 'DIV' };
+  return daChan;                       // có chặn hành vi mặc định hay không
+}
 
 console.log('--- A. Khung dọc đủ 9 tầng ---');
 for (const [cls, ten] of [['tieude', 'thanh tiêu đề'], ['menu', 'thanh menu'],
@@ -440,8 +493,27 @@ console.log('\n--- Q. Sửa chữ tại chỗ ---');
   /* Enter phải tách NGAY, không đợi rời đoạn: không chặn thì trình duyệt chỉ
      chèn một dấu xuống dòng, người dùng bấm Enter xong không thấy gì xảy ra. */
   ok(chay('typeof tachDoanTaiCho') === 'function', 'có đường tách đoạn tại con trỏ');
-  ok(/e\.key === 'Enter'[\s\S]{0,200}tachDoanTaiCho[\s\S]{0,120}preventDefault/.test(JS),
-     'Enter tách đoạn ngay tại con trỏ, chặn hành vi mặc định');
+  {
+    // Gõ Enter THẬT giữa câu, xem đoạn có tách ngay không.
+    const truoc = chay('doanDangXem(S, TAI_LIEU).length');
+    const chan = goPhim(3, 'Enter', { vt: 4, chu: 'một hai ba' });
+    ok(chan && chay('doanDangXem(S, TAI_LIEU).length') === truoc + 1,
+       'gõ Enter giữa câu → tách ngay thành hai đoạn',
+       `${truoc} → ${chay('doanDangXem(S, TAI_LIEU).length')}`);
+    /* Cắt ĐÚNG vị trí con trỏ, giữ nguyên cả dấu cách - không tự ý trim.
+       Con trỏ ở ký tự thứ 4 của "một hai ba" thì phần trên là "một " kèm
+       khoảng trắng; cắt bỏ nó là sửa chữ người dùng sau lưng họ. */
+    ok(chay('doanDangXem(S, TAI_LIEU)[2].chu') === 'một '
+       && chay('doanDangXem(S, TAI_LIEU)[3].chu') === 'hai ba',
+       'chữ cắt đúng chỗ con trỏ, không mất ký tự nào',
+       chay('doanDangXem(S, TAI_LIEU)[2].chu') + ' | '
+       + chay('doanDangXem(S, TAI_LIEU)[3].chu'));
+    // Shift+Enter KHÔNG tách - để dành cho xuống dòng trong cùng đoạn.
+    const truoc2 = chay('doanDangXem(S, TAI_LIEU).length');
+    ok(!goPhim(3, 'Enter', { vt: 2, chu: 'abc', shiftKey: true })
+       && chay('doanDangXem(S, TAI_LIEU).length') === truoc2,
+       'Shift+Enter KHÔNG tách đoạn');
+  }
   {
     const truoc = chay('doanDangXem(S, TAI_LIEU).length');
     const chuGoc = chay('doanDangXem(S, TAI_LIEU)[2].chu');
@@ -462,13 +534,33 @@ console.log('\n--- Q. Sửa chữ tại chỗ ---');
   ok(/coPlay = d\.kieu !== 'blank' && String\(d\.chu/.test(JS),
      'đoạn chưa có chữ thì không treo nút ▶ (bấm ra lỗi là nút giả)');
 
-  ok(/e\.key === 'Backspace' && vt === 0[\s\S]{0,120}gopLenDoanTren/.test(JS),
-     'Backspace ở ĐẦU đoạn thì gộp lên đoạn trên');
-  ok(/e\.key === 'Delete' && vt === het[\s\S]{0,200}gopLenDoanTren/.test(JS),
-     'Delete ở CUỐI đoạn thì kéo đoạn dưới lên');
-  ok(/ArrowUp' && vt === 0[\s\S]{0,140}datCaret/.test(JS)
-     && /ArrowDown' && vt === het[\s\S]{0,140}datCaret/.test(JS),
-     'mũi tên lên/xuống ở mép đoạn thì sang đoạn kề');
+  /* GÕ THẬT thay vì grep. Mỗi phép dưới đây gọi đúng handler keydown mà cửa sổ
+     thật dùng, rồi soi kết quả trong tài liệu - không phải soi mã nguồn. */
+  {
+    const truoc = chay('doanDangXem(S, TAI_LIEU).length');
+    const chan = goPhim(3, 'Backspace', { vt: 0, chu: 'đoạn ba' });
+    ok(chan && chay('doanDangXem(S, TAI_LIEU).length') === truoc - 1,
+       'gõ Backspace ở ĐẦU đoạn 3 → gộp lên đoạn trên, bớt một đoạn',
+       `${truoc} → ${chay('doanDangXem(S, TAI_LIEU).length')}`);
+  }
+  {
+    const truoc = chay('doanDangXem(S, TAI_LIEU).length');
+    const chu = chay('doanDangXem(S, TAI_LIEU)[2].chu');
+    const chan = goPhim(3, 'Delete', { vt: chu.length, chu });
+    ok(chan && chay('doanDangXem(S, TAI_LIEU).length') === truoc - 1,
+       'gõ Delete ở CUỐI đoạn 3 → kéo đoạn dưới lên',
+       `${truoc} → ${chay('doanDangXem(S, TAI_LIEU).length')}`);
+  }
+  {
+    const truoc = chay('doanDangXem(S, TAI_LIEU).length');
+    const chan = goPhim(3, 'Backspace', { vt: 2, chu: 'giữa câu' });
+    ok(!chan && chay('doanDangXem(S, TAI_LIEU).length') === truoc,
+       'Backspace GIỮA câu thì để trình duyệt lo, không gộp đoạn nào');
+  }
+  ok(goPhim(3, 'ArrowUp', { vt: 0, chu: 'abc' }), 'mũi tên LÊN ở đầu đoạn được xử lý');
+  ok(goPhim(3, 'ArrowDown', { vt: 3, chu: 'abc' }), 'mũi tên XUỐNG ở cuối đoạn được xử lý');
+  ok(!goPhim(3, 'ArrowUp', { vt: 2, chu: 'abc' }),
+     'mũi tên LÊN ở giữa đoạn thì KHÔNG giành phím của trình duyệt');
   ok(/sel && sel\.isCollapsed/.test(JS),
      'chỉ giành phím khi con trỏ đứng một chỗ, đang bôi đen thì để trình duyệt lo');
 
