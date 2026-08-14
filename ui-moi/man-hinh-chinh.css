@@ -197,6 +197,14 @@
               background: transparent; color: var(--acc);
               font-size: 11px; cursor: pointer; opacity: 0;
               transition: opacity .12s, background .12s; }
+/* Ký hiệu do CSS vẽ theo lớp .dang-doc, KHÔNG viết vào HTML. Vòng nhịp đọc
+   gạt lớp ấy mỗi 250ms mà không dựng lại DOM, nên ký hiệu nằm trong HTML thì
+   đoạn sang lượt đọc vẫn trơ ra hình tam giác - phải bấm chỗ khác mới đổi. */
+.doan__play::after { content: '▶'; }
+.doan.dang-doc .doan__play::after { content: '■'; }
+/* Đoạn đang đọc thì nút hiện sẵn, không bắt rê chuột vào mới thấy: đang có
+   tiếng chạy mà phải đi tìm chỗ bấm dừng là lúc bối rối nhất. */
+.doan.dang-doc .doan__play { opacity: 1; }
 .doan:hover .doan__play { opacity: 1; }
 /* Đi bằng bàn phím cũng phải thấy nút, không thì chỉ ai dùng chuột mới nghe được. */
 .doan__play:focus-visible { opacity: 1; outline: 2px solid var(--acc); outline-offset: 1px; }
@@ -209,7 +217,13 @@
    ăn gì là thứ làm người lớn tuổi loay hoay lâu nhất, còn tệ hơn không có nút. */
 .doan__play.la-khoa { color: var(--dis); cursor: not-allowed; }
 .doan__play.la-khoa:hover { background: transparent; }
-.doan__than { flex: 1; min-width: 0; max-width: 700px; padding-right: 24px; }
+/* Chữ chạy hết bề ngang ô, KHÔNG chặn ở 700px nữa - cửa sổ rộng mà chữ dồn
+   vào giữa để trống nửa màn hình thì phí, chữ lại ngắn dòng hơn mức cần.
+
+   Chừa 52px bên phải làm chỗ cho nút ▶ (rộng 28, cách mép 10, còn 14 để thở).
+   Đây là thứ THAY nền đặc dưới nút: trước kia dựa vào trần 700px để chữ không
+   chạm nút, bỏ trần thì phải chừa chỗ, không thì nút lại đè lên chữ. */
+.doan__than { flex: 1; min-width: 0; padding-right: 52px; }
 /* ==================================================== viền kéo đổi cỡ cửa sổ
 
    Cửa sổ frameless nên phải tự vẽ mép. Dải 6px ở cạnh, 12px ở góc — đủ rộng

@@ -262,7 +262,8 @@ function veDoan(d, n) {
         the ? `<span class="doan__the">${esc(the)}</span>` : ''}${esc(d.chu)}</span>`}</span>${
     coPlay ? `
     <button class="doan__play${viKhoa ? ' la-khoa' : ''}" data-nghe="${n}"
-            title="${esc(viKhoa || `Nghe riêng đoạn ${n} — nghe hết đoạn thì dừng`)}">▶</button>` : ''}
+            title="${esc(viKhoa
+              || `Nghe riêng đoạn ${n}. Đang đọc đoạn này thì bấm để dừng.`)}"></button>` : ''}
   </div>`;
 }
 
@@ -1348,13 +1349,20 @@ document.addEventListener('click', (e) => {
                                    return chuyenSang(dongTab(S, +n.dataset.dongtab)); }
   if ((n = t('[data-tab]')))    return chuyenSang(doiTab(S, +n.dataset.tab));
   if (t('#themTab'))            return chuyenSang(themTab(S));
-  if ((n = t('[data-nghe]')))   { e.stopPropagation();
-                                  /* Lớp chặn TRONG: lớp ngoài là nút mờ đi, nhưng
-                                     nút Nghe toàn bộ khoá được mà đường này lọt là
-                                     giao diện chạy màn "đang đọc" không có tiếng. */
-                                  const viKhoa = lyDoKhoa(S);
-                                  if (viKhoa) return moBao(viKhoa, 'Chưa nghe được');
-                                  dat(ngheRiengDoan(S, +n.dataset.nghe)); return batDauPhat(); }
+  if ((n = t('[data-nghe]'))) {
+    e.stopPropagation();
+    /* Đang đọc chính đoạn này thì nút ấy là nút DỪNG - CSS đã đổi nó thành ■.
+       Kiểm ở đây chứ không gắn thuộc tính riêng vào HTML: nhịp đọc chuyển đoạn
+       bằng cách gạt lớp, không dựng lại DOM, nên thuộc tính viết sẵn sẽ ôi. */
+    const soDoan = +n.dataset.nghe;
+    if (S.view === 'dang_doc' && soDoan === S.pos) return dungPhat();
+    /* Lớp chặn TRONG: lớp ngoài là nút mờ đi, nhưng nút Nghe toàn bộ khoá được
+       mà đường này lọt là giao diện chạy màn "đang đọc" không có tiếng. */
+    const viKhoa = lyDoKhoa(S);
+    if (viKhoa) return moBao(viKhoa, 'Chưa nghe được');
+    dat(ngheRiengDoan(S, soDoan));
+    return batDauPhat();
+  }
   if ((n = t('[data-doan]')))   return dat(chonDoan(S, +n.dataset.doan));
   if (t('#nutXuat'))            return moHopXuat();
   if (t('#bDong'))              return dat({ ...S, toast: false });

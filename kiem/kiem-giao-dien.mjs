@@ -106,7 +106,8 @@ ok(co('[hắng giọng]'), 'thẻ cảm xúc ở đoạn 11');
    vào. Máng số trở lại đúng vai bản mẫu: chỉ là số, KHÔNG phải nút — nên nó
    không được mang data-nghe nữa, không thì lại thành hai nút chồng vai. */
 ok(/<button class="doan__play"[\s\S]*?data-nghe="\d+"/.test(HTML), 'mỗi đoạn có nút ▶ riêng');
-ok(/Nghe riêng đoạn \d+ — nghe hết đoạn thì dừng/.test(HTML), 'mách nước nút ▶ kèm số đoạn');
+ok(/Nghe riêng đoạn \d+\. Đang đọc đoạn này thì bấm để dừng\./.test(HTML),
+   'mách nước nút ▶ kèm số đoạn và nói rõ bấm lần nữa là dừng');
 ok(!/class="doan__so[^"]*"[^>]*data-nghe/.test(HTML), 'máng số KHÔNG còn là nút');
 ok(!co('doc__nghe'), 'KHÔNG còn nút Nghe đoạn ở thanh trên');
 /* Dòng trống không có chữ để đọc; treo nút ở đó là bày nút bấm ra lỗi.
@@ -145,9 +146,34 @@ ok(/\.doan__play\s*\{[^}]*background:\s*transparent/.test(CSS_CHINH),
 ok(!/\.doan__play::before/.test(CSS_CHINH), 'KHÔNG còn dải mờ dần');
 ok(/\.doan__play:hover\s*\{[^}]*var\(--acc-soft\)/.test(CSS_CHINH),
    'rê vào nút thì nền là màu rgba hoà được với mọi nền dòng');
-/* Lý do bỏ được nền che chữ: vùng chữ có trần, không chạy tới chỗ đặt nút. */
-ok(/\.doan__than\s*\{[^}]*max-width:\s*\d+px/.test(CSS_CHINH),
-   'vùng chữ có max-width nên không đụng nút ở mép phải');
+/* Chữ chạy hết bề ngang ô. Chỗ tránh nút nay là padding-right chứ không phải
+   trần 700px - bỏ trần mà quên chừa chỗ là nút đè lên chữ ngay. */
+ok(!/\.doan__than\s*\{[^}]*max-width/.test(CSS_CHINH),
+   'chữ chạy hết bề ngang ô, không chặn ở 700px');
+ok(/\.doan__than\s*\{[^}]*padding-right:\s*(4[89]|[5-9]\d)px/.test(CSS_CHINH),
+   'vùng chữ chừa đủ chỗ bên phải cho nút ▶');
+
+/* Nhịp đọc chuyển đoạn bằng cách gạt lớp, KHÔNG dựng lại DOM. Ký hiệu nút phải
+   do CSS vẽ theo lớp, viết vào HTML là đoạn sang lượt đọc vẫn trơ hình ▶. */
+ok(/\.doan__play::after\s*\{[^}]*content:\s*'▶'/.test(CSS_CHINH)
+   && /\.doan\.dang-doc\s+\.doan__play::after\s*\{[^}]*content:\s*'■'/.test(CSS_CHINH),
+   'nút đổi ▶ thành ■ ở đoạn đang đọc');
+ok(/\.doan\.dang-doc\s+\.doan__play\s*\{[^}]*opacity:\s*1/.test(CSS_CHINH),
+   'đoạn đang đọc thì nút hiện sẵn, không bắt rê chuột mới thấy');
+ok(/S\.view === 'dang_doc' && soDoan === S\.pos\) return dungPhat\(\)/
+   .test(readFileSync(join(UI, 'giao-dien.js'), 'utf8')),
+   'bấm nút ở đoạn đang đọc thì DỪNG, không đọc lại từ đầu');
+
+/* HỌ LỖI: kích thước CỨNG gặp nội dung do người dùng nhập thì sớm muộn cũng vỡ.
+   Hàng bảng Soát tab 2 đựng nguyên đoạn văn - để height cứng là chữ tràn ra
+   ngoài hàng và đè lên hàng dưới, chủ dự án mở bản .exe gặp ngay. */
+const CSS_SOAT = readFileSync(join(UI, 'man-soat.css'), 'utf8');
+ok(/\.soat__hang\s*\{[\s\S]*?min-height:\s*38px/.test(CSS_SOAT),
+   'hàng bảng Soát dùng min-height');
+ok(!/[^-]height:\s*38px/.test(CSS_SOAT),
+   'KHÔNG còn chiều cao cứng 38px ở bảng Soát (chữ dài sẽ đè lên nhau)');
+ok(/\.soat__bang--doi\s+\.soat__hang\s*\{[^}]*align-items:\s*flex-start/.test(CSS_SOAT),
+   'bảng hai cột canh chữ từ trên xuống, không để hai cột so le');
 ok(/\.doan__so\s*\{[^}]*cursor:\s*default/.test(CSS_CHINH), 'máng số trở lại con trỏ thường');
 
 /* ---- HỌ LỖI KHOÁ PHÁT TIẾNG ----------------------------------------------
@@ -176,7 +202,7 @@ ok(/\.doan__play\.la-khoa:hover\s*\{[^}]*background:\s*transparent/.test(CSS_CHI
    'CSS: khoá thì rê vào nút ▶ KHÔNG sáng lên mời bấm');
 
 const JS_CHINH = readFileSync(join(UI, 'giao-dien.js'), 'utf8');
-ok(/\[data-nghe\][\s\S]{0,400}?lyDoKhoa\(S\)[\s\S]{0,200}?moBao/.test(JS_CHINH),
+ok(/\[data-nghe\][\s\S]{0,900}?lyDoKhoa\(S\)[\s\S]{0,200}?moBao/.test(JS_CHINH),
    'đường nút ▶ hỏi lyDoKhoa trước khi phát');
 ok(/e\.key === ' '[\s\S]{0,600}?lyDoKhoa\(S\)[\s\S]{0,200}?moBao/.test(JS_CHINH),
    'phím Space hỏi lyDoKhoa trước khi phát');

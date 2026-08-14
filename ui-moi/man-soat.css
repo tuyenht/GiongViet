@@ -52,12 +52,25 @@
 /* Hàng cao CỐ ĐỊNH 38px như bản mẫu, không phải min-height: chữ dài thì cắt
    bằng dấu ba chấm, đừng đẩy hàng cao lên. Bảng mà hàng cao thấp khác nhau
    là mắt người lớn tuổi rất khó dò theo. */
+/* CHIỀU CAO TỐI THIỂU, không phải chiều cao cố định.
+
+   Bản mẫu ghi "mỗi hàng cao 38px" và đó đúng cho tab 1, nơi mỗi ô chỉ vài
+   chữ. Nhưng tab 2 đựng nguyên đoạn văn: đặt height cứng là chữ tràn ra khỏi
+   hàng và ĐÈ LÊN hàng dưới - chủ dự án mở bản .exe ra gặp ngay.
+
+   Cùng họ với mọi chỗ khác trong dự án: kích thước cứng gặp nội dung do người
+   dùng nhập thì sớm muộn cũng vỡ. Nội dung người dùng nhập -> min-height. */
 .soat__hang {
-  display: flex; align-items: center; height: 38px; flex: none;
-  padding: 0 12px; border-bottom: 1px solid var(--divider); font-size: 13px;
+  display: flex; align-items: center; min-height: 38px; flex: none;
+  padding: 6px 12px; border-bottom: 1px solid var(--divider); font-size: 13px;
+  line-height: 1.45;
 }
+/* Hàng hai cột đựng cả đoạn văn: chữ phải bắt đầu từ trên xuống, không thì
+   cột ngắn bị đẩy xuống giữa cột dài, đọc thành hai bậc so le. */
+.soat__bang--doi .soat__hang { align-items: flex-start; }
+.soat__bang--doi .soat__hang--dau { align-items: center; }
 .soat__hang--dau {
-  position: sticky; top: 0; z-index: 2; height: 32px;
+  position: sticky; top: 0; z-index: 2; min-height: 32px; align-items: center;
   background: var(--sub-h); color: var(--txt3);
   font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase;
 }
