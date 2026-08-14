@@ -1650,6 +1650,40 @@ document.addEventListener('keydown', (e) => {
         const ds = doanTrongVungChon();
         if (ds.length > 1) { e.preventDefault(); return xoaCacDoan(ds); }
       }
+
+      /* Bốn thao tác làm cả bài cư xử như MỘT tài liệu chứ không phải nhiều ô
+         rời: Backspace đầu đoạn gộp lên, Delete cuối đoạn kéo đoạn dưới lên,
+         mũi tên lên/xuống ở đầu/cuối đoạn thì sang đoạn kề.
+
+         Chỉ xử lý khi con trỏ ĐỨNG MỘT CHỖ và nằm đúng mép: giữa đoạn thì để
+         trình duyệt lo, không giành việc của nó. */
+      const oChu = document.activeElement;
+      const sel = window.getSelection && window.getSelection();
+      if (oChu && oChu.classList && oChu.classList.contains('doan__chu')
+          && sel && sel.isCollapsed) {
+        const oDoan = oChu.closest('[data-doan]');
+        const n = oDoan ? +oDoan.dataset.doan : 0;
+        const vt = viTriCaret(oChu);
+        const het = oChu.textContent.length;
+
+        if (n && e.key === 'Backspace' && vt === 0) {
+          if (gopLenDoanTren(n)) { e.preventDefault(); return; }
+        }
+        if (n && e.key === 'Delete' && vt === het) {
+          // Kéo đoạn dưới lên = gộp đoạn dưới vào đoạn này.
+          const duoi = doanGoDuoc(n, 1);
+          const oDuoi = duoi && duoi.closest('[data-doan]');
+          if (oDuoi && gopLenDoanTren(+oDuoi.dataset.doan)) { e.preventDefault(); return; }
+        }
+        if (n && e.key === 'ArrowUp' && vt === 0) {
+          const tren = doanGoDuoc(n, -1);
+          if (tren && datCaret(tren, tren.textContent.length)) { e.preventDefault(); return; }
+        }
+        if (n && e.key === 'ArrowDown' && vt === het) {
+          const duoi = doanGoDuoc(n, 1);
+          if (duoi && datCaret(duoi, 0)) { e.preventDefault(); return; }
+        }
+      }
     }
     if (e.key === 'Escape') dat({ ...S, find: false });
     if (e.key === 'Enter' && document.activeElement.id === 'oTim') {
@@ -1842,6 +1876,75 @@ function chuDangGo(nut) {
 function roiDoanDangGo(nut) {
   const n = +((nut.closest('[data-doan]') || {}).dataset || {}).doan;
   if (n) luuSuaDoan(n, nut.textContent);
+}
+
+/* ---- đi lại và gộp đoạn: cho cả bài cư xử như MỘT tài liệu ------------------
+
+   Mỗi đoạn là một vùng gõ riêng, nên trình duyệt không tự đưa con trỏ sang
+   đoạn kề, cũng không tự gộp khi bấm Backspace ở đầu đoạn. Thiếu mấy thứ này
+   thì gõ vẫn thấy rời rạc dù xoá và tách đã chạy. */
+
+/** Con trỏ đang ở ký tự thứ mấy trong đoạn. */
+function viTriCaret(el) {
+  const sel = window.getSelection && window.getSelection();
+  if (!sel || !sel.rangeCount) return 0;
+  const goc = sel.getRangeAt(0);
+  const r = goc.cloneRange();
+  r.selectNodeContents(el);
+  r.setEnd(goc.endContainer, goc.endOffset);
+  return r.toString().length;
+}
+
+function datCaret(el, vt) {
+  if (!el) return false;
+  el.focus();
+  const sel = window.getSelection && window.getSelection();
+  if (!sel) return false;
+  const r = document.createRange();
+  const t = el.firstChild;
+  if (t && t.nodeType === 3) {
+    r.setStart(t, Math.max(0, Math.min(vt, t.textContent.length)));
+    r.collapse(true);
+  } else {
+    r.selectNodeContents(el);
+    r.collapse(vt <= 0);
+  }
+  sel.removeAllRanges();
+  sel.addRange(r);
+  return true;
+}
+
+/** Đoạn gõ được gần nhất theo hướng `buoc`, bỏ qua dòng trống. */
+function doanGoDuoc(n, buoc) {
+  for (let i = n + buoc; i >= 1; i += buoc) {
+    const el = document.querySelector(`[data-doan="${i}"] .doan__chu[contenteditable]`);
+    if (el) return el;
+    if (!document.querySelector(`[data-doan="${i}"]`)) return null;
+  }
+  return null;
+}
+
+/* Gộp đoạn n vào đoạn gõ được ngay trên nó, con trỏ dừng đúng chỗ nối - y như
+   bấm Backspace ở đầu dòng trong Notepad. */
+function gopLenDoanTren(n) {
+  const ten = tenTepDangXem(S);
+  const t = TAI_LIEU[ten];
+  if (!t || !t.doan[n - 1]) return false;
+  let tren = 0;
+  for (let i = n - 1; i >= 1; i--) {
+    if (t.doan[i - 1] && t.doan[i - 1].kieu !== 'blank') { tren = i; break; }
+  }
+  if (!tren) return false;
+
+  const noi = String(t.doan[tren - 1].chu || '');
+  const moi = t.doan.slice();
+  moi[tren - 1] = { ...moi[tren - 1], chu: noi + String(t.doan[n - 1].chu || '') };
+  moi.splice(n - 1, 1);
+  TAI_LIEU[ten] = { ...t, doan: moi };
+  duLieuSoat = null;
+  dat({ ...S, chips: dichThe(S.chips, ten, n, -1), soatBoQua: {}, sel: tren });
+  datCaret(document.querySelector(`[data-doan="${tren}"] .doan__chu`), noi.length);
+  return true;
 }
 
 /* Những đoạn mà vùng bôi đen đang chạm tới.

@@ -428,6 +428,32 @@ console.log('\n--- Q. Sửa chữ tại chỗ ---');
      'xoá hai đoạn một lượt thì bớt đúng hai',
      `${truocXoa} → ${chay('doanDangXem(S, TAI_LIEU).length')}`);
 
+  /* Cả bài phải cư xử như MỘT tài liệu. Trình duyệt không tự đưa con trỏ sang
+     đoạn kề cũng không tự gộp, vì mỗi đoạn là một vùng gõ riêng. */
+  ok(chay('typeof gopLenDoanTren') === 'function'
+     && chay('typeof doanGoDuoc') === 'function'
+     && chay('typeof viTriCaret') === 'function',
+     'có đủ đường gộp đoạn, tìm đoạn kề và đo vị trí con trỏ');
+  ok(/e\.key === 'Backspace' && vt === 0[\s\S]{0,120}gopLenDoanTren/.test(JS),
+     'Backspace ở ĐẦU đoạn thì gộp lên đoạn trên');
+  ok(/e\.key === 'Delete' && vt === het[\s\S]{0,200}gopLenDoanTren/.test(JS),
+     'Delete ở CUỐI đoạn thì kéo đoạn dưới lên');
+  ok(/ArrowUp' && vt === 0[\s\S]{0,140}datCaret/.test(JS)
+     && /ArrowDown' && vt === het[\s\S]{0,140}datCaret/.test(JS),
+     'mũi tên lên/xuống ở mép đoạn thì sang đoạn kề');
+  ok(/sel && sel\.isCollapsed/.test(JS),
+     'chỉ giành phím khi con trỏ đứng một chỗ, đang bôi đen thì để trình duyệt lo');
+
+  // Gộp thật: hai đoạn liền nhau nhập làm một, chữ nối liền.
+  const truocGop = chay('doanDangXem(S, TAI_LIEU).length');
+  const chuTren = chay('doanDangXem(S, TAI_LIEU)[0].chu');
+  const chuDuoi = chay('doanDangXem(S, TAI_LIEU)[1].chu');
+  chay('gopLenDoanTren(2)');
+  ok(chay('doanDangXem(S, TAI_LIEU).length') === truocGop - 1,
+     'gộp xong thì bớt một đoạn', `${truocGop} → ${chay('doanDangXem(S, TAI_LIEU).length')}`);
+  ok(chay('doanDangXem(S, TAI_LIEU)[0].chu') === chuTren + chuDuoi,
+     'chữ hai đoạn nối liền, không mất chữ nào');
+
   /* Thẻ cảm xúc đánh theo SỐ ĐOẠN, nên tách hay xoá đoạn là phải dời chúng
      theo. Không dời thì thẻ nhảy sang nhầm câu mà người dùng không hề đụng. */
   const themGiua = chay("dichThe({ t: { 2: 'a', 5: 'b' } }, 't', 3, 1)");
