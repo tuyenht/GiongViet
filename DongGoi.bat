@@ -60,9 +60,12 @@ if not exist "%ROOT%vieneu_models" (
 )
 
 echo [1/5] Don thu muc build cu...
-if exist "%BUILD_DIR%" rmdir /s /q "%BUILD_DIR%"
-if exist "%SPEC_DIR%"  rmdir /s /q "%SPEC_DIR%"
-if exist "%DICH%"      rmdir /s /q "%DICH%"
+rem KHONG xoa %DICH% o day. Ban truoc xoa ngay buoc nay, nen moi lan build dut
+rem ganh la mat luon ban .exe dang chay duoc - da xay ra nhieu lan. Ban moi chi
+rem dung toi %DICH% o buoc 4, sau khi da build xong VA kiem du 3 tep mau chot.
+if exist "%BUILD_DIR%"       rmdir /s /q "%BUILD_DIR%"
+if exist "%SPEC_DIR%"        rmdir /s /q "%SPEC_DIR%"
+if exist "%ROOT%_dist_moi"   rmdir /s /q "%ROOT%_dist_moi"
 mkdir "%BUILD_DIR%"
 mkdir "%SPEC_DIR%"
 
@@ -123,8 +126,31 @@ echo   OK: vieneu\assets\voices_v3_turbo.json
 
 echo.
 echo [4/5] Dua ban build ra %DICH% va noi du lieu dung chung...
+rem Ban cu chi bi dung toi o day - build da xong va da kiem du 3 tep mau chot.
+rem Doi TEN chu khong xoa: move that bai thi con duong lui.
+rem
+rem Go junction TRUOC khi don ban cu. rmdir /s khong di theo junction, nhung
+rem ffmpeg va vieneu_models nang vai GB va nam ngoai git - khong danh cuoc vao
+rem mot hanh vi cua he dieu hanh khi cai gia la phai tai lai tu dau.
+set "CU=%DICH%_cu"
+if exist "%CU%" rmdir /s /q "%CU%"
+if exist "%DICH%" (
+    for %%L in (ffmpeg vieneu_models giong_rieng) do (
+        if exist "%DICH%\%%L" rmdir "%DICH%\%%L" 2>nul
+    )
+    move "%DICH%" "%CU%" >nul
+    if errorlevel 1 (
+        echo [LOI] Khong doi ten duoc ban cu - co the dang mo GiongViet.exe.
+        echo       Dong chuong trinh roi chay lai. Ban cu van nguyen ven.
+        goto :fail
+    )
+)
 move "%ROOT%_dist_moi\GiongViet" "%DICH%" >nul
-if errorlevel 1 goto :fail
+if errorlevel 1 (
+    echo [LOI] Khong dua duoc ban moi ra %DICH% - dang khoi phuc ban cu...
+    if exist "%CU%" move "%CU%" "%DICH%" >nul
+    goto :fail
+)
 rmdir /s /q "%ROOT%_dist_moi" 2>nul
 
 rem Noi (junction) thay vi chep: mo hinh VieNeu vai GB, chep ra la ton cho va
@@ -140,10 +166,33 @@ for %%F in (cauhinh.ini hoso.json congduc.txt noidung.ini tudien.ini giaodien.js
     if exist "%ROOT%%%F" if not exist "%DICH%\%%F" copy /Y "%ROOT%%%F" "%DICH%\%%F" >nul
 )
 
+rem Cuu du lieu do CHINH CHUONG TRINH ghi ra ben ban cu. hoso-v2.json la vi du
+rem ro nhat: no khong co o thu muc goc nen vong chep ben tren khong dung toi,
+rem ma no giu ho so - giong - ba thanh chinh - the cam xuc cua nguoi dung. Xoa
+rem ban cu ma khong cuu la nguoi dung mo len thay moi thu ve mac dinh.
+rem Chi chep thu %DICH% CHUA co, de ban moi luon uu tien.
+if exist "%CU%" (
+    for %%F in ("%CU%\*.json" "%CU%\*.ini" "%CU%\*.txt") do (
+        if not exist "%DICH%\%%~nxF" copy /Y "%%F" "%DICH%\%%~nxF" >nul
+    )
+)
+
 echo.
 echo [5/5] Don thu muc tam...
 if exist "%BUILD_DIR%" rmdir /s /q "%BUILD_DIR%"
 if exist "%SPEC_DIR%"  rmdir /s /q "%SPEC_DIR%"
+rem Ban cu chi bi don SAU KHI ban moi da yen vi va da cuu xong du lieu.
+rem
+rem Windows hay giu handle them mot nhip sau khi noi dung da xoa xong: lan
+rem build dau tien voi ban nay, rmdir don sach ben trong roi van bao "The
+rem directory is not empty" va de lai cai vo rong. Cho mot nhip roi xoa lai.
+if exist "%CU%" rmdir /s /q "%CU%" 2>nul
+if exist "%CU%" (
+    ping -n 3 127.0.0.1 >nul 2>nul
+    rmdir /s /q "%CU%" 2>nul
+)
+rem Con sot cai vo rong thi KHONG coi la that bai: ban moi da xong va da kiem.
+if exist "%CU%" echo   [!] Con sot %CU% ^(rong^) - xoa tay luc nao cung duoc.
 
 echo.
 echo =========================================
