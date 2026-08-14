@@ -1,4 +1,4 @@
-# GiongDoc — Đặc tả giao diện
+# Giọng Việt — Đặc tả giao diện
 
 Ứng dụng desktop Windows chuyển văn bản tiếng Việt thành giọng nói, chạy mô hình cục bộ trên máy người dùng.
 
@@ -12,9 +12,9 @@ Người dùng **không nghe hết cả bài**. Họ dán văn bản vào, nghe 
 
 Ba điều bắt buộc giữ nguyên:
 
-1. **Đơn vị nội dung là đoạn, không phải dòng.** Mỗi đoạn là một khối chữ tự xuống dòng, đo chữ tối đa 700px, **không bao giờ cắt cụt bằng dấu ba chấm**.
-2. **Không có thanh tua theo thời gian.** Người dùng tìm chỗ cần nghe bằng cách cuộn văn bản và bấm số đoạn, không kéo thanh thời gian. Thanh dưới chỉ *báo* tiến trình, không kéo được.
-3. **Bấm số đoạn = nghe riêng đoạn đó, nghe hết đoạn thì dừng.** Muốn nghe liền mạch cả bài thì bấm *Nghe toàn bộ*.
+1. **Đơn vị nội dung là đoạn, không phải dòng.** Mỗi đoạn là một khối chữ tự xuống dòng theo chiều rộng thẻ, **không bao giờ cắt cụt bằng dấu ba chấm**.
+2. **Không có thanh tua theo thời gian.** Người dùng tìm chỗ cần nghe bằng cách cuộn văn bản, không kéo thanh thời gian. Thanh dưới chỉ *báo* tiến trình, không kéo được.
+3. **Sửa văn bản tại chỗ như Notepad.** Vùng đọc là nơi gõ được, không phải nơi chỉ đọc. **Nút ▶ ở lề phải từng đoạn = nghe riêng đoạn đó, nghe hết đoạn thì dừng.** Muốn nghe liền mạch cả bài thì bấm *Nghe toàn bộ*.
 
 ---
 
@@ -41,7 +41,7 @@ Bốn hồ sơ mặc định:
 *Tạo hồ sơ mới* thêm hồ sơ trống (một tab chưa đặt tên) và chuyển sang hồ sơ đó ngay.
 
 ### Tài liệu
-Mỗi tài liệu có: tên tệp, mảng đoạn (`head` | `body` | `blank`), và bộ *Cần chú ý* riêng. Đoạn không có id riêng — số đoạn là vị trí trong mảng, tính từ 1.
+Mỗi tài liệu có: tên tệp, mảng đoạn (`head` | `body`), và bộ *Cần chú ý* riêng. **Không có đoạn rỗng trong mảng** — khi nạp tệp, mọi dòng trống bị bỏ. Đoạn không có id riêng — số đoạn là vị trí trong mảng, tính từ 1.
 
 Thời lượng ước tính: `số ký tự / 11` giây mỗi đoạn, cộng lại. Dưới 60 giây ghi `42 giây`, từ 60 giây trở lên ghi `1 phút 28 giây`.
 
@@ -76,7 +76,7 @@ chip-bg   rgba(0,0,0,.055)  chip-bd rgba(0,0,0,.09)  chip-fg #4a4a4a
 ok        #0f7b0f
 err       #c42b1c   err-bg #fdf3f4   err-bd #eecfd2
 warn      #9d5d00   warn-bg #fff9ec  warn-bd #f0e2c2
-rail      #868686   thanh trượt, thanh cuộn giả
+rail      #868686   thanh trượt, thanh cuộn
 shadow    0 8px 16px rgba(0,0,0,.14)
 ```
 
@@ -126,7 +126,7 @@ Mọi con số hiển thị dùng `font-variant-numeric: tabular-nums`. Chữ đ
 Cửa sổ 1440×900. Xếp dọc: thanh tiêu đề 32px → thanh menu 30px → thanh công cụ 44px → dải tab tệp 36px → *(thanh tìm kiếm)* → *(dải cảnh báo)* → vùng ba cột (co giãn) → *(thanh phát 46px)* → thanh trạng thái 28px.
 
 ### Thanh tiêu đề (32px)
-Logo 16px bo 3px nền accent, tên tệp + `— GiongDoc`. Bên phải ba nút cửa sổ 46×32px; nút đóng khi rê chuột nền `#c42b1c` chữ trắng.
+Logo 16px bo 3px nền accent, tên tệp + `— Giọng Việt`. Bên phải ba nút cửa sổ 46×32px; nút đóng khi rê chuột nền `#c42b1c` chữ trắng.
 
 ### Thanh menu (30px)
 `Tệp · Chỉnh sửa · Chèn · Giọng · Xem · Trợ giúp`. Bấm mở menu thả xuống rộng tối thiểu 250px, mỗi mục cao 32px, tên bên trái, phím tắt bên phải màu `txt3`. Bấm ra ngoài đóng menu.
@@ -138,7 +138,7 @@ Logo 16px bo 3px nền accent, tên tệp + `— GiongDoc`. Bên phải ba nút 
 | Chèn | Thẻ cảm xúc `Alt+1…3` · Khoảng lặng 1 giây `Alt+S` · Ngắt đoạn `Enter` |
 | Giọng | Đổi giọng đọc `Ctrl+G` · Nghe mẫu giọng `Ctrl+M` · Thư viện giọng · Nhân bản giọng từ file… |
 | Xem | Thu gọn danh sách hồ sơ `Ctrl+B` · Cỡ chữ lớn hơn `Ctrl+=` · Cỡ chữ nhỏ hơn `Ctrl+-` · Giao diện tối |
-| Trợ giúp | Hướng dẫn nhanh `F1` · Danh sách phím tắt `Ctrl+/` · Giới thiệu GiongDoc |
+| Trợ giúp | Hướng dẫn nhanh `F1` · Danh sách phím tắt `Ctrl+/` · Giới thiệu Giọng Việt |
 
 ### Thanh công cụ (44px)
 Trái sang phải, tất cả đều là nút chìm (không viền), cao 32px:
@@ -187,27 +187,37 @@ Dưới danh sách: **Tạo hồ sơ mới** (nút chìm, icon dấu cộng).
 ### Cột giữa — Vùng đọc (co giãn)
 Thẻ nền `layer`, viền `stroke`, bo 8px.
 
-Đầu thẻ cao 38px: bên trái `215 từ · 16 đoạn · khoảng 1 phút 28 giây`; bên phải gợi ý *Bấm số đoạn để nghe riêng đoạn đó* (12.5px, `txt3`).
+Đầu thẻ cao 38px: bên trái `215 từ · 15 đoạn · khoảng 1 phút 28 giây`; bên phải gợi ý *Bấm vào chữ để sửa như Notepad · nút ▶ bên phải để nghe riêng đoạn* (12.5px, `txt3`).
 
-Thân là danh sách đoạn. Mỗi đoạn:
-- **Máng số** rộng 54px, số căn phải, cách chữ 14px, 12.5px màu `txt3`. Rê chuột: chữ `acc` nền `acc-soft`. Bấm = nghe riêng đoạn đó. Tooltip *Nghe riêng đoạn này, nghe hết đoạn thì dừng*.
-- **Chữ** rộng tối đa 700px, đệm phải 24px, 18px (tiêu đề 20px/700), dòng cao 1.55, `text-wrap: pretty`.
-- Nếu đoạn có thẻ cảm xúc: chip 12.5px/600, nền `chip-bg`, viền `chip-bd`, bo 4px, đệm 4×8px, đặt ngay trước chữ, cách chữ 8px, không xuống dòng.
-- Đoạn `blank` chỉ cao 24px, chỉ có số.
+Thân là danh sách đoạn, đệm trong thẻ 8px bên trái và 16px bên phải. Mỗi đoạn là một hàng bo 6px, đệm 7×8px — nền khi chọn / đang đọc là một khối bo góc phủ cả số đoạn, chữ và nút ▶, không tràn ra sát viền thẻ. Mỗi đoạn gồm:
+- **Máng số** rộng 30px, số căn phải, cách chữ 12px, 12.5px màu `txt3` — chỉ để đánh dấu vị trí, không còn là nút.
+- **Chữ** tràn theo chiều rộng còn lại của hàng, 18px (tiêu đề 20px/700), dòng cao 1.55, `text-wrap: pretty`, **sửa được trực tiếp** (xem *Sửa văn bản tại chỗ* bên dưới).
+- **Nút nghe riêng đoạn** 26×26px bo 4px, tam giác 12px, nằm ở lề phải, cách thanh cuộn 10px. **Chỉ hiện khi rê chuột đến đoạn đó** hoặc khi đoạn đang đọc / đang tạo âm thanh (khi đó viền và chữ `acc`, nền `acc-soft`); đổi độ mờ 0.12s. Rê chuột lên nút: viền `acc`, nền `acc-soft`. Tooltip *Nghe riêng đoạn này, nghe hết đoạn thì dừng*.
+- Nếu đoạn có thẻ cảm xúc: chip 12.5px/600, nền `chip-bg`, viền `chip-bd`, bo 4px, đệm 4×8px, đặt trước khối chữ, cách chữ 9px, không xuống dòng, **nằm ngoài vùng gõ**. **Gỡ thẻ:** bấm vào chip (rê chuột đổi viền và chữ sang `err`, tooltip *Bấm để gỡ thẻ cảm xúc*), hoặc `Backspace` khi con trỏ ở đầu chữ của đoạn đó — lần `Backspace` này gỡ thẻ, **không nối đoạn lên trên**; bấm tiếp mới nối đoạn.
+- **Không có đoạn rỗng.** Văn bản không bao giờ hiển thị dòng trống đánh số.
 
 Trạng thái đoạn:
 
 | Trạng thái | Nền | Chữ | Máng số |
 |---|---|---|---|
 | Bình thường | trong suốt | `txt2` | `txt3` |
-| Đang chọn (bấm vào) | `sel` | như cũ, có con trỏ nháy đầu đoạn | như cũ |
-| Đang đọc | `hl` + vạch trong 3px `acc` bên trái | `txt`, đậm 600 | `acc`, đậm 700, có tam giác nhỏ |
+| Đang chọn (bấm vào) | `sel` + vạch trong 3px `acc` bên trái | như cũ, con trỏ gõ thật ở đúng chỗ bấm | như cũ |
+| Đang đọc | `hl` + vạch trong 3px `acc` bên trái | `txt`, đậm 600 | `acc`, đậm 700 (không có tam giác) |
 | Đã đọc xong (chỉ khi nghe liền mạch) | trong suốt | `dis` | `dis` |
-| Đang tạo âm thanh | `hl` | `txt` | vòng xoay 11px thay cho tam giác |
+| Đang tạo âm thanh | `hl` | `txt` | vòng xoay 11px trước số |
 
-Rê chuột lên đoạn: nền `sub-h`.
+Rê chuột lên đoạn: nền `sub-h`, nút ▶ của đoạn đó hiện ra.
 
-Bên phải vùng đọc có thanh cuộn giả rộng 6px bo 3px màu `rail` độ mờ .4.
+Vùng đọc **cuộn thật** (`overflow-y: auto`), thanh cuộn mảnh (`scrollbar-width: thin`) màu `rail`, **chỉ hiện khi chuột ở trong vùng đọc** — chuột ra khỏi vùng thì `scrollbar-color` chuyển sang trong suốt, đồng thời ẩn nút ▶.
+
+### Sửa văn bản tại chỗ
+Vùng đọc làm việc như Notepad, không có chế độ *xem* / *sửa* riêng:
+- Bấm vào chữ → con trỏ nháy đúng vị trí bấm; gõ, xoá, chọn khối, dán đều được. Dán chỉ nhận chữ trần, không nhận định dạng.
+- `Enter` tách đoạn tại con trỏ; phần sau con trỏ thành đoạn mới, con trỏ ở đầu đoạn mới.
+- `Backspace` ở đầu đoạn → nối đoạn đó vào cuối đoạn trên, con trỏ ở chỗ nối. `Delete` ở cuối đoạn → kéo đoạn dưới lên.
+- **Đoạn bỏ trống tự xoá** khi rời khỏi đoạn đó, số đoạn đánh lại liền mạch. Không có ngoại lệ nào — cả dòng trống sẵn có trong tệp gốc cũng bị bỏ khi nạp.
+- Số từ, số đoạn, thứ tự và ước tính thời lượng cập nhật theo từng thao tác sửa.
+- Sửa đoạn đã nghe/đã xuất → áp tình huống *Âm thanh cũ sau khi sửa văn bản*.
 
 **Trạng thái rỗng:** khung nét đứt 1.5px `stroke2`, rộng 500px, bo 8px, nền `layer2`, đệm 44×32px, canh giữa. Bên trong: icon clipboard 52px mờ .75 → tiêu đề 18px/600 *Dán văn bản vào đây để bắt đầu* → hai dòng 14px *Nhấn Ctrl+V, hoặc kéo thả tệp .txt, .docx, .rtf vào cửa sổ này.* / *Hồ sơ đang chọn: **{tên hồ sơ}** — {tên giọng}.* → hai nút: **Dán văn bản** (accent) và **Chọn tệp từ máy…** (viền).
 
@@ -306,7 +316,7 @@ Chân: chú thích *Chuẩn hoá chỉ ảnh hưởng đến âm thanh, văn b�
 
 ## Khung chung của các màn phụ
 
-Bốn màn 4, 5, 6 dùng chung một khung: thanh tiêu đề 32px (logo + tên màn + `— GiongDoc` + nút **‹ Màn hình chính** dạng chip bo tròn 22px nền `sub-h`, rồi ba nút cửa sổ bên phải) → vùng nội dung chia hai cột: **cột trái 240px** là danh sách nhóm/bộ lọc, **cột phải** là một thẻ nền `layer` viền `stroke` bo 8px chiếm hết chỗ còn lại.
+Bốn màn 4, 5, 6 dùng chung một khung: thanh tiêu đề 32px (logo + tên màn + `— Giọng Việt` + nút **‹ Màn hình chính** dạng chip bo tròn 22px nền `sub-h`, rồi ba nút cửa sổ bên phải) → vùng nội dung chia hai cột: **cột trái 240px** là danh sách nhóm/bộ lọc, **cột phải** là một thẻ nền `layer` viền `stroke` bo 8px chiếm hết chỗ còn lại.
 
 Mục đang chọn ở cột trái: nền `layer`, viền 1px `stroke`, chữ đậm 600, vạch dọc 3×18px màu `acc` ở `left:2px`. Đầu cột trái có mũi tên quay lại 30px + tên màn 16px/600. Đáy cột trái là một dòng thông tin phụ 13px màu `txt3`.
 
@@ -385,9 +395,9 @@ Ví dụ nội dung giữ nguyên: `Bùi Thị Thanh Tâm` → *Bùi Thị Thanh
 | Xuất file | Định dạng, nơi lưu, đặt tên |
 | Phím tắt | Xem và đổi phím tắt |
 | Bộ nhớ | Dung lượng mô hình và bộ đệm |
-| Về GiongDoc | Phiên bản, cập nhật, giấy phép |
+| Về Giọng Việt | Phiên bản, cập nhật, giấy phép |
 
-Đáy cột trái: `GiongDoc 1.4.2` / `Bản quyền đã kích hoạt`.
+Đáy cột trái: `Giọng Việt 1.4.2` / `Bản quyền đã kích hoạt`.
 
 **Cột phải** — danh sách thiết lập của nhóm đang chọn. Mỗi dòng có tên 14px, dòng giải thích 13px màu `txt3` bên dưới (bỏ trống nếu không cần), và điều khiển ở bên phải. Bốn kiểu điều khiển:
 
@@ -422,7 +432,8 @@ Nội dung mẫu giữ nguyên, ví dụ: *Ngôn ngữ giao diện — Áp dụn
 | `theme` | `sang` \| `toi` | `sang` | chế độ màu |
 
 Chuyển trạng thái:
-- bấm số đoạn → `view = 'dang_doc'`, `mode = 'one'`, `pos = sel = N`; hết đoạn thì `view = 'san_sang'`
+- bấm nút ▶ của một đoạn → `view = 'dang_doc'`, `mode = 'one'`, `pos = sel = N`; hết đoạn thì `view = 'san_sang'`
+- sửa chữ trong một đoạn → cập nhật mảng đoạn của tài liệu đang xem; `Enter`/`Backspace`/`Delete` tách và nối đoạn; đoạn bỏ trống bị gỡ khỏi mảng khi rời khỏi đoạn
 - **Nghe toàn bộ** → `view = 'dang_doc'`, `mode = 'all'`, `pos = 1`
 - tạm dừng → `view = 'san_sang'` (giữ `pos`); dừng → `view = 'san_sang'`
 - đổi hồ sơ hoặc đổi tab → `view = 'san_sang'`, `pos = sel = 1`
@@ -456,4 +467,4 @@ Màn hình chính có bảng điều khiển bản mẫu phía trên cửa sổ 
 
 **2. Không có thanh tua.** Người dùng dò từng chỗ nghi ngờ, không nghe tuyến tính. Thanh tua chỉ tạo cảm giác đây là trình phát nhạc và khiến người ta kéo qua kéo lại vô ích.
 
-**3. Không có mã hoá tệp, kiểu xuống dòng, mức phóng to ở thanh trạng thái.** Đó là ngôn ngữ của trình soạn code. Người dùng của GiongDoc không cần.
+**3. Không có mã hoá tệp, kiểu xuống dòng, mức phóng to ở thanh trạng thái.** Đó là ngôn ngữ của trình soạn code. Người dùng của Giọng Việt không cần.

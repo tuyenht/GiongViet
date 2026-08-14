@@ -225,7 +225,7 @@ function veVungDoc() {
       <span class="doc__thongke">${esc(thongKe(doan))}</span>
       <!-- Gợi ý phải tả đúng thao tác hiện có. Câu cũ bảo "bấm số đoạn" trong
            khi số đã thôi làm nút là chỉ đường sai, còn hại hơn không ghi gì. -->
-      <span class="doc__goiy">Đưa chuột vào đoạn rồi bấm ▶ để nghe riêng đoạn đó</span>
+      <span class="doc__goiy">Bấm vào chữ để sửa như Notepad · nút ▶ bên phải để nghe riêng đoạn</span>
     </div>
     <div class="doc__cuon" id="cuon">
       ${doan.map((d, i) => veDoan(d, i + 1)).join('')}
@@ -242,6 +242,10 @@ function veDoan(d, n) {
   // các đoạn phía trên giữ nguyên - người dùng đang dò chứ không nghe tuyến tính.
   else if (S.mode === 'all' && S.view === 'dang_doc' && n < S.pos) cls.push('doc-xong');
   else if (n === S.sel) cls.push('dang-chon');
+  // Đang tạo âm thanh: nút ▶ hiện sẵn có viền, y như lúc đang đọc.
+  if (S.situation === 'dang_tao' && n === S.pos) cls.push('dang-tao');
+  // Tạm dừng giữa chừng: nút trở lại hình ▶ để bấm là đọc tiếp.
+  if (daTamDung && n === S.pos) cls.push('tam-dung');
 
   const the = theCuaDoan(S, n);
   const dangCho = S.situation === 'dang_tao' && n === S.pos;
@@ -268,13 +272,14 @@ function veDoan(d, n) {
               : n}</span>
     <!-- data-doan đủ để nhịp đọc gạt lớp trên từng đoạn mà không dựng lại DOM -->
     <span class="doan__than">${d.kieu === 'blank' ? '' :
-      `${the ? `<span class="doan__the" contenteditable="false">${esc(the)}</span>` : ''}<span
+      `${the ? `<span class="doan__the" contenteditable="false" data-gothe="${n}"
+             title="Bấm để gỡ thẻ cảm xúc">${esc(the)}</span>` : ''}<span
          class="doan__chu"${suaDuoc ? ' contenteditable="plaintext-only" spellcheck="false"' : ''}
          >${esc(d.chu)}</span>`}</span>${
     coPlay ? `
     <button class="doan__play${viKhoa ? ' la-khoa' : ''}" data-nghe="${n}"
             title="${esc(viKhoa
-              || `Nghe riêng đoạn ${n}. Đang đọc đoạn này thì bấm để dừng.`)}"></button>` : ''}
+              || `Nghe riêng đoạn này, nghe hết đoạn thì dừng`)}"></button>` : ''}
   </div>`;
 }
 
@@ -1367,13 +1372,29 @@ document.addEventListener('click', (e) => {
     if (o && +o.dataset.doan !== S.sel) S = { ...S, sel: +o.dataset.doan };
     return;
   }
+  /* Bấm thẻ cảm xúc = gỡ thẻ. Đoạn giữ nguyên, KHÔNG nối lên trên. */
+  if ((n = t('[data-gothe]'))) {
+    e.stopPropagation();
+    const so = +n.dataset.gothe;
+    const tep = tenTepDangXem(S);
+    const cua = { ...(S.chips[tep] || {}) };
+    delete cua[so];
+    return dat({ ...S, chips: { ...S.chips, [tep]: cua } });
+  }
   if ((n = t('[data-nghe]'))) {
     e.stopPropagation();
     /* Đang đọc chính đoạn này thì nút ấy là nút DỪNG - CSS đã đổi nó thành ■.
        Kiểm ở đây chứ không gắn thuộc tính riêng vào HTML: nhịp đọc chuyển đoạn
        bằng cách gạt lớp, không dựng lại DOM, nên thuộc tính viết sẵn sẽ ôi. */
     const soDoan = +n.dataset.nghe;
-    if (S.view === 'dang_doc' && soDoan === S.pos) return dungPhat();
+    /* Theo chuẩn trình phát: đang phát thì nút là TẠM DỪNG, tạm dừng rồi thì
+       bấm tiếp là đọc tiếp - không phải dừng hẳn rồi đọc lại từ đầu. Bản mẫu
+       chưa nói tới trạng thái này, lấy lệ thường. */
+    if (S.view === 'dang_doc' && soDoan === S.pos) return LENH['Tạm dừng']();
+    if (daTamDung && soDoan === S.pos) {
+      dat({ ...S, view: 'dang_doc' });
+      return batDauPhat(true);
+    }
     /* Lớp chặn TRONG: lớp ngoài là nút mờ đi, nhưng nút Nghe toàn bộ khoá được
        mà đường này lọt là giao diện chạy màn "đang đọc" không có tiếng. */
     const viKhoa = lyDoKhoa(S);

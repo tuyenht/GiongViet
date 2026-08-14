@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """GiongViet — chạy giao diện mới (ui-moi) với engine thật.
 
-Bản song song, cố ý KHÔNG đụng GiongDoc.py: chương trình anh đang dùng hằng
+Điểm vào của Giọng Việt. Bản cũ đã ngừng dùng, nằm trong _luutru/ - phần
 ngày phải chạy y nguyên trong lúc bản mới còn dở. Khi nào bản mới qua đủ
 nghiệm thu thì mới đổi tên thư mục và gộp lại làm một.
 
@@ -20,7 +20,7 @@ SPI_GETWORKAREA = 0x0030
 def vung_lam_viec():
     """Lấy vùng màn hình dùng được TRƯỚC khi import webview.
 
-    Lý do y hệt GiongDoc.py: pywebview bật DPI awareness cho tiến trình, sau đó
+    pywebview bật DPI awareness cho tiến trình, sau đó
     Windows trả pixel vật lý còn cỡ cửa sổ lại tính bằng pixel logic. Lấy sai
     một nhịp là cửa sổ tràn ra ngoài màn hình, mất luôn thanh phát ở dưới cùng.
     """

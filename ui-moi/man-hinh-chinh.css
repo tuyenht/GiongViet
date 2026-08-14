@@ -143,29 +143,41 @@
             padding: 0 16px; border-bottom: 1px solid var(--divider); }
 .doc__thongke { font-size: 12.5px; color: var(--txt2); font-variant-numeric: tabular-nums; }
 .doc__goiy { margin-left: auto; font-size: 12.5px; color: var(--txt3); }
-.doc__cuon { flex: 1; min-height: 0; overflow: auto; padding: 8px 0 24px; }
+/* Cuộn THẬT. Thanh cuộn mảnh và chỉ hiện khi chuột ở trong vùng đọc - ra khỏi
+   vùng thì màu chuyển trong suốt, cùng lúc các nút ▶ cũng tắt. */
+.doc__cuon { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden;
+             padding: 8px 10px 24px 8px;
+             scrollbar-width: thin; scrollbar-color: transparent transparent;
+             transition: scrollbar-color .15s; }
+.doc__cuon:hover { scrollbar-color: var(--rail, #868686) transparent; }
+.doc__cuon::-webkit-scrollbar { width: 8px; }
+.doc__cuon::-webkit-scrollbar-thumb { background: transparent; border-radius: 4px; }
+.doc__cuon:hover::-webkit-scrollbar-thumb { background: var(--rail, #868686); }
 
+/* Mỗi đoạn là một hàng BO GÓC, nền phủ trọn máng số - chữ - nút ▶ chứ không
+   tràn ra sát viền thẻ. Số đo lấy từ bản mẫu cập nhật 14/8: bo 6px, đệm 7×8. */
 .doan { position: relative; width: 100%; display: flex; align-items: flex-start;
-        padding: 4px 0; border: 0; background: transparent; text-align: left;
+        padding: 7px 8px; border: 0; border-radius: 6px;
+        background: transparent; text-align: left;
         transition: background .15s; }
 .doan:hover { background: var(--sub-h); }
-.doan.dang-chon { background: var(--sel); }
+/* Vạch dọc 3px nằm TRONG khối bo góc, dùng inset shadow chứ không border-left:
+   border đẩy nội dung sang phải 3px, làm chữ nhích mỗi lần đổi đoạn chọn. */
+.doan.dang-chon { background: var(--sel); box-shadow: inset 3px 0 0 var(--acc); }
 .doan.dang-doc { background: var(--hl); box-shadow: inset 3px 0 0 var(--acc); }
 .doan.doc-xong .doan__chu, .doan.doc-xong .doan__so { color: var(--dis); }
 
 /* Máng số trở lại đúng vai bản mẫu: CHỈ là số thứ tự, không phải nút. Việc
    nghe riêng đoạn đã chuyển hẳn sang nút ▶ nổi bên phải mỗi dòng. */
-.doan__so { width: 54px; flex: none; padding-right: 14px; text-align: right;
+/* Máng số CHỈ để đánh dấu vị trí - không còn là nút, và bản mẫu cập nhật đã
+   bỏ hẳn tam giác báo đoạn đang đọc ở đây (việc đó nay là của nút ▶ lề phải).
+   30px thay cho 54px vì không phải chừa chỗ cho mũi tên nữa. */
+.doan__so { width: 30px; flex: none; padding-right: 12px; text-align: right;
             white-space: nowrap;
             font-size: 12.5px; line-height: var(--dong-doan); color: var(--txt3);
             font-variant-numeric: tabular-nums; border: 0; background: transparent;
             cursor: default; }
-/* Mũi tên chỉ để BÁO đoạn đang đọc, không mời bấm. Chiếm chỗ sẵn dù đang trong
-   suốt, để con số không nhảy ngang đúng lúc tới lượt nó. */
-.doan__so::before { content: '▶'; font-size: 9px; margin-right: 5px;
-                    color: var(--acc); opacity: 0; }
 .doan.dang-doc .doan__so { color: var(--acc); font-weight: 700; }
-.doan.dang-doc .doan__so::before { opacity: 1; }
 
 /* Nút nghe riêng đoạn: hiện khi đưa chuột vào dòng, nằm sát mép phải, canh
    giữa theo chiều cao của cả đoạn nên đoạn dài mấy dòng vẫn tìm thấy ngay.
@@ -191,20 +203,24 @@
    nền dòng nào cũng hoà, không đục ra một mảng khác màu. */
 .doan__play { position: absolute; right: 10px; top: 50%; z-index: 2;
               transform: translateY(-50%);
-              width: 28px; height: 28px; display: inline-flex;
+              width: 26px; height: 26px; display: inline-flex;
               align-items: center; justify-content: center;
-              border: 0; border-radius: 5px;
+              border: 1px solid transparent; border-radius: 4px;
               background: transparent; color: var(--acc);
-              font-size: 11px; cursor: pointer; opacity: 0;
-              transition: opacity .12s, background .12s; }
+              font-size: 12px; cursor: pointer; opacity: 0;
+              transition: opacity .12s, background .12s, border-color .12s; }
+/* Đoạn đang đọc hoặc đang tạo âm thanh: nút hiện sẵn, có viền và nền accent. */
+.doan.dang-doc .doan__play, .doan.dang-tao .doan__play {
+  opacity: 1; border-color: var(--acc); background: var(--acc-soft); }
 /* Ký hiệu do CSS vẽ theo lớp .dang-doc, KHÔNG viết vào HTML. Vòng nhịp đọc
    gạt lớp ấy mỗi 250ms mà không dựng lại DOM, nên ký hiệu nằm trong HTML thì
    đoạn sang lượt đọc vẫn trơ ra hình tam giác - phải bấm chỗ khác mới đổi. */
+/* Ký hiệu theo CHUẨN trình phát, bản mẫu chưa nói tới nên lấy lệ thường: đang
+   phát thì nút là TẠM DỪNG, tạm dừng rồi thì trở lại thành phát. Vòng nhịp đọc
+   gạt lớp mỗi 250ms nên ký hiệu phải do CSS vẽ, viết vào HTML là nó trơ ra. */
 .doan__play::after { content: '▶'; }
-.doan.dang-doc .doan__play::after { content: '■'; }
-/* Đoạn đang đọc thì nút hiện sẵn, không bắt rê chuột vào mới thấy: đang có
-   tiếng chạy mà phải đi tìm chỗ bấm dừng là lúc bối rối nhất. */
-.doan.dang-doc .doan__play { opacity: 1; }
+.doan.dang-doc .doan__play::after { content: '❚❚'; letter-spacing: -1px; font-size: 9px; }
+.doan.tam-dung .doan__play::after { content: '▶'; letter-spacing: 0; font-size: 12px; }
 .doan:hover .doan__play { opacity: 1; }
 /* Đi bằng bàn phím cũng phải thấy nút, không thì chỉ ai dùng chuột mới nghe được. */
 .doan__play:focus-visible { opacity: 1; outline: 2px solid var(--acc); outline-offset: 1px; }
@@ -230,7 +246,9 @@
    mép 10, còn lại để thở). Đây là thứ THAY nền đặc dưới nút: trước kia dựa vào
    trần 700px để chữ không chạm nút, bỏ trần thì phải chừa chỗ, không thì nút
    lại đè lên chữ. */
-.doan__than { flex: 1; min-width: 0; padding-right: 86px; }
+/* Chừa 46px cho MỘT nút ▶ (26 + cách mép 10 + thở). Bản trước chừa 86 vì có
+   thêm nút sửa; nay gõ thẳng vào chữ nên nút ấy không còn. */
+.doan__than { flex: 1; min-width: 0; padding-right: 46px; }
 /* Đang sửa thì ô nhập chiếm hết bề ngang, không phải né nút nào. */
 .doan--sua .doan__than { padding-right: 12px; }
 /* ==================================================== viền kéo đổi cỡ cửa sổ
@@ -275,10 +293,14 @@
   box-shadow: 0 0 0 2px var(--acc-soft);
 }
 
+/* Thẻ nằm NGOÀI vùng gõ, cách chữ 9px, và bấm vào là gỡ - nên phải xưng là
+   bấm được: con trỏ bàn tay, rê vào thì viền và chữ chuyển sang err. */
 .doan__the { display: inline-flex; align-items: center; height: 22px; padding: 0 8px;
-             margin-right: 8px; border: 1px solid var(--chip-bd); border-radius: 4px;
-             background: var(--chip-bg); color: var(--chip-fg);
-             font-size: 12.5px; font-weight: 600; white-space: nowrap; vertical-align: 2px; }
+             margin-right: 9px; border: 1px solid var(--chip-bd); border-radius: 4px;
+             background: var(--chip-bg); color: var(--chip-fg); cursor: pointer;
+             font-size: 12.5px; font-weight: 600; white-space: nowrap; vertical-align: 2px;
+             transition: border-color .12s, color .12s; }
+.doan__the:hover { border-color: var(--err); color: var(--err); }
 
 /* trạng thái rỗng */
 .rong { flex: 1; display: flex; align-items: center; justify-content: center; padding: 24px; }

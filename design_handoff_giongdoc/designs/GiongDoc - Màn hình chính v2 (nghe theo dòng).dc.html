@@ -280,28 +280,30 @@ a{color:var(--acc)}a:hover{color:var(--acc-h)}
       </sc-if>
 
       <sc-if value="{{ hasFile }}" hint-placeholder-val="{{ true }}">
-        <div style="position:relative;flex:1;min-height:0;overflow:hidden;padding:8px 0">
-          <div style="position:absolute;right:4px;top:{{ scrollTop }};width:6px;height:{{ scrollH }};border-radius:3px;background:var(--rail);opacity:.4"></div>
+        <div onMouseEnter="{{ enterText }}" onMouseLeave="{{ leaveText }}" style="position:relative;flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;padding:8px 10px 8px 8px;scrollbar-width:thin;scrollbar-color:{{ railColor }} transparent">
           <sc-for list="{{ segs }}" as="s" hint-placeholder-count="11">
             <div style="display:flex">
               <sc-if value="{{ s.isBlank }}">
-                <div onClick="{{ s.select }}" style="display:flex;align-items:center;width:100%;height:24px;background:{{ s.bg }};cursor:default">
-                  <span style="width:54px;flex:none;text-align:right;padding-right:16px;font-size:12.5px;color:var(--txt3);font-variant-numeric:tabular-nums">{{ s.no }}</span>
-                  <sc-if value="{{ s.showCaret }}"><span style="flex:none;width:1.5px;height:20px;background:var(--txt);animation:caret 1.1s step-end infinite"></span></sc-if>
+                <div onClick="{{ s.select }}" style="display:flex;align-items:center;width:100%;min-height:24px;background:{{ s.bg }}">
+                  <span style="width:34px;flex:none;text-align:right;padding-right:12px;font-size:12.5px;color:var(--txt3);font-variant-numeric:tabular-nums">{{ s.no }}</span>
+                  <span ref="{{ s.ref }}" onInput="{{ s.onInput }}" onKeyDown="{{ s.onKey }}" onFocus="{{ s.select }}" onBlur="{{ s.onBlur }}" style="flex:1 1 auto;min-width:0;min-height:20px;padding-right:12px;outline:none;font-size:16px;line-height:1.5;color:var(--txt);cursor:text;white-space:pre-wrap"></span>
                 </div>
               </sc-if>
               <sc-if value="{{ s.isText }}" hint-placeholder-val="{{ true }}">
-                <div onClick="{{ s.select }}" style="display:flex;align-items:flex-start;width:100%;padding:6px 0;background:{{ s.bg }};box-shadow:{{ s.bar }};cursor:default" style-hover="background:{{ s.hoverBg }}">
-                  <span onClick="{{ s.play }}" style="width:54px;flex:none;display:flex;align-items:center;justify-content:flex-end;gap:5px;padding-right:14px;padding-top:{{ s.gutPad }};font-size:12.5px;color:{{ s.noFg }};font-weight:{{ s.noWt }};font-variant-numeric:tabular-nums;cursor:default;border-radius:3px" style-hover="color:var(--acc);background:var(--acc-soft)" title="Nghe riêng đoạn này, nghe hết đoạn thì dừng">
+                <div onClick="{{ s.select }}" onMouseEnter="{{ s.enter }}" style="display:flex;align-items:flex-start;width:100%;padding:7px 8px;border-radius:6px;background:{{ s.bg }};box-shadow:{{ s.bar }}" style-hover="background:{{ s.hoverBg }}">
+                  <span style="width:30px;flex:none;display:flex;align-items:center;justify-content:flex-end;gap:5px;padding-right:12px;padding-top:{{ s.gutPad }};font-size:12.5px;color:{{ s.noFg }};font-weight:{{ s.noWt }};font-variant-numeric:tabular-nums;cursor:default">
                     <sc-if value="{{ s.isPrep }}"><span style="width:11px;height:11px;flex:none;border-radius:6px;border:2px solid var(--stroke2);border-top-color:var(--acc);animation:spin .8s linear infinite"></span></sc-if>
-                    <sc-if value="{{ s.isNow }}"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5l12 7-12 7z"/></svg></sc-if>
                     {{ s.no }}
                   </span>
-                  <span style="flex:1 1 auto;max-width:700px;min-width:0;padding-right:24px;font-size:{{ s.fs }};line-height:1.55;letter-spacing:{{ s.ls }};color:{{ s.fg }};font-weight:{{ s.wt }};text-wrap:pretty">
-                    <sc-if value="{{ s.showCaret }}"><span style="display:inline-block;vertical-align:-2px;width:1.5px;height:18px;background:var(--txt);animation:caret 1.1s step-end infinite"></span></sc-if>
-                    <sc-if value="{{ s.hasChip }}"><span style="display:inline-block;white-space:nowrap;vertical-align:2px;margin-right:8px;font-size:12.5px;font-weight:600;line-height:1;padding:4px 8px;border-radius:4px;background:var(--chip-bg);border:1px solid var(--chip-bd);color:var(--chip-fg)">{{ s.chip }}</span></sc-if>
-                    {{ s.text }}
-                  </span>
+                  <div style="flex:1 1 auto;min-width:0;display:flex;align-items:flex-start;gap:9px">
+                    <sc-if value="{{ s.hasChip }}"><span onClick="{{ s.dropChip }}" title="Bấm để gỡ thẻ cảm xúc" style="flex:none;white-space:nowrap;margin-top:3px;font-size:12.5px;font-weight:600;line-height:1;padding:4px 8px;border-radius:4px;background:var(--chip-bg);border:1px solid var(--chip-bd);color:var(--chip-fg);cursor:default" style-hover="border-color:var(--err);color:var(--err)">{{ s.chip }}</span></sc-if>
+                    <span data-seg="{{ s.no }}" ref="{{ s.ref }}" onInput="{{ s.onInput }}" onKeyDown="{{ s.onKey }}" onFocus="{{ s.select }}" onBlur="{{ s.onBlur }}" style="flex:1 1 auto;min-width:0;padding-right:4px;outline:none;font-size:{{ s.fs }};line-height:1.55;letter-spacing:{{ s.ls }};color:{{ s.fg }};font-weight:{{ s.wt }};text-wrap:pretty;cursor:text;white-space:pre-wrap"></span>
+                  </div>
+                  <div onClick="{{ s.play }}" style="width:30px;flex:none;display:flex;justify-content:flex-start;padding-top:{{ s.gutPad }};opacity:{{ s.pbOp }};transition:opacity .12s">
+                    <span style="display:flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:4px;border:1px solid {{ s.pbBd }};background:{{ s.pbBg }};color:{{ s.pbFg }};cursor:default" style-hover="border-color:var(--acc);background:var(--acc-soft);color:var(--acc)" title="Nghe riêng đoạn này, nghe hết đoạn thì dừng">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5l12 7-12 7z"/></svg>
+                    </span>
+                  </div>
                 </div>
               </sc-if>
             </div>
@@ -507,7 +509,7 @@ a{color:var(--acc)}a:hover{color:var(--acc-h)}
           <div>
             <div style="font-size:14px;color:var(--txt2);margin-bottom:6px">Lưu vào</div>
             <div style="display:flex;gap:8px">
-              <div style="flex:1;display:flex;align-items:center;height:36px;padding:0 10px;border:1px solid var(--stroke2);border-radius:4px;background:var(--ctl);font-size:14px;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">C:\Users\Tuan\Documents\GiongDoc\Xuất</div>
+              <div style="flex:1;display:flex;align-items:center;height:36px;padding:0 10px;border:1px solid var(--stroke2);border-radius:4px;background:var(--ctl);font-size:14px;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">C:\Users\Tuan\Documents\GiongViet\Xuất</div>
               <div style="display:flex;align-items:center;height:36px;padding:0 14px;border:1px solid var(--stroke2);border-radius:4px;background:var(--ctl);font-size:14px;color:var(--txt);cursor:default" style-hover="background:var(--ctl-h)">Chọn…</div>
             </div>
           </div>
@@ -541,11 +543,11 @@ a{color:var(--acc)}a:hover{color:var(--acc-h)}
         <div style="width:16px;height:16px;border-radius:3px;background:var(--acc);display:flex;align-items:center;justify-content:center">
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--acc-txt)" stroke-width="2.6" stroke-linecap="round"><path d="M4 9v6M9 5v14M14 8v8M19 11v2"/></svg>
         </div>
-        <span style="font-size:12px;color:var(--txt3)">GiongDoc</span>
+        <span style="font-size:12px;color:var(--txt3)">Giọng Việt</span>
         <span onClick="{{ closeToast }}" style="margin-left:auto;width:24px;height:24px;display:flex;align-items:center;justify-content:center;border-radius:3px;color:var(--txt2);cursor:default" style-hover="background:var(--sub-h)"><svg width="9" height="9" viewBox="0 0 12 12" stroke="currentColor" stroke-width="1.2"><path d="M1.5 1.5l9 9M10.5 1.5l-9 9"/></svg></span>
       </div>
       <div style="font-size:15px;font-weight:600;color:var(--txt)">Đã xuất xong tệp âm thanh</div>
-      <div style="font-size:14px;line-height:1.5;color:var(--txt2);margin-top:3px">{{ toastLine }}<br>Lưu tại: Tài liệu\GiongDoc\Xuất</div>
+      <div style="font-size:14px;line-height:1.5;color:var(--txt2);margin-top:3px">{{ toastLine }}<br>Lưu tại: Tài liệu\GiongViet\Xuất</div>
       <div style="display:flex;gap:8px;margin-top:12px">
         <div style="flex:1;display:flex;align-items:center;justify-content:center;height:34px;border-radius:4px;background:var(--ctl);border:1px solid var(--stroke2);font-size:14px;color:var(--txt);cursor:default" style-hover="background:var(--ctl-h)">Mở thư mục</div>
         <div onClick="{{ closeToast }}" style="flex:1;display:flex;align-items:center;justify-content:center;height:34px;border-radius:4px;background:var(--ctl);border:1px solid var(--stroke2);font-size:14px;color:var(--txt);cursor:default" style-hover="background:var(--ctl-h)">Đóng</div>
@@ -567,13 +569,102 @@ class Component extends DCLogic {
   state = { view: null, theme: null, sit: null, voiceOpen: false, tags: false, tune: false,
             mode: 'all', pos: 4, sel: 13, exportOpen: false, exporting: false, toast: false,
             profile: 0, profiles: null, rail: false, menu: -1, find: false, sample: false,
-            tabsByProf: null, activeByProf: null, chips: null, fmt: 0, split: 0 };
+            tabsByProf: null, activeByProf: null, chips: null, fmt: 0, split: 0, docs: null, tick: 0,
+            hoverSeg: 0, overText: false };
 
   get view() { return this.state.view || this.props.state || 'san_sang'; }
   get sit() { return this.state.sit || this.props.tinhHuong || 'binh_thuong'; }
   get theme() { return this.state.theme || this.props.theme || 'sang'; }
-  componentDidMount() { this.applyTheme(); }
-  componentDidUpdate() { this.applyTheme(); }
+  componentDidMount() { this.applyTheme(); this.syncText(); }
+  componentDidUpdate() {
+    this.applyTheme();
+    this.syncText();
+    const c = this._caret;
+    if (c) {
+      this._caret = null;
+      const el = this._els && this._els[c.no];
+      if (el) { this._pendingNo = c.no; el.focus(); this.setCaret(el, c.off); this._pendingNo = 0; }
+    }
+  }
+
+  dropChip(key, no) {
+    const map = this.chipMap();
+    const cur = Object.assign({}, map[key || 'A']);
+    delete cur[no];
+    this.setState({ chips: Object.assign({}, map, { [key || 'A']: cur }) });
+  }
+
+  lines(key) {
+    const d = this.state.docs && this.state.docs[key];
+    return d || this.body(key).filter((x) => x.k !== 'blank' && String(x.t).trim());
+  }
+  liveLines(key) {
+    const s = this._snap;
+    return (s && s.key === key) ? s.list : this.lines(key);
+  }
+  syncText() {
+    const els = this._els || {}, want = this._want || {};
+    Object.keys(els).forEach((no) => {
+      const el = els[no], t = want[no];
+      if (!el || t == null) return;
+      if (el.textContent !== t) el.textContent = t;
+    });
+  }
+  fixNode(el) {
+    if (!el) return;
+    if (el.querySelector('br') || el.childNodes.length > 1) {
+      const off = this.caretOff(el);
+      const t = String(el.textContent || '');
+      el.textContent = t;
+      if (el === document.activeElement) this.setCaret(el, off);
+    }
+  }
+
+  readDom(key) {
+    const src = this.liveLines(key);
+    const out = src.map((d) => ({ k: d.k, t: d.t }));
+    const nodes = document.querySelectorAll('[data-seg]');
+    for (let n = 0; n < nodes.length; n++) {
+      const j = parseInt(nodes[n].getAttribute('data-seg'), 10) - 1;
+      if (j >= 0 && j < out.length) out[j].t = String(nodes[n].textContent || '').replace(/\s*\n\s*/g, ' ');
+    }
+    return out;
+  }
+  commitText(key, list) {
+    this._snap = null;
+    this.setState({ docs: Object.assign({}, this.state.docs || {}, { [key]: list }) });
+  }
+  putLines(key, list, caret) {
+    this._rev = (this._rev || 0) + 1;
+    this._caret = caret || null;
+    this._snap = null;
+    this.setState({ docs: Object.assign({}, this.state.docs || {}, { [key]: list }) });
+  }
+  caretOff(el) {
+    const s = window.getSelection();
+    if (!s || !s.rangeCount) return 0;
+    const r = s.getRangeAt(0);
+    if (!el.contains(r.startContainer)) return 0;
+    const pre = document.createRange();
+    pre.selectNodeContents(el); pre.setEnd(r.startContainer, r.startOffset);
+    return pre.toString().length;
+  }
+  setCaret(el, off) {
+    const r = document.createRange(), s = window.getSelection();
+    let n = el, o = off;
+    while (n && n.nodeType !== 3) {
+      let next = null;
+      for (let c = n.firstChild; c; c = c.nextSibling) {
+        const len = (c.textContent || '').length;
+        if (o <= len || !c.nextSibling) { next = c; break; }
+        o -= len;
+      }
+      n = next;
+    }
+    if (n) r.setStart(n, Math.min(o, n.textContent.length));
+    else { r.selectNodeContents(el); r.collapse(true); }
+    r.collapse(true); s.removeAllRanges(); s.addRange(r);
+  }
   componentWillUnmount() { clearTimeout(this._t1); clearTimeout(this._t2); }
   applyTheme() { document.documentElement.setAttribute('data-theme', this.theme === 'toi' ? 'dark' : 'light'); }
 
@@ -689,12 +780,17 @@ class Component extends DCLogic {
 
   segs(key, pos, playing, mode, prep, sel) {
     const chips = this.chipMap()[key] || {};
-    return this.body(key).map((d, i) => {
+    const src = this.liveLines(key);
+    const rev = this._rev || 0;
+    const want = {};
+    const clean = (t) => String(t || '').replace(/\s*\n\s*/g, ' ');
+    const out = src.map((d, i) => {
       const no = i + 1, now = playing && no === pos, cur = (playing || prep) && no === pos;
       const done = playing && mode === 'all' && no < pos;
       const head = d.k === 'head', blank = d.k === 'blank';
       const chip = chips[no] || '';
       const picked = sel === no && !cur;
+      want[no] = String(d.t || '');
       return {
         no: no, text: d.t, hasChip: !!chip, chip: chip,
         isBlank: blank, isText: !blank, isNow: now, isPrep: prep && no === pos,
@@ -705,14 +801,82 @@ class Component extends DCLogic {
         fg: done ? 'var(--dis)' : (cur ? 'var(--txt)' : (head ? 'var(--txt)' : 'var(--txt2)')),
         bg: cur ? 'var(--hl)' : (picked ? 'var(--sel)' : 'transparent'),
         hoverBg: cur ? 'var(--hl)' : 'var(--sub-h)',
-        bar: cur ? 'inset 3px 0 0 var(--acc)' : 'none',
+        bar: cur ? 'inset 3px 0 0 var(--acc)' : (picked ? 'inset 3px 0 0 var(--acc)' : 'none'),
         noFg: cur ? 'var(--acc)' : (done ? 'var(--dis)' : 'var(--txt3)'),
         noWt: cur ? '700' : '400',
         gutPad: head ? '5px' : '4px',
+        pbOp: (cur || this.state.hoverSeg === no) ? '1' : '0',
+        enter: () => { if (this.state.hoverSeg !== no) this.setState({ hoverSeg: no }); },
+        pbBd: cur ? 'var(--acc)' : 'var(--stroke2)',
+        pbBg: cur ? 'var(--acc-soft)' : 'transparent',
+        pbFg: cur ? 'var(--acc)' : 'var(--txt3)',
+        ref: (el) => {
+          if (!this._els) this._els = {};
+          if (el) { el.contentEditable = 'plaintext-only'; el.spellcheck = false; this._els[no] = el; }
+          else if (this._els[no]) delete this._els[no];
+        },
+        onInput: (e) => {
+          if ((this._rev || 0) !== rev) return;
+          this.fixNode(e.currentTarget);
+          this.commitText(key, this.readDom(key));
+        },
+        onKey: (e) => {
+          if ((this._rev || 0) !== rev) return;
+          const el = e.currentTarget, sl = window.getSelection();
+          this.fixNode(el);
+          const collapsed = !sl || sl.isCollapsed;
+          const dom = this.readDom(key);
+          const txt = clean((dom[i] || d).t);
+          if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            const off = this.caretOff(el);
+            const l = dom.slice();
+            const k0 = d.k;
+            l.splice(i, 1, { k: k0, t: txt.slice(0, off) }, { k: 'body', t: txt.slice(off) });
+            this.setState({ sel: no + 1 });
+            this.putLines(key, l, { no: no + 1, off: 0 });
+            return;
+          }
+          if (e.key === 'Backspace' && collapsed && this.caretOff(el) === 0 && chip) {
+            e.preventDefault();
+            this.dropChip(key, no);
+            return;
+          }
+          if (e.key === 'Backspace' && collapsed && i > 0 && this.caretOff(el) === 0) {
+            e.preventDefault();
+            const l = dom.slice();
+            const prev = l[i - 1];
+            l.splice(i - 1, 2, { k: prev.k, t: prev.t + txt });
+            this.setState({ sel: no - 1 });
+            this.putLines(key, l, { no: no - 1, off: prev.t.length });
+            return;
+          }
+          if (e.key === 'Delete' && collapsed && this.caretOff(el) === txt.length && i < dom.length - 1) {
+            e.preventDefault();
+            const l = dom.slice();
+            l.splice(i, 2, { k: d.k, t: txt + l[i + 1].t });
+            this.putLines(key, l, { no: no, off: txt.length });
+          }
+        },
+        onBlur: (e) => {
+          if ((this._rev || 0) !== rev) return;
+          this.fixNode(e.currentTarget);
+          const dom = this.readDom(key);
+          const keepIdx = (this._caret ? this._caret.no : (this._pendingNo || 0)) - 1;
+          const kept = dom.filter((x, j) => String(x.t).trim() || j === keepIdx);
+          const l = kept.length ? kept : [{ k: 'body', t: '' }];
+          const cur = this.lines(key);
+          const same = l.length === cur.length && l.every((x, j) => x.t === cur[j].t);
+          if (same) { this._snap = null; return; }
+          this.putLines(key, l, null);
+        },
+        dropChip: () => this.dropChip(key, no),
         select: () => this.setState({ sel: no }),
         play: () => this.setState({ view: 'dang_doc', pos: no, sel: no, mode: 'one' })
       };
     });
+    this._want = want;
+    return out;
   }
 
   renderVals() {
@@ -729,7 +893,8 @@ class Component extends DCLogic {
     const noEngine = sit === 'mat_ket_noi', noQuota = sit === 'het_luot', loadingVoice = sit === 'giong_dang_tai';
     const blocked = noEngine || noQuota || loadingVoice;
 
-    const list = key ? this.body(key) : [];
+    const list = key ? this.liveLines(key) : [];
+    if (this._snap && this._snap.key !== key) this._snap = null;
     const total = list.length || 1;
     const pos = Math.min(this.state.pos || 1, total);
     const sel = Math.min(this.state.sel || 1, total);
@@ -777,7 +942,7 @@ class Component extends DCLogic {
       ['Chèn', [['Thẻ cảm xúc','Alt+1…3'],['Khoảng lặng 1 giây','Alt+S'],['Ngắt đoạn','Enter']]],
       ['Giọng', [['Đổi giọng đọc','Ctrl+G'],['Nghe mẫu giọng','Ctrl+M'],['Thư viện giọng',''],['Nhân bản giọng từ file…','']]],
       ['Xem', [['Thu gọn danh sách hồ sơ','Ctrl+B'],['Cỡ chữ lớn hơn','Ctrl+='],['Cỡ chữ nhỏ hơn','Ctrl+-'],['Giao diện tối','']]],
-      ['Trợ giúp', [['Hướng dẫn nhanh','F1'],['Danh sách phím tắt','Ctrl+/'],['Giới thiệu GiongDoc','']]]
+      ['Trợ giúp', [['Hướng dẫn nhanh','F1'],['Danh sách phím tắt','Ctrl+/'],['Giới thiệu Giọng Việt','']]]
     ];
     const LEFTS = ['6px','49px','140px','191px','250px','293px'];
     const mi = this.state.menu;
@@ -958,7 +1123,11 @@ class Component extends DCLogic {
       tuneSummary: tuneParts.length ? tuneParts.join(' · ') : 'Theo mặc định của hồ sơ',
       toggleTune: () => this.setState({ tune: !this.state.tune }),
       resetTune: () => this.patchProf({ speed: 0, pitch: 0, vol: 100 }),
-      headerHint: isEmpty ? '' : 'Bấm số đoạn để nghe riêng đoạn đó',
+      headerHint: isEmpty ? '' : 'Bấm vào chữ để sửa như Notepad · nút ▶ bên phải để nghe riêng đoạn',
+      railOpacity: this.state.overText ? '.4' : '0',
+      railColor: this.state.overText ? 'var(--rail)' : 'transparent',
+      enterText: () => { if (!this.state.overText) this.setState({ overText: true }); },
+      leaveText: () => this.setState({ overText: false, hoverSeg: 0 }),
       profileName: prof.name,
       doExport: () => { if (!isEmpty && !blocked) this.setState(Object.assign({}, shut, { exportOpen: true })); },
       exportOpen: this.state.exportOpen, closeExport: () => this.setState({ exportOpen: false }),
@@ -973,7 +1142,7 @@ class Component extends DCLogic {
       },
       toastOpen: this.state.toast, closeToast: () => this.setState({ toast: false }),
       toastLine: baseName + ext + ' · ' + durText + ' · ' + (ext === '.wav' ? '11,6 MB' : '2,8 MB'),
-      windowTitle: isEmpty ? 'GiongDoc' : (at.name + ' — GiongDoc'),
+      windowTitle: isEmpty ? 'Giọng Việt' : (at.name + ' — Giọng Việt'),
       docMeta: isEmpty ? 'Chưa có văn bản' : (words + ' từ · ' + total + ' đoạn · khoảng ' + durText),
       segs: isEmpty ? [] : this.segs(key, pos, isPlaying, mode, isPrep, sel),
       statusCaret: isEmpty ? 'Chưa có văn bản' : ('Đoạn ' + (isPlaying ? pos : sel) + ', Cột 1'),

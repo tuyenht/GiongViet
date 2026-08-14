@@ -27,7 +27,7 @@ là khoá hết, kể cả phương thức thêm sau này — giaodien_moi/kiem_
 đọc mã nguồn để canh đúng điều đó.
 
 Tiến trình bản mới (GiongViet.py) chạy riêng, nên khoá ở đây không ảnh
-hưởng gì đến GiongDoc.py đang dùng hằng ngày.
+hưởng gì đến dữ liệu thật của người dùng.
 
 KHÔNG khoá: tệp WAV do người dùng chủ động bấm Xuất (đó là thứ họ muốn có),
 và GiongViet-loi.log (nhật ký lỗi, không phải dữ liệu của họ).

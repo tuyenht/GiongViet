@@ -6,11 +6,13 @@ Thư mục đã đủ để chạy độc lập: 6 file thiết kế, `support.j
 
 ---
 
-Tôi cần bạn áp **đầy đủ** bản thiết kế mới nhất của **GiongDoc** vào dự án này. GiongDoc là ứng dụng desktop Windows chuyển văn bản tiếng Việt thành giọng nói, chạy mô hình cục bộ trên máy người dùng. Người dùng là người Việt không rành kỹ thuật.
+Tôi cần bạn áp **đầy đủ** bản thiết kế mới nhất của **Giọng Việt** vào dự án này. Giọng Việt là ứng dụng desktop Windows chuyển văn bản tiếng Việt thành giọng nói, chạy mô hình cục bộ trên máy người dùng. Người dùng là người Việt không rành kỹ thuật.
+
+**Tên ứng dụng chính thức là “Giọng Việt”.** Mọi chỗ hiển thị cho người dùng dùng đúng cụm này (thanh tiêu đề, menu Trợ giúp, màn Cài đặt, thông báo). Tên thư mục và đường dẫn trên đĩa dùng dạng không dấu `GiongViet` (ví dụ `Documents\GiongViet\Xuất`). Tên file thiết kế trong thư mục bàn giao vẫn còn tiền tố `GiongDoc` — đó chỉ là tên file, không phải tên sản phẩm.
 
 Dự án này **có thể đã được dựng một phần từ bản thiết kế cũ**. Thiết kế đã thay đổi khá nhiều từ lần bàn giao trước, và một số phần của bản cũ cũng chưa được làm xong. Vì vậy việc đầu tiên không phải là viết code, mà là đối chiếu.
 
-Lưu ý: thư mục dự án có thể vẫn mang tên cũ (`DocCongDuc`) và code cũ có thể xoay quanh nội dung "danh sách công đức". Đó là **di sản của bản đầu**, không phải phạm vi sản phẩm. GiongDoc đọc mọi loại văn bản tiếng Việt — thông báo, bài viết, sách nói, danh sách và biểu mẫu. Đừng lấy tên thư mục làm căn cứ cho nội dung hay cách đặt tên trong code mới.
+Lưu ý: thư mục dự án có thể vẫn mang tên cũ (`DocCongDuc`) và code cũ có thể xoay quanh nội dung "danh sách công đức". Đó là **di sản của bản đầu**, không phải phạm vi sản phẩm. Giọng Việt đọc mọi loại văn bản tiếng Việt — thông báo, bài viết, sách nói, danh sách và biểu mẫu. Đừng lấy tên thư mục làm căn cứ cho nội dung hay cách đặt tên trong code mới.
 
 ## Tài liệu
 
@@ -44,11 +46,16 @@ Nếu dự án chưa có framework, đề xuất cho tôi chọn (WinUI 3 C#/XAM
 
 **Vùng đọc**
 11. **Bỏ cột thời lượng từng đoạn** và nhãn `THỜI LƯỢNG` ở đầu vùng đọc. Thời lượng tổng đã có ở dòng thống kê, thời gian chạy đã có ở thanh phát.
-12. Đầu vùng đọc: bên trái là thống kê `215 từ · 16 đoạn · khoảng 1 phút 28 giây`, bên phải là gợi ý *Bấm số đoạn để nghe riêng đoạn đó*. **Không lặp lại tên tệp** ở đây (đã có ở thanh tiêu đề và ở tab).
-13. Đo chữ tối đa **700px** (bản cũ 640px), đệm phải 24px.
-14. **Bấm số đoạn = nghe riêng đoạn đó, hết đoạn thì dừng.** Bấm *Nghe toàn bộ* mới nghe liền mạch. Thanh phát ghi *Đang nghe riêng đoạn 4* / *Nghe hết đoạn này sẽ dừng* ở chế độ nghe riêng, và *Đang đọc đoạn 4/16* / *Đang chuẩn bị đoạn tiếp theo…* ở chế độ liền mạch. Đồng hồ ở chế độ nghe riêng đếm theo độ dài đoạn đó, không phải cả bài.
+12. Đầu vùng đọc: bên trái là thống kê `215 từ · 16 đoạn · khoảng 1 phút 28 giây`, bên phải là gợi ý *Bấm vào chữ để sửa như Notepad · nút ▶ bên phải để nghe riêng đoạn*. **Không lặp lại tên tệp** ở đây (đã có ở thanh tiêu đề và ở tab).
+13. Chữ tràn theo chiều rộng thẻ: lề trái 34px (máng số), lề phải 30px (chỗ nút ▶). Bản cũ giới hạn 640–700px và đệm 54px hai bên — bỏ.
+14. **Nút ▶ ở lề phải từng đoạn = nghe riêng đoạn đó, hết đoạn thì dừng** (bản cũ bấm vào số đoạn — nay số đoạn chỉ để đánh dấu vị trí). Bấm *Nghe toàn bộ* mới nghe liền mạch. Thanh phát ghi *Đang nghe riêng đoạn 4* / *Nghe hết đoạn này sẽ dừng* ở chế độ nghe riêng, và *Đang đọc đoạn 4/16* / *Đang chuẩn bị đoạn tiếp theo…* ở chế độ liền mạch. Đồng hồ ở chế độ nghe riêng đếm theo độ dài đoạn đó, không phải cả bài.
 15. Ở chế độ nghe riêng, các đoạn phía trên **không** bị làm mờ (chỉ chế độ liền mạch mới mờ các đoạn đã đọc xong).
-16. Bấm vào thân đoạn = **chọn đoạn** (nền `sel`, có con trỏ nháy đầu đoạn, thanh trạng thái đổi số đoạn). Rê chuột lên cả đoạn thì sáng lên, không chỉ riêng con số.
+16. **Vùng đọc sửa được tại chỗ như Notepad** — phần này mới hoàn toàn, xem mục *Sửa văn bản tại chỗ* trong README. Bấm vào chữ → con trỏ gõ thật ở đúng vị trí bấm (không phải con trỏ giả đầu đoạn như bản cũ), gõ/xoá/chọn khối/dán đều được; `Enter` tách đoạn, `Backspace` đầu đoạn nối lên trên, `Delete` cuối đoạn kéo đoạn dưới lên; **đoạn bỏ trống tự xoá**; số từ / số đoạn / thời lượng cập nhật theo. Rê chuột lên cả đoạn thì sáng lên và hiện nút ▶ của đoạn đó.
+
+**Hiện / ẩn theo chuột**
+27. Nút ▶ của mỗi đoạn **chỉ hiện khi chuột ở trên đoạn đó** (hoặc đoạn đang đọc / đang tạo âm thanh). Không hiện hàng loạt 16 nút cùng lúc.
+28. Thanh cuộn của vùng đọc **chỉ hiện khi chuột ở trong vùng đọc**, chuột ra khỏi thì mờ dần về 0 (0.15s).
+29. Bỏ tam giác nhỏ ở máng số của đoạn đang đọc — nền `hl` và vạch `acc` đã đủ để biết đoạn nào đang đọc. Vòng xoay khi đang tạo âm thanh thì giữ.
 
 **Cột phải**
 17. Thêm phần đầu thẻ: nhãn `HỒ SƠ ĐANG DÙNG` + tên hồ sơ. Giọng và thanh điều chỉnh bên dưới thuộc về hồ sơ đó — bỏ dòng chú thích cũ nằm trong mục thu gọn.
@@ -85,8 +92,8 @@ Sau mỗi bước, dừng lại báo tôi biết đã xong gì.
 
 ## Bốn quyết định bắt buộc giữ nguyên, đừng "cải tiến"
 
-- Đơn vị nội dung là **đoạn**, không phải dòng. Chữ tự xuống dòng, **không bao giờ cắt cụt bằng dấu ba chấm**.
-- **Không có thanh tua theo thời gian.** Thanh dưới chỉ báo tiến trình, không kéo được. Người dùng tìm chỗ cần nghe bằng cách cuộn và bấm số đoạn.
+- Đơn vị nội dung là **đoạn**, không phải dòng. Chữ tự xuống dòng, **không bao giờ cắt cụt bằng dấu ba chấm**. Vùng đọc là nơi sửa được, không phải nơi chỉ đọc.
+- **Không có thanh tua theo thời gian.** Thanh dưới chỉ báo tiến trình, không kéo được. Người dùng tìm chỗ cần nghe bằng cách cuộn và bấm nút ▶ của đoạn.
 - **Nghe toàn bộ** và **Xuất file âm thanh** là một cặp ở góc phải thanh công cụ, chỉ hiện khi có văn bản, và chỉ *Xuất* là nút accent.
 - **Hồ sơ đọc là chỗ làm việc riêng**, không phải preset giọng.
 
@@ -103,7 +110,9 @@ Copy tiếng Việt trong README là bản cuối, **giữ nguyên từng chữ*
 Xong thì tự kiểm bằng danh sách này và báo lại từng dòng đạt hay chưa:
 
 - [ ] Đổi hồ sơ ở cột trái → tab tệp, nội dung giữa, giọng, thanh điều chỉnh, Cần chú ý đều đổi
-- [ ] Bấm số đoạn → nghe riêng đoạn đó, thanh phát ghi đúng, hết đoạn thì dừng
+- [ ] Bấm nút ▶ của một đoạn → nghe riêng đoạn đó, thanh phát ghi đúng, hết đoạn thì dừng
+- [ ] Nút ▶ và thanh cuộn chỉ hiện theo chuột đúng như mục 27–28
+- [ ] Sửa chữ trực tiếp trong vùng đọc: gõ, `Enter` tách đoạn, `Backspace`/`Delete` nối đoạn, đoạn bỏ trống tự xoá, số từ và số đoạn cập nhật
 - [ ] Bấm *Nghe toàn bộ* → đọc liền mạch, các đoạn đã đọc mờ dần
 - [ ] Chưa có văn bản → cặp Nghe/Xuất ẩn, các công cụ phụ thuộc văn bản chuyển màu mờ
 - [ ] Xuất → hộp thoại → thanh trạng thái chạy → thông báo góc
