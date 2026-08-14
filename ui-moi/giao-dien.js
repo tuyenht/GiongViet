@@ -252,24 +252,15 @@ function veDoan(d, n) {
   // Dòng trống không có chữ để đọc nên không treo nút - nút bấm ra lỗi là nút giả.
   const coPlay = d.kieu !== 'blank';
 
-  /* Ô SỬA CHỮ ngay tại chỗ. Dùng textarea chứ không contenteditable: nhịp đọc
-     bọc từng chữ vào <span> để tô sáng, cho người dùng gõ thẳng vào cái DOM ấy
-     là hai bên giẫm chân nhau. Textarea là một hộp chữ phẳng, tách hẳn. */
-  if (S.suaDoan === n) {
-    return `<div class="doan doan--sua" data-doan="${n}">
-      <span class="doan__so">${n}</span>
-      <span class="doan__than">
-        <textarea class="doan__o" id="oSuaDoan" rows="2"
-                  spellcheck="false">${esc(d.chu)}</textarea>
-        <span class="doan__suathanh">
-          <button class="nut nut--acc" data-suaxong="${n}">Xong</button>
-          <button class="nut nut--vien" data-suahuy="1">Huỷ</button>
-          <span class="doan__suamach">Xuống dòng để tách thành đoạn mới ·
-            xoá hết chữ để bỏ đoạn này · Esc để huỷ</span>
-        </span>
-      </span>
-    </div>`;
-  }
+  /* GÕ THẲNG VÀO CHỮ, không có chế độ vào/ra ô sửa. Chủ dự án bấm thử: phải
+     bấm nút rồi mới gõ được là quá nhiều bước, "muốn như Notepad".
+
+     contenteditable chỉ bật khi KHÔNG đọc. Lúc đang đọc, nhịp tô chữ bọc từng
+     chữ vào <span> để sáng dần theo tiếng; cho gõ vào giữa cái DOM đang bị
+     viết lại 60 lần một giây là hai bên giẫm chân nhau.
+
+     plaintext-only để dán từ web vào không kéo theo cả đống thẻ HTML. */
+  const suaDuoc = S.view !== 'dang_doc' && d.kieu !== 'blank';
 
   return `<div class="${cls.join(' ')}" data-doan="${n}">
     <span class="doan__so">${
@@ -277,14 +268,13 @@ function veDoan(d, n) {
               : n}</span>
     <!-- data-doan đủ để nhịp đọc gạt lớp trên từng đoạn mà không dựng lại DOM -->
     <span class="doan__than">${d.kieu === 'blank' ? '' :
-      `<span class="doan__chu">${n === S.sel && S.view !== 'dang_doc' ? '<span class="nhap"></span>' : ''}${
-        the ? `<span class="doan__the">${esc(the)}</span>` : ''}${esc(d.chu)}</span>`}</span>${
+      `${the ? `<span class="doan__the" contenteditable="false">${esc(the)}</span>` : ''}<span
+         class="doan__chu"${suaDuoc ? ' contenteditable="plaintext-only" spellcheck="false"' : ''}
+         >${esc(d.chu)}</span>`}</span>${
     coPlay ? `
     <button class="doan__play${viKhoa ? ' la-khoa' : ''}" data-nghe="${n}"
             title="${esc(viKhoa
               || `Nghe riêng đoạn ${n}. Đang đọc đoạn này thì bấm để dừng.`)}"></button>` : ''}
-    <button class="doan__sua" data-sua="${n}"
-            title="Sửa chữ trong đoạn ${n}">✎</button>
   </div>`;
 }
 
@@ -1370,13 +1360,13 @@ document.addEventListener('click', (e) => {
                                    return chuyenSang(dongTab(S, +n.dataset.dongtab)); }
   if ((n = t('[data-tab]')))    return chuyenSang(doiTab(S, +n.dataset.tab));
   if (t('#themTab'))            return chuyenSang(themTab(S));
-  if ((n = t('[data-sua]')))    { e.stopPropagation(); return moSuaDoan(+n.dataset.sua); }
-  if ((n = t('[data-suaxong]'))) {
-    e.stopPropagation();
-    const o = $('#oSuaDoan');
-    return luuSuaDoan(+n.dataset.suaxong, o ? o.value : '');
+  /* Bấm vào chính chữ đang sửa được thì để yên cho con trỏ đứng đó - dat() ở
+     dưới sẽ vẽ lại vùng đọc và ném con trỏ về đầu bài. */
+  if (t('.doan__chu[contenteditable]')) {
+    const o = t('[data-doan]');
+    if (o && +o.dataset.doan !== S.sel) S = { ...S, sel: +o.dataset.doan };
+    return;
   }
-  if (t('[data-suahuy]'))       { e.stopPropagation(); return dat({ ...S, suaDoan: null }); }
   if ((n = t('[data-nghe]'))) {
     e.stopPropagation();
     /* Đang đọc chính đoạn này thì nút ấy là nút DỪNG - CSS đã đổi nó thành ■.
@@ -1606,18 +1596,28 @@ document.addEventListener('input', (e) => {
   }
 });
 
+/* Gõ vào chữ thì chép ngay sang tài liệu, KHÔNG vẽ lại - vẽ lại là con trỏ
+   nhảy về đầu bài, gõ được đúng một chữ rồi mất chỗ. Việc tách hay bỏ đoạn
+   đợi tới lúc rời khỏi đoạn (focusout) mới làm, lúc ấy vẽ lại mới an toàn. */
+const _nutChu = (e) => {
+  const el = e.target && (e.target.nodeType === 1 ? e.target : e.target.parentElement);
+  return el && el.closest ? el.closest('.doan__chu[contenteditable]') : null;
+};
+document.addEventListener('input', (e) => {
+  const nut = _nutChu(e);
+  if (nut) chuDangGo(nut);
+});
+document.addEventListener('focusout', (e) => {
+  const nut = _nutChu(e);
+  if (nut) roiDoanDangGo(nut);
+});
+
 document.addEventListener('keydown', (e) => {
-  if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
-    /* Ô sửa chữ có bộ phím riêng. Enter TRƠN để xuống dòng như mọi ô nhập -
-       đó chính là cách tách đoạn - nên phím xác nhận phải là Ctrl+Enter. */
-    if (document.activeElement.id === 'oSuaDoan') {
-      if (e.key === 'Escape') { e.preventDefault(); return dat({ ...S, suaDoan: null }); }
-      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
-        e.preventDefault();
-        return luuSuaDoan(S.suaDoan, document.activeElement.value);
-      }
-      return;
-    }
+  /* isContentEditable PHẢI có ở đây. Vùng chữ gõ thẳng không phải INPUT cũng
+     không phải TEXTAREA, thiếu nó là phím tắt toàn cục nuốt mất phím Space -
+     gõ văn bản mà không đánh được dấu cách. */
+  const dangGoChu = !!(document.activeElement && document.activeElement.isContentEditable);
+  if (dangGoChu || ['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
     if (e.key === 'Escape') dat({ ...S, find: false });
     if (e.key === 'Enter' && document.activeElement.id === 'oTim') {
       e.preventDefault(); toiKetQua(e.shiftKey ? -1 : 1);
@@ -1783,19 +1783,30 @@ function vanTayTaiLieu() {
        + '|' + JSON.stringify(S.chips[tenTepDangXem(S)] || {});
 }
 
-/* ------------------------------------------------------------- sửa chữ tại chỗ
+/* ------------------------------------------------------------- gõ thẳng vào chữ
 
-   Mở ô sửa thì DỪNG đọc trước: playlist bên Python dựng từ bản chữ cũ, để nó
-   chạy tiếp trong lúc người dùng gõ là loa đọc một đằng màn hình một nẻo. */
-function moSuaDoan(n) {
-  if (S.view === 'dang_doc') dungPhat();
-  dat({ ...S, suaDoan: n, sel: n });
-  const o = $('#oSuaDoan');
-  if (o) { o.focus(); o.setSelectionRange(o.value.length, o.value.length); }
+   KHÔNG dựng lại DOM trong lúc người dùng đang gõ. dat() gọi ve() vẽ lại cả
+   vùng đọc, mà vẽ lại là con trỏ nhảy về đầu bài - gõ được đúng một chữ rồi
+   mất chỗ. Nên đường này chỉ chép chữ vào TAI_LIEU, còn vẽ lại thì đợi tới
+   lúc rời đoạn. */
+function chuDangGo(nut) {
+  const n = +((nut.closest('[data-doan]') || {}).dataset || {}).doan;
+  const ten = tenTepDangXem(S);
+  const t = TAI_LIEU[ten];
+  if (!n || !t || !t.doan[n - 1]) return;
+  t.doan[n - 1] = { ...t.doan[n - 1], chu: nut.textContent };
+  henLuuHoSo();
 }
 
-/* Lưu ô sửa. Một ô có thể ra NHIỀU đoạn (xuống dòng) hoặc KHÔNG còn đoạn nào
-   (xoá sạch chữ) - tách và gộp đoạn đi cùng một đường với sửa chữ thường.
+/* Rời đoạn mới xét tách - gõ Enter giữa câu là muốn xuống dòng chứ chưa chắc
+   đã muốn cắt đoạn ngay lúc ấy, mà cắt ngay thì DOM dựng lại và mất con trỏ. */
+function roiDoanDangGo(nut) {
+  const n = +((nut.closest('[data-doan]') || {}).dataset || {}).doan;
+  if (n) luuSuaDoan(n, nut.textContent);
+}
+
+/* Chép chữ vào tài liệu, và tách hoặc bỏ đoạn nếu cần. Một đoạn có thể ra
+   NHIỀU đoạn (có xuống dòng) hoặc KHÔNG còn đoạn nào (xoá sạch chữ).
 
    Kết quả soát cũ bỏ hết: nó nói về bản chữ trước khi sửa, giữ lại là màn Soát
    chỉ vào những chỗ không còn tồn tại. */
@@ -1803,9 +1814,13 @@ function luuSuaDoan(n, chuMoi) {
   const ten = tenTepDangXem(S);
   const t = TAI_LIEU[ten];
   const cu = t && t.doan;
-  if (!cu || !cu[n - 1]) return dat({ ...S, suaDoan: null });
+  if (!cu || !cu[n - 1]) return;
 
   const dong = String(chuMoi).split(/\r?\n/).map((x) => x.trim()).filter((x) => x);
+  /* Không có gì đổi thì ĐỪNG vẽ lại. Rời đoạn nào cũng vẽ lại cả vùng đọc là
+     bài dài giật một cái mỗi lần bấm sang dòng khác, mà chẳng để làm gì. */
+  if (dong.length === 1 && dong[0] === cu[n - 1].chu) return;
+
   const moi = dong.length
     ? cu.slice(0, n - 1)
         .concat(dong.map((chu, i) => (i === 0 ? { ...cu[n - 1], chu } : { kieu: 'body', chu })),
@@ -1817,7 +1832,7 @@ function luuSuaDoan(n, chuMoi) {
   // Thẻ của đoạn n ở nguyên chỗ khi tách (dời từ n+1), nhưng phải bỏ khi xoá.
   const chips = delta ? dichThe(S.chips, ten, delta > 0 ? n + 1 : n, delta) : S.chips;
   duLieuSoat = null;
-  dat({ ...S, chips, suaDoan: null, soatBoQua: {},
+  dat({ ...S, chips, soatBoQua: {},
         sel: Math.max(1, Math.min(n, moi.length)),
         pos: Math.max(1, Math.min(S.pos, moi.length)) });
 }

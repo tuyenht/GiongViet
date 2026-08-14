@@ -378,13 +378,28 @@ console.log('\n--- P. Màn Soát: đánh dấu đã xử lý ---');
 
 console.log('\n--- Q. Sửa chữ tại chỗ ---');
 {
-  ok(/data-sua="\d+"/.test(HTML), 'mỗi đoạn có nút ✎ sửa chữ');
+  /* Gõ THẲNG vào chữ, không có chế độ vào/ra ô sửa: chủ dự án bấm thử bảo phải
+     bấm nút rồi mới gõ được là quá nhiều bước, "muốn như Notepad". */
+  ok(/class="doan__chu" contenteditable="plaintext-only"/.test(HTML.replace(/\s+/g, ' '))
+     || /doan__chu[^>]*contenteditable="plaintext-only"/.test(HTML),
+     'chữ trong đoạn gõ thẳng được, không phải bấm nút mở ô');
+  ok(!/data-sua=|doan__o|data-suaxong/.test(HTML), 'KHÔNG còn chế độ ô sửa riêng');
 
-  const oSua = chay("(() => { const cu = S; S = { ...S, suaDoan: 3 };"
-    + " const r = veDoan({ kieu: 'body', chu: 'thử sửa' }, 3); S = cu; return r; })()");
-  ok(/<textarea class="doan__o"/.test(oSua), 'đoạn đang sửa dựng ô nhập');
-  ok(/data-suaxong="3"/.test(oSua) && /data-suahuy/.test(oSua), 'ô sửa có nút Xong và Huỷ');
-  ok(!/data-nghe=/.test(oSua), 'đang sửa thì KHÔNG bày nút nghe của đoạn đó');
+  /* Đang đọc thì KHOÁ gõ: nhịp tô chữ bọc từng chữ vào <span> và viết lại liên
+     tục, cho gõ vào giữa cái DOM ấy là hai bên giẫm chân nhau. */
+  const dangDoc = chay("(() => { const cu = S; S = { ...S, view: 'dang_doc', pos: 3 };"
+    + " const r = veDoan({ kieu: 'body', chu: 'đang đọc' }, 3); S = cu; return r; })()");
+  ok(!/contenteditable="plaintext-only"/.test(dangDoc), 'đang đọc thì không cho gõ vào chữ');
+
+  const trong = chay("veDoan({ kieu: 'blank', chu: '' }, 2)");
+  ok(!/contenteditable="plaintext-only"/.test(trong), 'dòng trống không mở ô gõ');
+
+  ok(chay('typeof chuDangGo') === 'function' && chay('typeof roiDoanDangGo') === 'function',
+     'có đường chép chữ lúc gõ và đường xét tách lúc rời đoạn');
+  /* Bẫy đã suýt vấp: contenteditable KHÔNG phải INPUT/TEXTAREA, thiếu
+     isContentEditable trong chặn phím tắt là phím Space bị nuốt. */
+  ok(/isContentEditable/.test(readFileSync(join(UI, 'giao-dien.js'), 'utf8')),
+     'phím tắt toàn cục nhường phím khi đang gõ chữ (không nuốt dấu cách)');
 
   /* Thẻ cảm xúc đánh theo SỐ ĐOẠN, nên tách hay xoá đoạn là phải dời chúng
      theo. Không dời thì thẻ nhảy sang nhầm câu mà người dùng không hề đụng. */
@@ -408,7 +423,6 @@ console.log('\n--- Q. Sửa chữ tại chỗ ---');
   const sauXoa = chay('doanDangXem(S, TAI_LIEU).length');
   ok(sauXoa === sauTach - 1, 'xoá sạch chữ thì bỏ hẳn đoạn đó', `${sauTach} → ${sauXoa}`);
 
-  ok(chay('S.suaDoan') === null, 'lưu xong thì đóng ô sửa');
   ok(Object.keys(chay('S.soatBoQua') || {}).length === 0,
      'sửa chữ thì bỏ kết quả soát cũ, vì nó nói về bản chữ trước khi sửa');
 }

@@ -67,11 +67,6 @@ function trangThaiBanDau(hoSo) {
     soatTab: 'chuy',            // chuy | chuanhoa
     soatLoc: 'tatca',           // tatca | nang | nhe
 
-    /* Đoạn đang mở ô sửa chữ, hoặc null. Một lúc chỉ sửa MỘT đoạn: mở nhiều ô
-       cùng lúc thì người dùng gõ dở ở chỗ này, bỏ đi chỗ khác, rồi không biết
-       cái nào đã lưu cái nào chưa. */
-    suaDoan: null,
-
     /* Những chỗ người dùng đã xem và quyết bỏ qua: { 'loai|tu|đoạn': true }.
        Soát ra chín chỗ mà không đánh dấu được đã xử lý chỗ nào thì càng nhìn
        càng rối - lần nào mở ra cũng thấy y nguyên chín chỗ ấy.
