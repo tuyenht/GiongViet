@@ -1618,6 +1618,17 @@ document.addEventListener('keydown', (e) => {
      gõ văn bản mà không đánh được dấu cách. */
   const dangGoChu = !!(document.activeElement && document.activeElement.isContentEditable);
   if (dangGoChu || ['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
+    /* Ctrl+S phải ăn NGAY GIỮA LÚC gõ - sửa xong là muốn lưu liền. Bắt bấm ra
+       ngoài rồi mới lưu được là thừa một bước không ai đoán ra.
+
+       blur() trước đã: rời ô mới kích focusout, mà focusout mới là chỗ chép
+       chữ vừa gõ sang tài liệu. Lưu trước khi chép là ghi ra bản thiếu đúng
+       những chữ vừa gõ. */
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+      e.preventDefault();
+      if (document.activeElement.blur) document.activeElement.blur();
+      return LENH['Lưu']();
+    }
     if (e.key === 'Escape') dat({ ...S, find: false });
     if (e.key === 'Enter' && document.activeElement.id === 'oTim') {
       e.preventDefault(); toiKetQua(e.shiftKey ? -1 : 1);
@@ -1634,6 +1645,12 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') return dat(dongHetMenu(S));
   if (c && k === 'h') { e.preventDefault(); return dat({ ...S, find: !S.find }); }
   if (c && k === 'b') { e.preventDefault(); return dat({ ...S, rail: !S.rail }); }
+  /* Bốn phím này VỐN ĐÃ ghi trong menu mà chưa có ai nối: bấm Ctrl+S theo đúng
+     chữ menu bày ra mà không có gì xảy ra thì cũng là một dạng hứa suông. */
+  if (c && k === 's') { e.preventDefault(); return LENH['Lưu'](); }
+  if (c && k === 'w') { e.preventDefault(); return LENH['Đóng tệp'](); }
+  if (c && k === 'g') { e.preventDefault(); return LENH['Đổi giọng đọc'](); }
+  if (c && k === 'm') { e.preventDefault(); return LENH['Nghe mẫu giọng'](); }
   if (e.altKey && ['1', '2', '3'].includes(e.key)) {
     e.preventDefault(); return dat(datThe(S, THE_CAM_XUC[+e.key - 1][0]));
   }

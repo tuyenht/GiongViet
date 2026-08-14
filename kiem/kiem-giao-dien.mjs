@@ -401,6 +401,18 @@ console.log('\n--- Q. Sửa chữ tại chỗ ---');
   ok(/isContentEditable/.test(readFileSync(join(UI, 'giao-dien.js'), 'utf8')),
      'phím tắt toàn cục nhường phím khi đang gõ chữ (không nuốt dấu cách)');
 
+  /* Menu bày phím tắt nào thì phím ấy phải ăn. Bấm Ctrl+S theo đúng chữ menu
+     ghi mà không có gì xảy ra cũng là một dạng hứa suông - đã sót 4 phím. */
+  const JS = readFileSync(join(UI, 'giao-dien.js'), 'utf8');
+  const khai = [...new Set([...JS.matchAll(/'Ctrl\+([A-Z])'/g)].map((m) => m[1].toLowerCase()))];
+  const coHandler = (p) =>
+    new RegExp(`k === '${p}'|key\\.toLowerCase\\(\\) === '${p}'`).test(JS);
+  const thieu = khai.filter((p) => !coHandler(p));
+  ok(thieu.length === 0, `mọi phím tắt Ctrl khai trong menu đều có handler (${khai.length} phím)`,
+     thieu.length ? 'thiếu: Ctrl+' + thieu.join(', Ctrl+').toUpperCase() : '');
+  ok(/document\.activeElement\.blur\(\)[\s\S]{0,80}LENH\['Lưu'\]/.test(JS),
+     'Ctrl+S lúc đang gõ thì rời ô trước rồi mới lưu, không ghi ra bản thiếu chữ vừa gõ');
+
   /* Thẻ cảm xúc đánh theo SỐ ĐOẠN, nên tách hay xoá đoạn là phải dời chúng
      theo. Không dời thì thẻ nhảy sang nhầm câu mà người dùng không hề đụng. */
   const themGiua = chay("dichThe({ t: { 2: 'a', 5: 'b' } }, 't', 3, 1)");
