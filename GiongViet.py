@@ -110,6 +110,19 @@ def bao_dam_ffmpeg():
 
 def main():
     bao_dam_ffmpeg()
+
+    # Gom các tệp cấu hình rời vào giongviet.db, một lần duy nhất. Chạy TRƯỚC
+    # khi dựng ApiMoi vì ApiMoi đọc cấu hình ngay lúc khởi tạo.
+    #
+    # Tệp cũ không bị xoá, chỉ dời sang sao-luu-cu/. Gom hỏng thì mọi đường đọc
+    # tự lùi về tệp rời, chương trình vẫn chạy như chưa có gì.
+    try:
+        import kho_cau_hinh
+        kho_cau_hinh.nhap_tu_tep_cu()
+    except Exception as loi:                             # noqa: BLE001
+        from giaodien import nhat_ky
+        nhat_ky.ghi_loi("Gom cấu hình vào kho, dùng tệp rời như cũ", loi)
+
     from giaodien_moi.cau_noi_moi import ApiMoi
 
     api = ApiMoi(VUNG_LAM_VIEC)

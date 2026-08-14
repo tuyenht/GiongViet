@@ -17,9 +17,10 @@ MAC_DINH = {"theme": "light", "zoom": 100, "thu_muc_xuat": ""}
 
 def doc_tuy_chon() -> dict:
     tuy_chon = dict(MAC_DINH)
-    if TUY_CHON_FILE.exists():
+    _noi_dung = engine.doc_tep_cau_hinh(TUY_CHON_FILE)
+    if _noi_dung:
         try:
-            data = json.loads(TUY_CHON_FILE.read_text(encoding="utf-8"))
+            data = json.loads(_noi_dung)
             if isinstance(data, dict):
                 tuy_chon.update({k: v for k, v in data.items() if k in MAC_DINH})
         except (json.JSONDecodeError, OSError):
@@ -29,8 +30,8 @@ def doc_tuy_chon() -> dict:
 
 def luu_tuy_chon(tuy_chon: dict):
     try:
-        TUY_CHON_FILE.write_text(
-            json.dumps(tuy_chon, ensure_ascii=False, indent=1), encoding="utf-8")
+        engine.ghi_tep_cau_hinh(
+            TUY_CHON_FILE, json.dumps(tuy_chon, ensure_ascii=False, indent=1))
     except OSError:
         pass
 

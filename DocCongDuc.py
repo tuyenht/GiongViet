@@ -17,6 +17,7 @@ card đồ hoạ), không cần Internet sau khi cài đặt và tải mô hình
 import collections
 import concurrent.futures
 import configparser
+import io
 import json
 import os
 import re
@@ -51,6 +52,54 @@ def app_dir() -> Path:
 
 
 BASE_DIR = app_dir()
+
+# Cấu hình nay nằm gọn trong giongviet.db thay vì rải bảy tệp cạnh .exe.
+# Kho giữ NGUYÊN nội dung dạng chuỗi nên configparser và json vẫn đọc y như
+# cũ - xem kho_cau_hinh.py. Gọi dat_goc ngay đây, trước mọi lần đọc cấu hình.
+import kho_cau_hinh  # noqa: E402
+
+kho_cau_hinh.dat_goc(BASE_DIR)
+
+
+def _thuoc_kho(path) -> bool:
+    """Chỉ tệp nằm THẲNG trong thư mục chương trình mới đi qua kho.
+
+    Kho đánh khoá bằng TÊN tệp, nên thiếu phép chặn này thì một đường dẫn trỏ
+    đi nơi khác - lời dẫn riêng của hồ sơ, hay thư mục tạm mà bộ kiểm dựng ra -
+    vẫn ghi đè lên mục cùng tên trong kho thật. Bộ kiểm đã suýt viết vào dữ
+    liệu của người dùng đúng theo đường ấy.
+    """
+    goc = kho_cau_hinh.goc()
+    if goc is None:
+        return False
+    try:
+        return Path(path).resolve().parent == Path(goc).resolve()
+    except OSError:
+        return False
+
+
+def doc_tep_cau_hinh(path) -> str:
+    """Đọc từ kho; kho chưa có thì đọc tệp rời như trước.
+
+    Đường lùi ấy là bắt buộc: bản đang chạy của người dùng còn tệp rời, và
+    lần đầu mở bản mới thì kho vẫn trống cho tới khi nhập xong."""
+    if _thuoc_kho(path):
+        noi_dung = kho_cau_hinh.doc(Path(path).name)
+        if noi_dung is not None:
+            return noi_dung
+    try:
+        return Path(path).read_text(encoding="utf-8-sig")
+    except (OSError, UnicodeDecodeError):
+        return ""
+
+
+def ghi_tep_cau_hinh(path, noi_dung: str) -> None:
+    """Ghi vào kho; kho hỏng thì ghi ra tệp rời để KHÔNG mất thiết lập."""
+    if _thuoc_kho(path) and kho_cau_hinh.ghi(Path(path).name, str(noi_dung)):
+        return
+    Path(path).write_text(str(noi_dung), encoding="utf-8")
+
+
 CONFIG_FILE = BASE_DIR / "cauhinh.ini"
 NOIDUNG_FILE = BASE_DIR / "noidung.ini"
 TUDIEN_FILE = BASE_DIR / "tudien.ini"
@@ -282,11 +331,10 @@ class NoiDung:
         self.mau_cau = MAU_CAU_MAC_DINH
 
     def load(self, path: Path):
-        if not path.exists():
-            return self
-        try:
-            raw = path.read_text(encoding="utf-8-sig", errors="replace")
-        except OSError:
+        # Lời dẫn nay cũng nằm trong kho; doc_tep_cau_hinh tự lùi về tệp rời
+        # khi kho chưa có mục ấy (bản cũ, hoặc lần đầu trước khi nhập).
+        raw = doc_tep_cau_hinh(path)
+        if not raw:
             return self
 
         sections, cur_sec, cur_key = {}, None, None
@@ -344,7 +392,8 @@ class NoiDung:
         return self
 
     def save(self, path: Path):
-        path.write_text(
+        ghi_tep_cau_hinh(
+            path,
             "; ==========================================================\n"
             ";  NOI DUNG LOI DAN - CHE DO DANH SACH CONG DUC\n"
             ";  Sua bang Notepad roi luu lai (UTF-8), hoac sua trong\n"
@@ -363,8 +412,7 @@ class NoiDung:
             f"noi_dung={self.cuoi_text}\n\n"
             "[MauCau]\n"
             "; Bat buoc co {ten} va {tien}\n"
-            f"noi_dung={self.mau_cau}\n",
-            encoding="utf-8-sig")
+            f"noi_dung={self.mau_cau}\n")
 
 
 # ---------------------------------------------------------------------------
@@ -373,12 +421,13 @@ class NoiDung:
 
 def load_tudien(path: Path) -> dict:
     tudien = dict(TUDIEN_MAC_DINH)
-    if not path.exists():
+    noi_dung = doc_tep_cau_hinh(path)
+    if not noi_dung:
         return tudien
     cfg = configparser.ConfigParser(interpolation=None)
     cfg.optionxform = str
     try:
-        cfg.read(path, encoding="utf-8-sig")
+        cfg.read_string(noi_dung)
     except configparser.Error:
         return tudien
     if cfg.has_section("ThayThe"):
@@ -422,8 +471,14 @@ def luu_tudien(path: Path, tudien: dict):
         if key not in tudien:
             dong.append(f"{key}=")
 
+    # Phải đi qua _thuoc_kho, KHÔNG gọi thẳng kho_cau_hinh.ghi: kho đánh khoá
+    # bằng tên tệp, gọi thẳng là một đường dẫn ngoài thư mục chương trình cũng
+    # ghi vào kho thật. Bộ kiểm đã bắt được đúng lỗi này.
+    noi_dung = "\n".join(dong) + "\n"
+    if _thuoc_kho(path) and kho_cau_hinh.ghi(Path(path).name, noi_dung):
+        return
     tam = path.with_suffix(path.suffix + ".tam")
-    tam.write_text("\n".join(dong) + "\n", encoding="utf-8-sig")
+    tam.write_text(noi_dung, encoding="utf-8-sig")
     tam.replace(path)
 
 
@@ -452,9 +507,10 @@ def save_tudien_mac_dinh(path: Path):
 
 def load_config():
     cfg = configparser.ConfigParser(interpolation=None)
-    if CONFIG_FILE.exists():
+    noi_dung = doc_tep_cau_hinh(CONFIG_FILE)
+    if noi_dung:
         try:
-            cfg.read(CONFIG_FILE, encoding="utf-8-sig")
+            cfg.read_string(noi_dung)
         except configparser.Error:
             pass
 
@@ -529,8 +585,9 @@ def save_config(cfg: dict):
 
     parser["HeThong"] = {"file_cong_duc": rel(cfg["data_file"]),
                          "ffplay": rel(cfg["ffplay"])}
-    with CONFIG_FILE.open("w", encoding="utf-8") as f:
-        parser.write(f)
+    bo_nho = io.StringIO()
+    parser.write(bo_nho)
+    ghi_tep_cau_hinh(CONFIG_FILE, bo_nho.getvalue())
 
 
 def ap_dung_phong_cach(cfg: dict, ten: str):

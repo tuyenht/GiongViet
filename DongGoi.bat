@@ -97,6 +97,7 @@ py -m PyInstaller --noconfirm --onedir --windowed --name GiongViet ^
     --hidden-import giaodien_moi.so_dien_thoai --hidden-import giaodien_moi.sdt_mau ^
     --hidden-import giaodien_moi.sdt_nhip --hidden-import giaodien_moi.am_thanh_loc ^
     --hidden-import giaodien_moi.soat_moi --hidden-import giaodien_moi.xuat_moi ^
+    --hidden-import kho_cau_hinh ^
     --distpath "%ROOT%_dist_moi" --workpath "%BUILD_DIR%" --specpath "%SPEC_DIR%" ^
     "%ROOT%GiongViet.py"
 if errorlevel 1 goto :fail

@@ -38,7 +38,13 @@ GHI_TRUC_TIEP = {"write_text", "write_bytes", "unlink", "rmtree", "touch"}
 
 # Loi goi ham dang day du duoc tinh la ghi dia.
 GHI_THEO_TEN = {"json.dump", "os.replace", "os.rename", "os.remove",
-                "shutil.copy", "shutil.copy2", "shutil.copyfile", "shutil.move"}
+                "shutil.copy", "shutil.copy2", "shutil.copyfile", "shutil.move",
+                # Cấu hình nay vào giongviet.db qua hai cửa này chứ không còn
+                # write_text thẳng ra tệp. Thiếu chúng ở đây thì ho_so.luu và
+                # he_thong.luu_tuy_chon lọt lưới - quét mã không thấy dấu ghi
+                # nào, trong khi chúng vẫn ghi thật.
+                "engine.ghi_tep_cau_hinh", "ghi_tep_cau_hinh",
+                "kho_cau_hinh.ghi", "kho.ghi"}
 
 # Mien tru, co ly do ro rang cho tung cai:
 MIEN_TRU = {

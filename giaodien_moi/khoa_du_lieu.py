@@ -34,6 +34,7 @@ và GiongViet-loi.log (nhật ký lỗi, không phải dữ liệu của họ).
 """
 
 import DocCongDuc as engine
+import kho_cau_hinh
 
 from giaodien import he_thong, ho_so
 
@@ -50,6 +51,10 @@ CUA_RA_GHI = [
     (ho_so, "luu", None, "hoso.json"),
     (ho_so, "tao_tep_noi_dung", ho_so.TEP_NOI_DUNG_GOC, "noidung-*.ini (tệp mới)"),
     (he_thong, "luu_tuy_chon", None, "giaodien.json"),
+    # Cấu hình nay gom vào giongviet.db. Không bịt cửa này thì bộ kiểm chạy
+    # xong để lại một tệp kho ngay giữa thư mục dự án - đã xảy ra thật.
+    # Trả False đúng nghĩa "ghi không thành", nơi gọi tự lùi về tệp rời.
+    (kho_cau_hinh, "ghi", False, "giongviet.db"),
 ]
 
 # Đếm số lần bị chặn theo tên hàm. Không phải để trang trí: khi giao diện mới

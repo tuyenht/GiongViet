@@ -91,7 +91,7 @@ ok((T / "giong_rieng" / "danhsach.json").exists(), "luu_ds_giong_rieng co ghi")
 
 print("\n--- B. Con ho truoc khi khoa ---")
 ho = khoa_du_lieu.con_ho()
-ok(len(ho) == 8, "8 cua ra deu dang mo", len(ho))
+ok(len(ho) == 9, "9 cua ra deu dang mo", len(ho))
 ok(not khoa_du_lieu.dang_khoa(), "chua khoa")
 
 print("\n--- C. Khoa lai ---")

@@ -148,10 +148,11 @@ def doc():
     None nghĩa là "dùng hồ sơ mặc định", không phải lỗi: lần chạy đầu tiên
     trên máy nào cũng rơi vào nhánh này.
     """
-    if not TEP.exists():
+    noi_dung = engine.doc_tep_cau_hinh(TEP)
+    if not noi_dung:
         return None
     try:
-        d = json.loads(TEP.read_text(encoding="utf-8"))
+        d = json.loads(noi_dung)
     except (json.JSONDecodeError, OSError, UnicodeDecodeError):
         return None
     if not isinstance(d, dict) or not d.get("hoSo"):
@@ -169,8 +170,9 @@ def luu(du_lieu) -> bool:
     if not sach["hoSo"]:
         return False
     try:
-        luu_tep.ghi_an_toan(
-            TEP, json.dumps(sach, ensure_ascii=False, indent=1))
+        # Kho SQLite ghi trong một giao dịch nên đã an toàn sẵn; ghi_tep_cau_hinh
+        # chỉ lùi về luu_tep.ghi_an_toan khi kho hỏng.
+        engine.ghi_tep_cau_hinh(TEP, json.dumps(sach, ensure_ascii=False, indent=1))
     except OSError:
         return False
     return True

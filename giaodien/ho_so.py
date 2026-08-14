@@ -134,9 +134,12 @@ def tep_noi_dung_cua(h: dict) -> str:
 def doc(cfg: dict) -> dict:
     """Trả {"dangDung": ma, "dsHoSo": [...]}. Tệp hỏng thì dựng lại từ đầu
     chứ không để chương trình chết vì một tệp phụ."""
-    if TEP.exists():
+    # Hồ sơ nay nằm trong giongviet.db; doc_tep_cau_hinh tự lùi về tệp rời khi
+    # kho chưa có mục ấy, nên bản đang chạy của người dùng không hụt gì.
+    _noi_dung = engine.doc_tep_cau_hinh(TEP)
+    if _noi_dung:
         try:
-            data = json.loads(TEP.read_text(encoding="utf-8"))
+            data = json.loads(_noi_dung)
             ds = [h for h in data.get("dsHoSo", [])
                   if isinstance(h, dict) and h.get("ma") and h.get("ten")
                   and h.get("loai") in KHOA_THEO_LOAI]
@@ -155,10 +158,7 @@ def doc(cfg: dict) -> dict:
 
 
 def luu(kho: dict):
-    tam = TEP.with_suffix(".json.tam")
-    tam.write_text(json.dumps(kho, ensure_ascii=False, indent=1),
-                   encoding="utf-8")
-    tam.replace(TEP)
+    engine.ghi_tep_cau_hinh(TEP, json.dumps(kho, ensure_ascii=False, indent=1))
 
 
 def tim(kho: dict, ma: str):
