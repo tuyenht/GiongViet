@@ -534,6 +534,34 @@ console.log('\n--- Q. Sửa chữ tại chỗ ---');
   ok(/coPlay = d\.kieu !== 'blank' && String\(d\.chu/.test(JS),
      'đoạn chưa có chữ thì không treo nút ▶ (bấm ra lỗi là nút giả)');
 
+  /* Ô ĐÃ BỊ GỠ khỏi màn hình thì focusout của nó phải bị BỎ QUA.
+
+     Tách đoạn gọi dat() vẽ lại vùng đọc, ô cũ bị thay; trình duyệt vẫn bắn
+     focusout trên ô chết ấy, mang theo nguyên câu CHƯA cắt. Chép nó vào tài
+     liệu là ghi đè đúng kết quả vừa tách - chủ dự án gặp cảnh bấm Enter thấy
+     tách, bấm ra chỗ khác thì đâu lại vào đấy, văn bản đầy đoạn giống hệt nhau. */
+  {
+    const truoc = chay('doanDangXem(S, TAI_LIEU).length');
+    const chuTruoc = chay('doanDangXem(S, TAI_LIEU)[2].chu');
+    chay(`roiDoanDangGo({
+      isConnected: false,
+      textContent: 'CHỮ CŨ CHƯA CẮT',
+      closest: () => ({ dataset: { doan: '3' } }),
+    })`);
+    ok(chay('doanDangXem(S, TAI_LIEU).length') === truoc
+       && chay('doanDangXem(S, TAI_LIEU)[2].chu') === chuTruoc,
+       'ô đã bị gỡ thì focusout KHÔNG ghi đè tài liệu',
+       chay('doanDangXem(S, TAI_LIEU)[2].chu').slice(0, 24));
+    // Ô còn sống thì vẫn phải chép chữ như thường.
+    chay(`roiDoanDangGo({
+      isConnected: true,
+      textContent: 'chữ mới gõ',
+      closest: () => ({ dataset: { doan: '3' } }),
+    })`);
+    ok(chay('doanDangXem(S, TAI_LIEU)[2].chu') === 'chữ mới gõ',
+       'ô còn sống thì vẫn chép chữ vào tài liệu như thường');
+  }
+
   /* GÕ THẬT thay vì grep. Mỗi phép dưới đây gọi đúng handler keydown mà cửa sổ
      thật dùng, rồi soi kết quả trong tài liệu - không phải soi mã nguồn. */
   {

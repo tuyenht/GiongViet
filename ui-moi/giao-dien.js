@@ -1911,6 +1911,16 @@ function chuDangGo(nut) {
 /* Rời đoạn mới xét tách - gõ Enter giữa câu là muốn xuống dòng chứ chưa chắc
    đã muốn cắt đoạn ngay lúc ấy, mà cắt ngay thì DOM dựng lại và mất con trỏ. */
 function roiDoanDangGo(nut) {
+  /* BỎ QUA nếu ô này đã bị gỡ khỏi màn hình.
+
+     Tách hay gộp đoạn đều gọi dat() để vẽ lại vùng đọc, và vẽ lại là mọi ô cũ
+     bị thay. Trình duyệt bắn focusout TRÊN Ô ĐÃ CHẾT ấy sau khi việc tách đã
+     xong, mang theo `textContent` là nguyên câu CHƯA cắt - chép nó vào tài
+     liệu là ghi đè đúng kết quả vừa tách.
+
+     Triệu chứng chủ dự án gặp: bấm Enter thấy tách, bấm ra chỗ khác thì đâu
+     lại vào đấy, và văn bản đầy những đoạn giống hệt nhau. */
+  if (nut.isConnected === false) return;
   const n = +((nut.closest('[data-doan]') || {}).dataset || {}).doan;
   if (n) luuSuaDoan(n, nut.textContent);
 }
