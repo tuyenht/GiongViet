@@ -30,6 +30,12 @@ _internal/
 # Giữ trên đĩa để lỡ cần đối chiếu, không thuộc mã nguồn đang dùng.
 _luutru/
 
+# ─── BẢN XUẤT THIẾT KẾ, TRÙNG VỚI design_handoff_giongdoc/ ĐÃ COMMIT ────────
+# Giữ trên đĩa cũng được, chỉ đừng để chúng lấp đầy `git status` mỗi lần nhìn.
+# Nội dung y hệt thứ đã theo dõi, xoá lúc nào cũng được.
+GiongDoc desktop mockup*.zip
+design_handoff_giongdoc2/
+
 # ─── RÁC ────────────────────────────────────────────────────────────────────
 __pycache__/
 *.pyc

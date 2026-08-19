@@ -61,6 +61,13 @@ là di sản từ hồi chạy song song hai bản. Đã chốt đổi thành `l
 `web/`, nhưng HOÃN đến khi build được `.exe` để kiểm chứng: việc đó đụng ~100
 chỗ import cộng `--hidden-import` và `--add-data`, mà rủi ro thật nằm ở đóng gói.
 
+**Bốn màn đứng riêng, Soát văn bản thì không** (chốt 19/8). Thư viện giọng · Từ điển
+phát âm · Cài đặt · Văn bản ghép chiếm **toàn cửa sổ**: bỏ thanh menu, thanh công cụ,
+hai cột; chỉ còn thanh tiêu đề mang tên màn kèm mũi tên lùi. Căn cứ đếm được là nút
+*"Quay lại màn hình chính"* trong tệp thiết kế — bốn màn ấy có, **Màn hình chính 0 và
+Soát văn bản 0**. Soát văn bản là một **bảng mở thêm ở dưới** trong cửa sổ chính, không
+phải một màn; chính tệp thiết kế của nó viết *"Vẫn là cửa sổ chính của Giọng Việt"*.
+
 **Có git từ 13/8/2026** — kho riêng tư `github.com/tuyenht/GiongViet`. Trước đó
 dự án không dùng git; các ghi chép cũ nói "không dùng git" là đã lỗi thời.
 Dữ liệu người dùng nằm trong `.gitignore`, không bao giờ commit.
@@ -95,6 +102,10 @@ Còn lại → làm thẳng, báo cáo sau. Đừng hỏi vụn vặt.
 | PowerShell không bung dấu sao | `py_compile a.py giaodien/*.py` → `[Errno 22]`, thoát mã 1, tưởng nhầm code lỗi. Dùng `glob.glob` |
 | `evaluate_js` gọi `pywebview.api` | Trả **Promise**, đọc đồng bộ chỉ nhận `{}`. Phải `.then()` gán biến global |
 | Bản `--windowed` in tiếng Việt ra stdout | `UnicodeEncodeError` cp1252. Ghi log ra tệp UTF-8 |
+| Tưởng `sao-luu-cu/` là chỗ sửa cấu hình bằng Notepad | Nó là **đầu ra thuần**, không nằm trên đường đọc nào. `GiongViet.py:121` `nhap_tu_tep_cu()` **dời** `noidung.ini`+`tudien.ini` khỏi thư mục cài đặt mỗi lần khởi động, rồi engine luôn ưu tiên bản trong kho — chép về chỗ cũ rồi sửa cũng vô hiệu. Bài đo: `kiem/kiem_duong_sua_loi_dan.py` |
+| Chạy `DongGoi.bat` khi vòng cứu dữ liệu còn thiếu | Glob cứu chỉ bắt `*.json *.ini *.txt`, **không có `*.db`, không đệ quy**. Sau khi gom thì thiết lập thật nằm trong `giongviet.db` — build lại là lùi về mốc tệp `.ini` rời, build lần hai là mất hẳn. Bài đo `kiem/kiem_dong_goi_cuu_du_lieu.py` đỏ cho tới khi vá |
+| Tin `vanTayTaiLieu()` để biết tài liệu có đổi không | Nó chỉ đếm **tổng số ký tự**. Sửa một chữ thành chữ khác cùng độ dài là vân tay y nguyên, mọi thứ dựa vào nó im lặng bỏ qua |
+| "Sửa" một bài trong `kiem/` đang đỏ | `kiem/` có **hai loại** bài: *bài canh* (xanh = tốt) và *bài chứng minh lỗi* (**xanh = lỗi còn nguyên**). Đọc docstring đầu tệp trước khi đụng vào |
 
 ## 5. Quy tắc làm việc
 
@@ -118,6 +129,7 @@ Get-Process ffplay                          # dem tien trinh phat tieng, toi da 
 ```
 
 Bundle phải có đủ 3 tệp mấu chốt:
-`_internal\ui\index.html` · `_internal\sea_g2p\sea_g2p.bin` · `_internal\vieneu\assets\voices_v3_turbo.json`
+`_internal\ui-moi\index.html` · `_internal\sea_g2p\sea_g2p.bin` · `_internal\vieneu\assets\voices_v3_turbo.json`
+(đo 19/8: thư mục là `ui-moi`, không phải `ui` — ghi `ui` là kiểm nhầm rồi tưởng thiếu tệp)
 
 Lệnh hội đồng: `/bs:spec` · `/bs:audit` · `/bs:next` · `/bs:review` · `/bs:ship` · `/bs:close`
