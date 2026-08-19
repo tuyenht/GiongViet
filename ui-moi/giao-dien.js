@@ -31,12 +31,56 @@ let daTamDung = false;
 let moHinh = { trangThai: 'kiem_tra', tieuDe: 'Đang kiểm tra mô hình…', phanTram: 0 };
 const moHinhSanSang = () => moHinh.trangThai === 'san_sang' || !coPython();
 
+/* Tệp nào đang có chữ sửa chưa ghi ra đĩa. Khoá theo tên tệp, cùng cách
+   TAI_LIEU đánh khoá, để đóng tab nào biết tab ấy.
+
+   Vì sao cần: Ctrl+S CÓ lưu thật (luuVanBan → moi_luu_van_ban), nhưng không có
+   gì tự lưu, không có dấu hiệu nào báo "chưa lưu", và cả hai đường đóng — đóng
+   tệp lẫn đóng cửa sổ — đều đi thẳng, không hỏi một câu. Người lớn tuổi không
+   tự đoán ra Ctrl+S; gõ sửa cả buổi rồi bấm dấu × là mất trắng.
+
+   KHÔNG dùng lại vanTayTaiLieu() làm cờ: hàm ấy chỉ đếm TỔNG số ký tự, nên sửa
+   một chữ thành chữ khác cùng độ dài là vân tay không đổi — cờ sẽ im lặng đúng
+   lúc cần kêu nhất. Đánh dấu thẳng ở từng chỗ sửa mới không lọt. */
+const chuaLuu = new Set();
+let gioLuuCuoi = '';
+const coSuaChuaLuu = () => chuaLuu.size > 0;
+
+/* Cập nhật ĐÚNG cái nhãn ở thanh trạng thái, không vẽ lại cả màn.
+   Đường gõ chữ cố ý không gọi dat() để khỏi dựng lại DOM và ném con trỏ về đầu
+   bài; nên nếu chỉ thêm vào Set rồi đợi lần vẽ sau thì gõ cả buổi mà dòng
+   "Chưa lưu" vẫn chưa hiện ra — đúng lúc cần nó nhất. */
+function danhDauSua() {
+  const t = tenTepDangXem(S);
+  if (!t) return;
+  chuaLuu.add(t);
+  const nut = $('#ttLuu');
+  if (nut) nut.innerHTML = veTinhTrangLuu();
+}
+
 // ---------------------------------------------------------------- thanh menu
 
+/* Sáu menu theo ĐÚNG thứ tự và câu chữ của bản thiết kế.
+   Mỗi mục là [nhãn, phím tắt] hoặc [nhãn, phím tắt, 'lý do chưa làm'].
+   ['-'] là gạch ngăn nhóm.
+
+   Có phần tử thứ ba = mục ấy CHƯA làm: hiện mờ, KHÔNG bấm được, và mang tooltip
+   nói rõ vì sao. Đây là yêu cầu của chủ dự án: "chức năng nào code đã có thì nối
+   vào menu, chỉ để xám những mục thật sự chưa làm. Không ẩn mục, không để bấm mà
+   không có gì xảy ra." Bày ra mà bấm không ăn thua chính là thứ KPI cấm; giấu đi
+   thì người dùng không biết phần mềm định có gì. Làm mờ kèm lý do là đường giữa. */
 const MENUS = [
-  ['Tệp', [['Mở tệp…', 'Ctrl+O'], ['Mở danh sách tên và số…', ''],
+  ['Tệp', [['Mở tệp…', 'Ctrl+O'],
+           ['Mở từ Google Docs…', '', 'Chưa làm — cần đăng nhập Google, dự kiến ở lượt sau'],
+           // Thiết kế không nêu mục này, nhưng code CÓ và nó là đường duy nhất
+           // mở danh sách tên–số. Giữ lại, đã báo ở mục "code làm tốt hơn thiết kế".
+           ['Mở danh sách tên và số…', ''],
            ['Dán văn bản', 'Ctrl+V'], ['Lưu', 'Ctrl+S'],
-           ['Xuất file âm thanh', 'Ctrl+E'], ['Đóng tệp', 'Ctrl+W']]],
+           ['Xuất file âm thanh', 'Ctrl+E'], ['Đóng tệp', 'Ctrl+W'],
+           ['-'],
+           ['Ghép danh sách từ Google Sheet…', '', 'Chưa làm — màn Văn bản ghép chưa dựng'],
+           ['-'],
+           ['Cài đặt…', ''], ['Thoát', 'Alt+F4']]],
   /* ĐÃ GỠ (13/8): Hoàn tác · Làm lại · Cắt · Sao chép · Khoảng lặng 1 giây ·
      Ngắt đoạn. Sáu mục ấy bấm vào chỉ đóng menu rồi thôi, và không mục nào
      nối được: chúng cần một VÙNG SOẠN THẢO để sửa chữ tại chỗ, mà vùng đọc
@@ -47,55 +91,109 @@ const MENUS = [
      đang chọn vào S.chips, và ba thẻ là tính năng thật của VieNeu. Trước đây
      chỉ Alt+1…3 chạy được, còn bấm chuột thì chết vì S.tags không nơi nào bật
      lên — nay nối vào LENH. */
-  ['Chỉnh sửa', [['Tìm và thay thế', 'Ctrl+H']]],
-  ['Chèn', [['Thẻ cảm xúc', 'Alt+1…3']]],
+  /* Sáu mục Hoàn tác…Chọn tất cả: trình duyệt tự lo trong vùng contenteditable,
+     nhưng CHƯA có lệnh riêng để bấm từ menu, và Ctrl+A hiện chỉ chọn trong MỘT
+     đoạn chứ không cả bài. Nói thật thế, đừng nối bừa vào một lệnh gần giống. */
+  ['Chỉnh sửa', [['Hoàn tác', 'Ctrl+Z', 'Bấm phím Ctrl+Z ngay trong chữ thì được; nút menu chưa nối'],
+                 ['Làm lại', 'Ctrl+Y', 'Bấm phím Ctrl+Y ngay trong chữ thì được; nút menu chưa nối'],
+                 ['-'],
+                 ['Cắt', 'Ctrl+X', 'Bấm phím Ctrl+X ngay trong chữ thì được; nút menu chưa nối'],
+                 ['Sao chép', 'Ctrl+C', 'Bấm phím Ctrl+C ngay trong chữ thì được; nút menu chưa nối'],
+                 ['Dán', 'Ctrl+V', 'Chưa làm — dán tại con trỏ khác với “Dán văn bản” ở menu Tệp'],
+                 ['Chọn tất cả', 'Ctrl+A', 'Chưa làm — Ctrl+A hiện chỉ chọn trong một đoạn'],
+                 ['-'],
+                 ['Tìm và thay thế', 'Ctrl+H'], ['Soát văn bản', 'Ctrl+K']]],
+  ['Chèn', [['Thẻ cảm xúc', 'Alt+1…3'],
+            ['Khoảng lặng 1 giây', 'Alt+S', 'Chưa làm'],
+            ['Ngắt đoạn', 'Enter', 'Bấm Enter ngay trong chữ thì được; nút menu chưa nối'],
+            ['-'],
+            ['Thêm cách đọc cho từ đang chọn…', '',
+             'Chưa làm — mở được Từ điển phát âm, nhưng chưa mang chữ đang chọn sang']]],
   ['Giọng', [['Đổi giọng đọc', 'Ctrl+G'], ['Nghe mẫu giọng', 'Ctrl+M'],
-             ['Thư viện giọng', ''], ['Nhân bản giọng từ file…', '']]],
+             ['-'],
+             ['Thư viện giọng', ''], ['Nhân bản giọng từ file…', ''],
+             ['Thu âm để tạo giọng mới…', '', 'Chưa làm — chưa có phần thu âm'],
+             ['-'],
+             ['Từ điển phát âm', '']]],
   ['Xem', [['Thu gọn danh sách hồ sơ', 'Ctrl+B'], ['Cỡ chữ lớn hơn', 'Ctrl+='],
-           ['Cỡ chữ nhỏ hơn', 'Ctrl+-'], ['Giao diện tối', '']]],
+           ['Cỡ chữ nhỏ hơn', 'Ctrl+-'],
+           ['-'],
+           ['Toàn màn hình', 'F11', 'Chưa làm'],
+           ['Giao diện tối', '']]],
   ['Trợ giúp', [['Hướng dẫn nhanh', 'F1'], ['Danh sách phím tắt', 'Ctrl+/'],
-                ['Giới thiệu Giọng Việt', '']]],
+                ['Giới thiệu Giọng Việt', ''],
+                ['-'],
+                ['Kiểm tra bản cập nhật', '', 'Chưa làm'],
+                ['Gửi phản hồi cho nhà phát triển', '', 'Chưa làm']]],
 ];
 
 const THE_CAM_XUC = [['[cười]', 'Alt+1'], ['[thở dài]', 'Alt+2'], ['[hắng giọng]', 'Alt+3']];
 
+/* Bảng con NEO VÀO NHÃN, không dùng bảng toạ độ cứng.
+   Bản trước viết left:${6 + S.menu * 74}px — tức giả định mọi nhãn rộng đúng
+   74px. Nhãn thật rộng 42 · 79 · 51 · 56 · 47 · 69px, nên bảng trôi dần: đo
+   được lệch 0 · +32 · +27 · +50 · +68 · +96px, tới menu cuối thì bảng nằm cách
+   chữ vừa bấm gần một trăm điểm ảnh. Bọc mỗi nhãn trong một ô position:relative
+   rồi cho bảng left:0 là hết, mà không phải đo gì lúc chạy. */
 const veMenu = () => `
   <div class="menu">
-    ${MENUS.map(([ten], i) =>
-      `<button class="menu__muc${S.menu === i ? ' dang-mo' : ''}" data-menu="${i}">${ten}</button>`).join('')}
-    ${S.menu < 0 ? '' : `<div class="menu__roi roi" style="left:${6 + S.menu * 74}px">
-      ${MENUS[S.menu][1].map(([ten, phim]) =>
-        `<button class="roi__muc" data-lenh="${esc(ten)}">
-           <span class="roi__ten">${esc(ten)}</span>
-           <span class="roi__phim">${esc(phim)}</span></button>`).join('')}
-    </div>`}
+    ${MENUS.map(([ten, muc], i) => `<span class="menu__o">
+      <button class="menu__muc${S.menu === i ? ' dang-mo' : ''}" data-menu="${i}">${ten}</button>
+      ${S.menu !== i ? '' : `<div class="menu__roi roi">
+        ${muc.map(([m, phim, chuaLam]) => (m === '-' ? '<div class="roi__ngan"></div>'
+          : `<button class="roi__muc"${chuaLam
+               ? ` disabled title="${esc(chuaLam)}"`
+               : ` data-lenh="${esc(m)}"`}>
+               <span class="roi__ten">${esc(m)}</span>
+               <span class="roi__phim">${esc(phim || '')}</span></button>`)).join('')}
+      </div>`}
+    </span>`).join('')}
   </div>`;
 
 // ---------------------------------------------------------------- thanh công cụ
+
+/* Câu nhắc cho nút: nút đang KHOÁ thì nói LÝ DO, không nói việc nó làm.
+   Yêu cầu của chủ dự án: "nút không dùng được thì làm mờ KÈM TOOLTIP NÓI LÝ DO".
+   Nút mờ mà tooltip vẫn tả việc bình thường là bắt người lớn tuổi tự đoán vì sao
+   bấm không ăn. */
+const nhac = (binhThuong, lyDo) => ` title="${esc(lyDo || binhThuong)}"`;
 
 function veCongCu() {
   const coVanBan = hienNgheVaXuat(S, TAI_LIEU);
   const dangPhat = S.view === 'dang_doc';
   const mo = coVanBan ? '' : ' disabled';        // chưa có văn bản thì chuyển màu dis
   const khoa = biKhoa(S) || !moHinhSanSang();
+  const viKhoa = lyDoKhoa(S);
+  const chuaCoChu = coVanBan ? '' : 'Chưa có văn bản — hãy Dán văn bản hoặc Mở tệp trước';
   return `
   <div class="congcu">
-    <button class="nut" data-lenh="Dán văn bản">${ic('dan')}<span>Dán văn bản</span></button>
-    <button class="nut" data-lenh="Mở tệp…">${ic('thumuc')}<span>Mở file</span></button>
+    <button class="nut" data-lenh="Dán văn bản"${nhac('Dán văn bản từ clipboard (Ctrl+V)')
+      }>${ic('dan')}<span>Dán văn bản</span></button>
+    <button class="nut" data-lenh="Mở tệp…"${nhac('Mở tệp văn bản (Ctrl+O)')
+      }>${ic('thumuc')}<span>Mở file</span></button>
     <span class="congcu__ngan"></span>
-    <button class="nut" data-lenh="Soát văn bản"${mo}>${ic('tich')}<span>Soát văn bản</span></button>
-    <button class="nut" id="nutThe"${mo}>${ic('cx')}<span>Thẻ cảm xúc</span>${ic('mui', 13)}</button>
-    ${S.tags ? veMenuThe() : ''}
+    <button class="nut" data-lenh="Soát văn bản"${mo}${
+      nhac('Xem các chỗ dễ đọc sai và văn bản sau chuẩn hoá (Ctrl+K)', chuaCoChu)
+      }>${ic('tich')}<span>Soát văn bản</span></button>
+    <span class="congcu__o">
+      <button class="nut" id="nutThe"${mo}${
+        nhac('Chèn thẻ cảm xúc vào đoạn đang chọn', chuaCoChu)
+        }>${ic('cx')}<span>Thẻ cảm xúc</span>${ic('mui', 13)}</button>
+      ${S.tags ? veMenuThe() : ''}
+    </span>
     <span class="congcu__phai">
-      <button class="nut" id="nutTim"${mo}>${ic('kinhlup')}<span>Tìm và thay thế</span></button>
+      <button class="nut" id="nutTim"${mo}${
+        nhac('Tìm một từ trong văn bản và thay bằng từ khác (Ctrl+H)', chuaCoChu)
+        }>${ic('kinhlup')}<span>Tìm và thay thế</span></button>
       ${coVanBan ? `<span class="congcu__ngan"></span>
         <button class="nut nut--vien nut--cao${dangPhat ? ' dang-phat' : ''}" id="nutNghe"${
-          khoa ? ' disabled' : ''} title="${dangPhat ? 'Tạm dừng (Space)'
+          khoa ? ' disabled' : ''}${nhac(dangPhat ? 'Tạm dừng (Space)'
             : daTamDung ? 'Đọc tiếp từ đoạn ' + S.pos + ' (Space)'
-            : 'Nghe liền mạch toàn bộ văn bản từ đầu (Space)'}">
+            : 'Nghe liền mạch toàn bộ văn bản từ đầu (Space)', viKhoa)}>
           ${ic(dangPhat ? 'tamdung' : 'tamgiac', 13)}<span>${
             dangPhat ? 'Tạm dừng' : daTamDung ? 'Đọc tiếp' : 'Nghe toàn bộ'}</span></button>
-        <button class="nut nut--acc nut--cao" id="nutXuat"${khoa ? ' disabled' : ''}>
+        <button class="nut nut--acc nut--cao" id="nutXuat"${khoa ? ' disabled' : ''}${
+          nhac('Mở hộp thoại xuất để chọn định dạng và nơi lưu (Ctrl+E)', viKhoa)}>
           ${ic('xuat')}<span>Xuất file âm thanh</span></button>` : ''}
     </span>
   </div>`;
@@ -103,8 +201,10 @@ function veCongCu() {
 
 /* Menu thẻ cảm xúc 260px. Ba thẻ này là tính năng thật của VieNeu-TTS: chèn
    thẳng vào chuỗi text là mô hình đọc ra ngữ điệu tương ứng. */
+/* Cũng neo vào nút của nó, không viết cứng top:76px;left:250px như trước —
+   toạ độ ấy đúng đúng một lần, với đúng một bố cục thanh công cụ. */
 const veMenuThe = () => `
-  <div class="roi" style="position:absolute;top:76px;left:250px;z-index:60;width:260px">
+  <div class="roi congcu__roi">
     <div class="roi__nhom">Chèn vào đoạn ${S.sel}</div>
     ${THE_CAM_XUC.map(([t, p]) =>
       `<button class="roi__muc" data-the="${esc(t)}">
@@ -122,9 +222,10 @@ const veDaiTab = () => `
       <div class="tab${i === S.activeByProfile[S.profile] ? ' dang-xem' : ''}" data-tab="${i}">
         <span class="tab__icon">${ic('tep', 14)}</span>
         <span class="tab__ten">${esc(ten || 'Chưa đặt tên')}</span>
-        <button class="tab__dong" data-dongtab="${i}">${ic('dong', 9)}</button>
+        <button class="tab__dong" data-dongtab="${i}" title="Đóng tệp">${ic('dong', 9)}</button>
       </div>`).join('')}
-    <button class="nut nut--icon daitab__them" id="themTab">${ic('cong', 14)}</button>
+    <button class="nut nut--icon daitab__them" id="themTab"
+            title="Mở thêm một tệp trong hồ sơ này">${ic('cong', 14)}</button>
   </div>`;
 
 // ---------------------------------------------------------------- tìm · cảnh báo
@@ -186,7 +287,8 @@ function veCotTrai() {
   return `
   <div class="trai${S.rail ? ' thu-gon' : ''}">
     <div class="trai__dau">
-      <button class="nut nut--icon" id="thuGon" title="Thu gọn danh sách hồ sơ (Ctrl+B)">
+      <button class="nut nut--icon" id="thuGon" title="${
+        S.rail ? 'Mở rộng danh sách hồ sơ (Ctrl+B)' : 'Thu gọn danh sách hồ sơ (Ctrl+B)'}">
         ${ic('bagach')}</button>
       <span class="trai__ten">Hồ sơ đọc</span>
     </div>
@@ -201,7 +303,8 @@ function veCotTrai() {
             <span class="hoso__giong">${esc(g ? g.ten : '')}</span>
           </span></button>`;
       }).join('')}
-      <button class="nut trai__lienket nhan-chu" data-lenh="Tạo hồ sơ mới" style="margin-top:4px">
+      <button class="nut trai__lienket nhan-chu" data-lenh="Tạo hồ sơ mới" style="margin-top:4px"
+              title="Tạo hồ sơ đọc mới">
         ${ic('cong', 15)}<span>Tạo hồ sơ mới</span></button>
     </div>
     <div class="trai__chan">
@@ -355,8 +458,10 @@ function veCotPhai() {
           <span class="chuy__dem${l.nang ? ' nang' : ''}">${l.dem}</span></button>`).join('')}
       </div>
       <div class="chuy__chan">
-        <button class="nut nut--vien" data-lenh="Soát văn bản">Soát văn bản</button>
-        <button class="lienket" data-lenh="Từ điển phát âm">Từ điển phát âm ›</button>
+        <button class="nut nut--vien" data-lenh="Soát văn bản"
+                title="Mở màn hình soát văn bản">Soát văn bản</button>
+        <button class="lienket" data-lenh="Từ điển phát âm"
+                title="Ghi cách đọc riêng cho từ ngữ của bạn">Từ điển phát âm ›</button>
       </div>
     </div></div>`}
   </div>`;
@@ -469,6 +574,16 @@ function veThanhPhat() {
 
 // ---------------------------------------------------------------- thanh trạng thái
 
+/* Trước đây chỗ này in cứng chuỗi "Đã lưu 14:02" — nói đã lưu kể cả khi chưa
+   lưu gì, mà giờ thì luôn là 14:02. Người lớn tuổi đọc dòng ấy rồi yên tâm đóng
+   chương trình là mất bài. Nay nói đúng ba trạng thái có thật. */
+function veTinhTrangLuu() {
+  const ten = tenTepDangXem(S);
+  if (ten && chuaLuu.has(ten)) return '<b>Chưa lưu</b> · ';
+  if (gioLuuCuoi) return `Đã lưu ${esc(gioLuuCuoi)} · `;
+  return '';
+}
+
 function veTrangThai() {
   const h = hoSoDangDung(S);
   const g = GIONG.find((x) => x.ma === h.giong);
@@ -485,12 +600,48 @@ function veTrangThai() {
       <span class="cham cham--${m.cham}"></span>
       <span id="ttNhan">${esc(m.nhan.replace('{giong}', g ? g.ten : ''))}</span>
       <span class="trangthai__ngan"></span>
-      <span>Đã lưu 14:02 · Hồ sơ: ${esc(h.ten)}</span>
+      <span><span id="ttLuu">${veTinhTrangLuu()}</span>Hồ sơ: ${esc(h.ten)}</span>
     </span>
   </div>`;
 }
 
 // ---------------------------------------------------------------- vẽ toàn bộ
+
+/* Màn nào chiếm TOÀN cửa sổ, màn nào chỉ thay phần giữa.
+
+   Căn cứ đo được, không phải ý thích: đếm nút "Quay lại màn hình chính" trong
+   bảy tệp thiết kế — Thư viện giọng 3, Cài đặt 2, Từ điển phát âm 2, Văn bản
+   ghép 2; còn Màn hình chính 0 và Soát văn bản 0. Bốn màn có đường quay lại là
+   bốn màn đứng riêng.
+
+   SOÁT VĂN BẢN KHÔNG nằm trong đây. Chính tệp thiết kế của nó viết: "Vẫn là cửa
+   sổ chính của Giọng Việt — cùng danh sách hồ sơ, cùng văn bản ở giữa", và nút
+   của nó là "Đóng bảng kết quả soát" chứ không phải "Quay lại màn hình chính".
+   Nó là một BẢNG mở thêm ở dưới, không phải một màn. */
+const MAN_TOAN_CUA_SO = {
+  giong:  { ten: 'Thư viện giọng',   dong: 'Đóng giọng' },
+  tudien: { ten: 'Từ điển phát âm',  dong: 'Đóng từ điển' },
+  caidat: { ten: 'Cài đặt',          dong: 'Đóng cài đặt' },
+};
+
+/* Thanh tiêu đề dùng chung cho mọi màn. Cửa sổ dựng frameless nên ba nút
+   thu nhỏ / phóng to / đóng phải luôn có, kể cả ở màn phụ. */
+const veThanhTieuDe = (nhan, lenhLui) => `
+    <div class="tieude">
+      <span class="tieude__dau pywebview-drag-region">
+        ${lenhLui
+          ? `<button class="nut nut--icon tieude__lui" data-lenh="${esc(lenhLui)}"
+                     title="Quay lại màn hình chính">${ic('lui', 15)}</button>`
+          : `<span class="dau-hieu">${ic('hieu', 10)}</span>`}
+        <span class="tieude__ten">${esc(nhan)} — Giọng Việt</span>
+      </span>
+      <span class="tieude__keo pywebview-drag-region"></span>
+      <button class="cuaso" data-cuaso="thu_nho" title="Thu nhỏ">${ic('thunho', 10)}</button>
+      <button class="cuaso" data-cuaso="phong_to"
+              title="${S.cuaSoKin ? 'Thu về cỡ vừa' : 'Phóng to'}"
+        >${ic(S.cuaSoKin ? 'thuvua' : 'phongto', 10)}</button>
+      <button class="cuaso cuaso--dong" data-cuaso="dong" title="Đóng">${ic('dong', 10)}</button>
+    </div>`;
 
 function ve() {
   const cuonCu = $('#cuon') ? $('#cuon').scrollTop : 0;
@@ -500,19 +651,15 @@ function ve() {
   // menu to ra theo, tràn khỏi cửa sổ, và người lớn tuổi mất luôn chỗ bấm.
   document.documentElement.style.setProperty('--zoom-doc', (S.zoom || 100) / 100);
 
-  $('#goc').innerHTML = `
-    <div class="tieude">
-      <span class="tieude__dau pywebview-drag-region">
-        <span class="dau-hieu">${ic('hieu', 10)}</span>
-        <span class="tieude__ten">${esc(ten)} — Giọng Việt</span>
-      </span>
-      <span class="tieude__keo pywebview-drag-region"></span>
-      <button class="cuaso" data-cuaso="thu_nho" title="Thu nhỏ">${ic('thunho', 10)}</button>
-      <button class="cuaso" data-cuaso="phong_to"
-              title="${S.cuaSoKin ? 'Thu về cỡ vừa' : 'Phóng to'}"
-        >${ic(S.cuaSoKin ? 'thuvua' : 'phongto', 10)}</button>
-      <button class="cuaso cuaso--dong" data-cuaso="dong" title="Đóng">${ic('dong', 10)}</button>
-    </div>
+  const toan = MAN_TOAN_CUA_SO[S.man];
+  $('#goc').innerHTML = toan
+    /* Màn đứng riêng: bỏ hết khung của màn chính — không thanh menu, không thanh
+       công cụ, không dải tệp, không hai cột, không dải phát. Chỉ còn thanh tiêu
+       đề có đường lùi, rồi thân màn chiếm trọn phần còn lại. */
+    ? `${veThanhTieuDe(toan.ten, toan.dong)}
+      ${veVienKeo()}
+      <div class="manphu">${veGiua()}</div>`
+    : `${veThanhTieuDe(ten, null)}
       ${veVienKeo()}
     ${veMenu()}${veCongCu()}${veDaiTab()}${veThanhTim()}${veCanhBao()}
     <div class="thanchinh${S.man !== 'chinh' ? ' thanchinh--phu' : ''}">${veCotTrai()}${
@@ -945,6 +1092,8 @@ function datTaiLieu(kq) {
   if (kq.loi) { moBao(kq.loi); return; }
 
   const ten = kq.ten || 'Chưa đặt tên';
+  // Vừa nạp từ đĩa thì trong bộ nhớ đúng bằng trên đĩa — sạch cờ chưa lưu.
+  chuaLuu.delete(ten);
   TAI_LIEU[ten] = {
     /* KHÔNG có đoạn rỗng - bỏ ngay lúc nạp, đúng bản thiết kế. Giữ lại thì
        văn bản hiện những dòng đánh số mà không có chữ nào, và mọi thứ bám theo
@@ -1039,6 +1188,7 @@ function thayThe(tim, thay, tatCa) {
     if (!tatCa) break;
   }
   if (dem) {
+    danhDauSua();
     dungPhat();
     // Sửa văn bản xong thì bản âm thanh đã nghe là bản cũ — đúng tình huống 5.
     dat({ ...S, situation: 'am_thanh_cu' });
@@ -1084,7 +1234,21 @@ function veLopNoi() {
   const g = (id) => noi.querySelector('#' + id);
 
   if (S.hopTin) {
-    g('tinDong').onclick = () => dat({ ...S, hopTin: null });
+    const dsNut = S.hopTin.nut || [];
+    if (dsNut.length) {
+      dsNut.forEach((b) => {
+        const el = g('tin_' + b.ma);
+        if (!el) return;
+        el.onclick = () => {
+          const xong = hopHoiXong;
+          hopHoiXong = null;
+          dat({ ...S, hopTin: null });
+          if (xong) xong(b.ma);
+        };
+      });
+    } else {
+      g('tinDong').onclick = () => dat({ ...S, hopTin: null });
+    }
     return;
   }
 
@@ -1149,6 +1313,18 @@ function trongHopXuat() {
 async function batDauXuat() {
   const ten = hopXuat.ten + hopXuat.duoi;
   if (!coPython()) { xuatGia(ten); return; }
+
+  /* Gửi lại đoạn TRƯỚC khi xuất, và ÉP gửi. Bên Python xuất từ self._playlist,
+     mà playlist chỉ dựng lại ở moi_dat_doan / moi_nghe_doan / moi_doc_danh_sach
+     - không đường nào trong số đó nằm trên lối xuất. Không gửi thì gõ sửa xong
+     bấm Xuất luôn là ra tệp mang chữ CŨ, mà màn hình vẫn hiện chữ mới nên người
+     dùng không có cách nào biết.
+     Ép (true) chứ không để nó tự so vân tay: vanTayTaiLieu() chỉ đếm TỔNG số ký
+     tự, nên sửa một chữ thành chữ khác cùng độ dài là vân tay không đổi và lần
+     gửi bị bỏ qua. Xuất là việc hiếm, gửi thừa một lượt rẻ hơn ra tệp sai.
+     Còn nếu vừa bấm "Nghe đoạn này" thì playlist đang chỉ có ĐÚNG đoạn ấy -
+     không gửi lại là tệp xuất ra mất gần hết tài liệu. */
+  await guiDoanSangPython(true);
 
   const loi = await api('moi_bat_dau_xuat',
                         hopXuat.ten, hopXuat.thuMuc, hopXuat.tach, hopXuat.dinhDang);
@@ -1276,6 +1452,11 @@ const LENH = {
   'Đóng giọng': () => { dungNgheThu(); dat({ ...dongHetMenu(S), man: 'chinh' }); },
   'Từ điển phát âm': () => moManTuDien(),
   'Cài đặt': () => moManCaiDat(),
+  // Thiết kế ghi nhãn có ba chấm; giữ nguyên nhãn, trỏ về cùng một việc.
+  'Cài đặt…': () => moManCaiDat(),
+  /* Thoát đi qua đúng cửa mà nút × của cửa sổ đi: hỏi trước nếu còn chữ chưa
+     lưu, rồi mới gọi thoat() — thoat() dừng mọi thứ chạy nền rồi mới đóng. */
+  'Thoát': () => hoiTruocKhiThoat(() => { if (coPython()) api('thoat'); }),
   'Đóng cài đặt': () => dat({ ...dongHetMenu(S), man: 'chinh' }),
   'Đóng từ điển': () => { dungNgheThu(); dat({ ...dongHetMenu(S), man: 'chinh',
                                                tuDienSua: null }); },
@@ -1300,7 +1481,10 @@ const LENH = {
      không có khoá tương ứng nên `f ? f() : dongHetMenu(S)` rơi vào nhánh sau.
      Người lớn tuổi bấm hai ba lần rồi tưởng máy hỏng. */
   'Lưu': () => luuVanBan(),
-  'Đóng tệp': () => chuyenSang(dongTab(S, S.activeByProfile[S.profile] || 0)),
+  'Đóng tệp': () => {
+    const i = S.activeByProfile[S.profile] || 0;
+    hoiTruocKhiDongTep(tabDangMo(S)[i], () => chuyenSang(dongTab(S, i)));
+  },
   'Thẻ cảm xúc': () => dat({ ...dongHetMenu(S), tags: true }),
   'Đổi giọng đọc': () => LENH['Thư viện giọng'](),
   'Nghe mẫu giọng': () => {
@@ -1344,6 +1528,54 @@ function moHopTin(ten, dong) {
   dat({ ...dongHetMenu(S), hopTin: { ten, dong } });
 }
 
+/* Hộp hỏi nhiều nút, dùng chung khung hopTin. Hàm gọi lại để NGOÀI state chứ
+   không nhét vào S: dat() sao chép state khắp nơi, mang theo hàm là sớm muộn
+   cũng có chỗ so sánh state rồi vấp. */
+let hopHoiXong = null;
+function moHopHoi(ten, dong, nut, xong) {
+  hopHoiXong = xong;
+  dat({ ...dongHetMenu(S), hopTin: { ten, dong, nut } });
+}
+
+/* Chặn mọi đường ĐÓNG khi còn chữ chưa lưu.
+   Ctrl+S có lưu thật, nhưng không có gì tự lưu và trước đây không đường đóng
+   nào hỏi một câu — gõ cả buổi rồi bấm dấu × là mất trắng. */
+function hoiTruocKhiDongTep(ten, tiep) {
+  if (!ten || !chuaLuu.has(ten)) { tiep(); return; }
+  moHopHoi('Chưa lưu', [
+    `Tệp “${ten}” có chữ bạn vừa sửa mà chưa lưu.`,
+    'Lưu thì phần mềm ghi ra một bản trong Tài liệu\\GiongViet — tệp gốc của bạn không bị đè.',
+  ], [
+    { ma: 'luu', nhan: 'Lưu rồi đóng', chinh: true },
+    { ma: 'bo', nhan: 'Đóng không lưu' },
+    { ma: 'huy', nhan: 'Quay lại' },
+  ], async (ma) => {
+    if (ma === 'huy') return;
+    /* Lưu HỎNG thì ĐỪNG đóng. Bỏ chốt này là gặp đúng cái nó sinh ra để chặn:
+       người dùng bấm "Lưu rồi đóng", lưu thất bại, tệp vẫn đóng, bài mất sạch —
+       mà lần này còn tệ hơn vì họ tưởng đã lưu rồi. */
+    if (ma === 'luu' && !(await luuVanBan())) return;
+    chuaLuu.delete(ten);
+    tiep();
+  });
+}
+
+/* Đóng cả cửa sổ: có thể NHIỀU tệp đang dở, mà Lưu ở đây chỉ lưu được tệp đang
+   xem. Nên không bày nút Lưu để khỏi hứa suông — chỉ nói rõ tệp nào đang dở. */
+function hoiTruocKhiThoat(tiep) {
+  if (!coSuaChuaLuu()) { tiep(); return; }
+  const ds = Array.from(chuaLuu);
+  moHopHoi('Còn chữ chưa lưu', [
+    ds.length === 1
+      ? `Tệp “${ds[0]}” có chữ bạn vừa sửa mà chưa lưu.`
+      : `${ds.length} tệp đang có chữ chưa lưu: ${ds.join(' · ')}.`,
+    'Quay lại rồi bấm Ctrl+S ở từng tệp nếu bạn muốn giữ.',
+  ], [
+    { ma: 'huy', nhan: 'Quay lại', chinh: true },
+    { ma: 'bo', nhan: 'Thoát không lưu' },
+  ], (ma) => { if (ma === 'bo') tiep(); });
+}
+
 /* Ctrl+S ghi ra TỆP MỚI đánh số kiểu Explorer, không đè bản gốc — quyết định
    của chủ dự án 12/8. Văn bản ở bản này chỉ đổi được qua Tìm và thay thế,
    nhưng đúng vì thế mà Lưu càng cần: thay xong mà không ghi được ra đâu thì
@@ -1351,12 +1583,18 @@ function moHopTin(ten, dong) {
 async function luuVanBan() {
   const doan = doanDangXem(S, TAI_LIEU);
   dat(dongHetMenu(S));
-  if (!doan.length) { moBao('Chưa có văn bản nào để lưu.'); return; }
-  if (!coPython()) { moBao('Cần chạy trong chương trình mới lưu được.'); return; }
+  if (!doan.length) { moBao('Chưa có văn bản nào để lưu.'); return false; }
+  if (!coPython()) { moBao('Cần chạy trong chương trình mới lưu được.'); return false; }
 
   const kq = await api('moi_luu_van_ban', tenTepDangXem(S) || 'vanban.txt',
                        doan.map((d) => d.chu).join('\n'));
+  if (kq && kq.ten) {
+    chuaLuu.delete(tenTepDangXem(S));
+    gioLuuCuoi = new Date().toTimeString().slice(0, 5);
+    ve();                       // thanh trạng thái đổi từ "Chưa lưu" sang giờ lưu
+  }
   moBao(kq && kq.ten ? `Đã lưu “${kq.ten}”.` : 'Chưa lưu được tệp.');
+  return !!(kq && kq.ten);
 }
 
 document.addEventListener('click', (e) => {
@@ -1368,7 +1606,9 @@ document.addEventListener('click', (e) => {
                                   return f ? f() : dat(dongHetMenu(S)); }
   if ((n = t('[data-hoso]')))   return chuyenSang(doiHoSo(S, +n.dataset.hoso));
   if ((n = t('[data-dongtab]'))) { e.stopPropagation();
-                                   return chuyenSang(dongTab(S, +n.dataset.dongtab)); }
+                                   const i = +n.dataset.dongtab;
+                                   return hoiTruocKhiDongTep(tabDangMo(S)[i],
+                                            () => chuyenSang(dongTab(S, i))); }
   if ((n = t('[data-tab]')))    return chuyenSang(doiTab(S, +n.dataset.tab));
   if (t('#themTab'))            return chuyenSang(themTab(S));
   /* Bấm vào chính chữ đang sửa được thì để yên cho con trỏ đứng đó - dat() ở
@@ -1525,7 +1765,7 @@ document.addEventListener('click', (e) => {
     if (viec === 'dong') {
       // thoat() dừng mọi thứ đang chạy nền rồi mới đóng cửa sổ. Đừng gọi
       // window.close(): WebView2 đóng khung mà tiến trình Python còn sống.
-      if (coPython()) api('thoat');
+      hoiTruocKhiThoat(() => { if (coPython()) api('thoat'); });
       return;
     }
     if (coPython()) {
@@ -1744,6 +1984,17 @@ document.addEventListener('keydown', (e) => {
   if (c && k === 'w') { e.preventDefault(); return LENH['Đóng tệp'](); }
   if (c && k === 'g') { e.preventDefault(); return LENH['Đổi giọng đọc'](); }
   if (c && k === 'm') { e.preventDefault(); return LENH['Nghe mẫu giọng'](); }
+  /* NĂM phím nữa cùng một họ với bốn phím trên: menu tự bày chúng ra mà không
+     nhánh nào bắt, bấm không có gì xảy ra — đúng thứ KPI "không bày nút giả"
+     cấm. Bốn cái đầu đã in sẵn trong MENUS; Ctrl+. thì bản thiết kế đòi qua
+     tooltip nút dừng ("Dừng (Ctrl+.)") và README mục Phím tắt.
+     Nhận cả '+' vì bàn phím có Shift trả '+' chứ không trả '='. */
+  if (c && (e.key === '=' || e.key === '+')) { e.preventDefault(); return LENH['Cỡ chữ lớn hơn'](); }
+  if (c && e.key === '-') { e.preventDefault(); return LENH['Cỡ chữ nhỏ hơn'](); }
+  if (c && e.key === '/') { e.preventDefault(); return LENH['Danh sách phím tắt'](); }
+  if (c && e.key === '.') { e.preventDefault(); return LENH['Dừng'](); }
+  if (c && k === 'k')     { e.preventDefault(); return LENH['Soát văn bản'](); }
+  if (e.key === 'F1')     { e.preventDefault(); return LENH['Hướng dẫn nhanh'](); }
   if (e.altKey && ['1', '2', '3'].includes(e.key)) {
     e.preventDefault(); return dat(datThe(S, THE_CAM_XUC[+e.key - 1][0]));
   }
@@ -1905,6 +2156,7 @@ function chuDangGo(nut) {
   const t = TAI_LIEU[ten];
   if (!n || !t || !t.doan[n - 1]) return;
   t.doan[n - 1] = { ...t.doan[n - 1], chu: nut.textContent };
+  danhDauSua();
   henLuuHoSo();
 }
 
@@ -1988,6 +2240,7 @@ function gopLenDoanTren(n) {
   moi[tren - 1] = { ...moi[tren - 1], chu: noi + String(t.doan[n - 1].chu || '') };
   moi.splice(n - 1, 1);
   TAI_LIEU[ten] = { ...t, doan: moi };
+  danhDauSua();
   duLieuSoat = null;
   dat({ ...S, chips: dichThe(S.chips, ten, n, -1), soatBoQua: {}, sel: tren });
   datCaret(document.querySelector(`[data-doan="${tren}"] .doan__chu`), noi.length);
@@ -2010,6 +2263,7 @@ function tachDoanTaiCho(n, phanTren, phanDuoi) {
   moi[n - 1] = { ...goc, chu: phanTren };
   moi.splice(n, 0, { kieu: 'body', chu: phanDuoi });
   TAI_LIEU[ten] = { ...t, doan: moi };
+  danhDauSua();
 
   duLieuSoat = null;
   dat({ ...S, chips: dichThe(S.chips, ten, n + 1, 1), soatBoQua: {}, sel: n + 1 });
@@ -2039,6 +2293,7 @@ function xoaCacDoan(ds) {
   const bo = new Set(ds);
   const moi = t.doan.filter((_, i) => !bo.has(i + 1));
   TAI_LIEU[ten] = { ...t, doan: moi };
+  danhDauSua();
   let chips = S.chips;
   Array.from(bo).sort((a, b) => b - a).forEach((n) => {
     chips = dichThe(chips, ten, n, -1);
@@ -2074,6 +2329,7 @@ function luuSuaDoan(n, chuMoi) {
 
   const delta = moi.length - cu.length;
   TAI_LIEU[ten] = { ...t, doan: moi };
+  danhDauSua();
   // Thẻ của đoạn n ở nguyên chỗ khi tách (dời từ n+1), nhưng phải bỏ khi xoá.
   const chips = delta ? dichThe(S.chips, ten, delta > 0 ? n + 1 : n, delta) : S.chips;
   duLieuSoat = null;

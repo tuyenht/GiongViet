@@ -169,7 +169,10 @@ function veHopTin(d) {
     <div class="hop__than tin">${dong}</div>
     <div class="hop__chan">
       <span style="flex:1"></span>
-      <button class="nut nut--acc" id="tinDong">Đóng</button>
+      ${(d.nut || []).length
+        ? d.nut.map((b) => `<button class="nut${b.chinh ? ' nut--acc' : ''}"
+             id="tin_${_e(b.ma)}">${_e(b.nhan)}</button>`).join('')
+        : '<button class="nut nut--acc" id="tinDong">Đóng</button>'}
     </div>
   </div></div>`;
 }

@@ -37,13 +37,20 @@
 .menu__muc { height: 22px; padding: 0 10px; border: 0; border-radius: 4px;
              background: transparent; font-size: 13.5px; transition: background .15s; }
 .menu__muc:hover, .menu__muc.dang-mo { background: var(--sub-h); }
-.menu__roi { position: absolute; top: 30px; z-index: 60; }
+/* Ô bọc mỗi nhãn menu: chỉ để bảng con neo vào ĐÚNG nhãn của nó. Cao bằng cả
+   thanh (align-self:stretch) nên top:100% rơi đúng mép dưới thanh menu. */
+.menu__o { position: relative; display: flex; align-items: center; align-self: stretch; }
+.menu__roi { position: absolute; top: 100%; left: 0; z-index: 60; }
 
 /* ============================================================ thanh công cụ 44 */
 
 .congcu { height: 44px; flex: none; display: flex; align-items: center; gap: 2px;
           padding: 0 8px; }
 .congcu__ngan { width: 1px; height: 20px; margin: 0 6px; background: var(--divider); flex: none; }
+/* Ô bọc nút Thẻ cảm xúc, để bảng thẻ neo vào chính nút ấy. */
+.congcu__o { position: relative; display: flex; align-items: center; }
+.congcu__roi { position: absolute; top: 100%; left: 0; margin-top: 4px;
+               z-index: 60; width: 260px; }
 .congcu__phai { margin-left: auto; display: flex; align-items: center; gap: 6px; }
 
 /* Nút Nghe toàn bộ lúc đang đọc: nền accent nhạt + viền accent, nhìn là biết
@@ -94,6 +101,12 @@
 /* ============================================================ vùng ba cột */
 
 .thanchinh { flex: 1; min-height: 0; display: flex; gap: 8px; padding: 2px 8px 8px; }
+/* Thân của màn đứng riêng: chiếm trọn phần dưới thanh tiêu đề. */
+.manphu { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+/* Mũi tên lùi ở đầu thanh tiêu đề. Không kéo cửa sổ được khi bấm lên nó, nên
+   đặt ngoài vùng pywebview-drag-region về mặt sự kiện bằng -webkit-app-region. */
+.tieude__lui { width: 30px; height: 24px; margin-right: 4px; flex: none;
+               -webkit-app-region: no-drag; }
 
 /* --- cột trái 240 --- */
 

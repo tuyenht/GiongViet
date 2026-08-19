@@ -286,7 +286,12 @@ ok(!/data-lenh="Từ điển phát âm"[^]*trai__chan/.test(HTML), 'Từ điển
 console.log('\n--- F. Thanh trạng thái ---');
 ok(/Đoạn \d+, Cột 1/.test(HTML), 'Đoạn N, Cột 1');
 ok(co('VieNeu v3 Turbo · sẵn sàng'), 'nhãn máy đọc');
-ok(co('Đã lưu 14:02'), 'Đã lưu hh:mm');
+/* Trước đây chỗ này canh đúng chuỗi "Đã lưu 14:02" in cứng — tức canh chính một
+   lời hứa suông: thanh trạng thái nói ĐÃ LƯU kể cả khi chưa lưu gì, và luôn là
+   14:02. Bản mẫu ghi 14:02 chỉ để MINH HOẠ trạng thái "đã lưu lúc mấy giờ";
+   sản phẩm phải in giờ thật. Nay canh ngược lại: không được có chuỗi cứng ấy. */
+ok(!co('Đã lưu 14:02'), 'KHÔNG in cứng "Đã lưu 14:02"');
+ok(co('Hồ sơ:'), 'thanh trạng thái vẫn nói hồ sơ đang dùng');
 ok(!co('UTF-8') && !co('CRLF') && !co('100%</span>'), 'KHÔNG còn UTF-8 / CRLF / mức phóng to');
 
 console.log('\n--- G. Dải tab ---');
@@ -460,12 +465,24 @@ console.log('\n--- Q. Sửa chữ tại chỗ ---');
   /* Menu bày phím tắt nào thì phím ấy phải ăn. Bấm Ctrl+S theo đúng chữ menu
      ghi mà không có gì xảy ra cũng là một dạng hứa suông - đã sót 4 phím. */
   const JS = readFileSync(join(UI, 'giao-dien.js'), 'utf8');
-  const khai = [...new Set([...JS.matchAll(/'Ctrl\+([A-Z])'/g)].map((m) => m[1].toLowerCase()))];
+  /* Chỉ đòi handler cho mục SỐNG. Mục có phần tử thứ ba là mục đang làm mờ, có
+     tooltip nói rõ chưa làm — nó KHÔNG hứa gì nên không nợ gì. Cắt đúng khối
+     MENUS chứ đừng quét cả tệp: quét cả tệp là dính luôn phím ghi trong chú
+     thích rồi đỏ lên vô cớ. */
+  const khoiMenu = JS.slice(JS.indexOf('const MENUS'), JS.indexOf('const THE_CAM_XUC'));
+  const song = [...khoiMenu.matchAll(/\['([^']+)',\s*'Ctrl\+([A-Za-z])'\]/g)];
+  const khai = [...new Set(song.map((m) => m[2].toLowerCase()))];
   const coHandler = (p) =>
     new RegExp(`k === '${p}'|key\\.toLowerCase\\(\\) === '${p}'`).test(JS);
   const thieu = khai.filter((p) => !coHandler(p));
-  ok(thieu.length === 0, `mọi phím tắt Ctrl khai trong menu đều có handler (${khai.length} phím)`,
+  ok(thieu.length === 0,
+     `mọi phím tắt Ctrl của mục SỐNG đều có handler (${khai.length} phím)`,
      thieu.length ? 'thiếu: Ctrl+' + thieu.join(', Ctrl+').toUpperCase() : '');
+  /* Và ngược lại: mục làm mờ phải có LÝ DO, không được mờ trơ trọi. */
+  const mo = [...khoiMenu.matchAll(/\['([^']+)',\s*'[^']*',\s*'([^']*)'\]/g)];
+  ok(mo.length > 0 && mo.every((m) => m[2].trim().length > 5),
+     `mục làm mờ nào cũng kèm lý do (${mo.length} mục)`,
+     mo.filter((m) => m[2].trim().length <= 5).map((m) => m[1]).join(', '));
   ok(/document\.activeElement\.blur\(\)[\s\S]{0,80}LENH\['Lưu'\]/.test(JS),
      'Ctrl+S lúc đang gõ thì rời ô trước rồi mới lưu, không ghi ra bản thiếu chữ vừa gõ');
 
@@ -627,6 +644,40 @@ console.log('\n--- Q. Sửa chữ tại chỗ ---');
   ok(Object.keys(chay('S.soatBoQua') || {}).length === 0,
      'sửa chữ thì bỏ kết quả soát cũ, vì nó nói về bản chữ trước khi sửa');
 }
+
+/* ============================================================ màn đứng riêng
+
+   Bốn tệp thiết kế có nút "Quay lại màn hình chính" (Thư viện giọng 3, Cài đặt
+   2, Từ điển phát âm 2, Văn bản ghép 2) — đó là bốn màn chiếm TOÀN cửa sổ.
+   Soát văn bản có 0, và tệp của nó tự nói "Vẫn là cửa sổ chính của Giọng Việt",
+   nên nó phải Ở LẠI trong khung chính. Canh đúng ranh giới ấy. */
+console.log('\n--- M. Màn đứng riêng vs bảng mở thêm ---');
+
+for (const [ma, ten] of [['giong', 'Thư viện giọng'],
+                         ['tudien', 'Từ điển phát âm'],
+                         ['caidat', 'Cài đặt']]) {
+  chay(`dat({ ...S, man: '${ma}' })`);
+  ok(co(`${ten} — Giọng Việt`), `${ten}: thanh tiêu đề mang tên màn`);
+  ok(co('title="Quay lại màn hình chính"'), `${ten}: có đường lùi về màn chính`);
+  ok(co('class="manphu"'), `${ten}: thân màn chiếm trọn cửa sổ`);
+  ok(!co('class="menu"') && !co('class="congcu"'),
+     `${ten}: KHÔNG còn thanh menu và thanh công cụ của màn chính`);
+  ok(!co('class="thanchinh'), `${ten}: KHÔNG còn hai cột trái/phải`);
+  /* Cửa sổ dựng frameless — mất ba nút này là không thu nhỏ / phóng to / đóng
+     được nữa, mà người dùng KHÔNG có viền hệ điều hành để thay thế. */
+  ok(co('data-cuaso="thu_nho"') && co('data-cuaso="phong_to"') && co('data-cuaso="dong"'),
+     `${ten}: vẫn còn ba nút cửa sổ`);
+}
+
+chay("dat({ ...S, man: 'soat' })");
+ok(!co('class="manphu"'), 'Soát văn bản KHÔNG phải màn đứng riêng');
+ok(co('class="menu"') && co('class="thanchinh'),
+   'Soát văn bản giữ nguyên khung màn chính, đúng câu thiết kế tự nói');
+ok(!co('title="Quay lại màn hình chính"'),
+   'Soát văn bản không có đường lùi — nó đóng bảng, không rời màn');
+
+chay("dat({ ...S, man: 'chinh' })");
+ok(co('class="menu"') && !co('class="manphu"'), 'quay về màn chính thì khung trở lại đủ');
 
 console.log(`\n${loi === 0 ? 'XANH — khớp hết' : `ĐỎ — ${loi} chỗ lệch`}`);
 process.exit(loi ? 1 : 0);
