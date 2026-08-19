@@ -2,7 +2,7 @@
 
 Giải nén / copy thư mục `design_handoff_giongdoc/` vào gốc dự án, rồi copy toàn bộ khối dưới đây dán vào Claude Code.
 
-Thư mục đã đủ để chạy độc lập: 6 file thiết kế, `support.js`, và thư mục `_ds/` chứa font. Mở file màn hình chính bằng trình duyệt là xem và bấm được ngay, không cần cài gì.
+Thư mục đã đủ để chạy độc lập: 7 file thiết kế, `support.js`, và thư mục `_ds/` chứa font. Mở file màn hình chính bằng trình duyệt là xem và bấm được ngay, không cần cài gì.
 
 ---
 
@@ -17,7 +17,7 @@ Lưu ý: thư mục dự án có thể vẫn mang tên cũ (`DocCongDuc`) và co
 ## Tài liệu
 
 - `design_handoff_giongdoc/README.md` — đặc tả đầy đủ: mô hình dữ liệu, token màu, cỡ chữ, từng màn hình, từng trạng thái, từng hành vi bấm. Đây là nguồn đúng duy nhất.
-- `design_handoff_giongdoc/designs/` — 6 file HTML bản mẫu. **Mở `GiongDoc - Màn hình chính v2 (nghe theo dòng).dc.html` trong trình duyệt và bấm thử trước khi code.** Bản mẫu chạy thật: đổi hồ sơ, mở menu, chuyển tab tệp, chọn đoạn, chèn thẻ, tìm và thay thế, xuất file, đi lại giữa các màn hình.
+- `design_handoff_giongdoc/designs/` — 7 file HTML bản mẫu. **Mở `GiongDoc - Màn hình chính v2 (nghe theo dòng).dc.html` trong trình duyệt và bấm thử trước khi code.** Bản mẫu chạy thật: đổi hồ sơ, mở menu, chuyển tab tệp, chọn đoạn, chèn thẻ, tìm và thay thế, mở tài liệu Google Docs, xuất file, đi lại giữa các màn hình.
 - Bản mẫu là **thiết kế, không phải code sản phẩm**. Đừng copy HTML sang dự án. Dựng lại bằng framework và thư viện sẵn có của dự án.
 
 ## Bước 1 — Đối chiếu trước, code sau
@@ -31,7 +31,7 @@ Nếu dự án chưa có framework, đề xuất cho tôi chọn (WinUI 3 C#/XAM
 Đây là những chỗ chắc chắn khác bản cũ. Kiểm từng dòng:
 
 **Cấu trúc**
-1. Còn **6 màn hình**, không phải 7. Màn *Xem trước chuẩn hoá* đã bị gộp vào màn *Soát văn bản* thành **tab thứ hai** trong cùng một màn. Nếu dự án đang có màn riêng, gỡ nó đi.
+1. Bộ hiện có **7 màn hình**. Màn *Xem trước chuẩn hoá* của bản cũ đã bị gộp vào màn *Soát văn bản* thành **tab thứ hai** trong cùng một màn — nếu dự án đang có màn riêng, gỡ nó đi. Màn thứ bảy là **Văn bản ghép**, hoàn toàn mới (mục *Màn hình 7* trong README).
 2. **Hồ sơ đọc là một chỗ làm việc riêng, không phải preset giọng.** Mỗi hồ sơ giữ giọng, tốc độ/cao độ/âm lượng, **và danh sách tệp đang mở của riêng nó**. Bấm đổi hồ sơ ở cột trái thì dải tab tệp, nội dung ở giữa, giọng, thanh điều chỉnh và danh sách *Cần chú ý* đều đổi theo. Xem bảng bốn hồ sơ mặc định trong README.
 3. Hồ sơ thứ tư đổi tên: *Danh sách công đức* → **Danh sách, biểu mẫu**.
 4. Mọi màn phụ có nút **‹ Màn hình chính** ở thanh tiêu đề.
@@ -46,7 +46,7 @@ Nếu dự án chưa có framework, đề xuất cho tôi chọn (WinUI 3 C#/XAM
 
 **Vùng đọc**
 11. **Bỏ cột thời lượng từng đoạn** và nhãn `THỜI LƯỢNG` ở đầu vùng đọc. Thời lượng tổng đã có ở dòng thống kê, thời gian chạy đã có ở thanh phát.
-12. Đầu vùng đọc: bên trái là thống kê `215 từ · 16 đoạn · khoảng 1 phút 28 giây`, bên phải là gợi ý *Bấm vào chữ để sửa như Notepad · nút ▶ bên phải để nghe riêng đoạn*. **Không lặp lại tên tệp** ở đây (đã có ở thanh tiêu đề và ở tab).
+12. Đầu vùng đọc: bên trái là thống kê `215 từ · 15 đoạn · khoảng 1 phút 28 giây`, bên phải là gợi ý *Bấm vào chữ để sửa như Notepad · nút ▶ bên phải để nghe riêng đoạn*. **Không lặp lại tên tệp** ở đây (đã có ở thanh tiêu đề và ở tab).
 13. Chữ tràn theo chiều rộng thẻ: lề trái 34px (máng số), lề phải 30px (chỗ nút ▶). Bản cũ giới hạn 640–700px và đệm 54px hai bên — bỏ.
 14. **Nút ▶ ở lề phải từng đoạn = nghe riêng đoạn đó, hết đoạn thì dừng** (bản cũ bấm vào số đoạn — nay số đoạn chỉ để đánh dấu vị trí). Bấm *Nghe toàn bộ* mới nghe liền mạch. Thanh phát ghi *Đang nghe riêng đoạn 4* / *Nghe hết đoạn này sẽ dừng* ở chế độ nghe riêng, và *Đang đọc đoạn 4/16* / *Đang chuẩn bị đoạn tiếp theo…* ở chế độ liền mạch. Đồng hồ ở chế độ nghe riêng đếm theo độ dài đoạn đó, không phải cả bài.
 15. Ở chế độ nghe riêng, các đoạn phía trên **không** bị làm mờ (chỉ chế độ liền mạch mới mờ các đoạn đã đọc xong).
@@ -83,7 +83,7 @@ Nếu dự án chưa có framework, đề xuất cho tôi chọn (WinUI 3 C#/XAM
 2. Mô hình dữ liệu: hồ sơ, tài liệu, tab theo hồ sơ, trạng thái ứng dụng (bảng cuối README).
 3. **Khung chung của các màn phụ** (mục cùng tên trong README): thanh tiêu đề có nút *‹ Màn hình chính*, cột trái 240px, thẻ nội dung bên phải. Dựng một lần rồi dùng lại cho màn 4, 5, 6.
 4. Màn hình chính, đủ ba trạng thái vùng đọc và bảy tình huống. Làm xong màn này rồi mới sang màn khác.
-5. Màn Soát văn bản (2 tab) → Xuất file âm thanh (3 giai đoạn) → Thư viện giọng → Từ điển phát âm → Cài đặt.
+5. Màn Soát văn bản (2 tab) → Xuất file âm thanh (3 giai đoạn) → Thư viện giọng → Từ điển phát âm → Cài đặt → Văn bản ghép.
 6. Nối các màn với nhau và kiểm nút *‹ Màn hình chính*.
 
 **Trước khi dựng mỗi màn:** mở file bản mẫu của màn đó trong trình duyệt, bấm thử hết các chỗ bấm được, và đọc lại đúng mục của màn đó trong README. Mọi con số không ghi trong README thì lấy trực tiếp từ bản mẫu — đừng tự đoán.
@@ -126,5 +126,7 @@ Xong thì tự kiểm bằng danh sách này và báo lại từng dòng đạt 
 - [ ] Thư viện giọng: 8 thẻ giọng chia hai nhóm, có dải sóng âm, nhãn *Đang dùng*, ô nét đứt nhân bản giọng mới
 - [ ] Từ điển phát âm: bảng 5 cột + khung *Thêm từ* mở ra đóng được
 - [ ] Cài đặt: 6 nhóm, đủ bốn kiểu điều khiển toggle / select / path / meter
+- [ ] Mở tài liệu từ Google Docs: đăng nhập / chọn từ Drive / dán link, tải xong mở ra như tệp thường, có chip lấy bản mới
+- [ ] Văn bản ghép: bảy phần ở cột trái, khớp cột sửa được, mẫu câu chèn biến, cột phải luôn khớp với thiết lập
 - [ ] Mọi màn phụ quay lại được màn chính
 - [ ] Chế độ tối đúng token, không chỗ nào còn màu sáng lọt vào

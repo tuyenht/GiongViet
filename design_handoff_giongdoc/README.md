@@ -4,7 +4,7 @@
 
 Đối tượng: người Việt không rành kỹ thuật — nhân viên văn phòng, người làm nội dung, cán bộ phường xã, người quản lý loa phát thanh, tình nguyện viên. Toàn bộ giao diện bằng tiếng Việt.
 
-Bộ này gồm **6 màn hình**.
+Bộ này gồm **7 màn hình**.
 
 ## Việc thật của người dùng
 
@@ -27,7 +27,7 @@ Một hồ sơ = **một chỗ làm việc riêng** cho một loại nội dung.
 - tốc độ / cao độ / âm lượng
 - **danh sách tệp đang mở** và tệp đang xem
 
-Đổi hồ sơ ở cột trái thì **tất cả đổi theo**: dải tab tệp, nội dung ở giữa, giọng và các thanh điều chỉnh ở cột phải, danh sách *Cần chú ý*. Đây không phải preset giọng — đây là nơi làm việc.
+Đổi hồ sơ ở cột trái thì **tất cả đổi theo**: danh sách tệp, nội dung ở giữa, giọng và các thanh điều chỉnh ở cột phải, danh sách *Cần chú ý*. Đây không phải preset giọng — đây là nơi làm việc.
 
 Bốn hồ sơ mặc định:
 
@@ -111,7 +111,7 @@ Mọi con số hiển thị dùng `font-variant-numeric: tabular-nums`. Chữ đ
 
 ### Khoảng cách, bo góc, đổ bóng
 - Bậc khoảng cách: 2 · 4 · 6 · 8 · 12 · 14 · 16 · 24px
-- Bo góc: **4px** cho control (nút, ô nhập, chip, mục menu); **8px** cho thẻ, dropdown, hộp thoại; **6px** cho dải cảnh báo; **7px 7px 0 0** cho tab tệp; **11–15px** cho chip bo tròn; tròn hoàn toàn cho chấm trạng thái
+- Bo góc: **4px** cho control (nút, ô nhập, chip, mục menu); **8px** cho thẻ, dropdown, hộp thoại; **6px** cho dải cảnh báo; **5px** cho mục hồ sơ, **0 4px 4px 0** cho mục tệp trong cột trái; **11–15px** cho chip bo tròn; tròn hoàn toàn cho chấm trạng thái
 - Đổ bóng: chỉ dropdown (`shadow`), hộp thoại (`0 32px 64px rgba(0,0,0,.32)`), thông báo góc (`0 12px 28px rgba(0,0,0,.28)`). **Thẻ không có đổ bóng** — chỉ viền 1px.
 
 ### Chuyển động
@@ -123,7 +123,7 @@ Mọi con số hiển thị dùng `font-variant-numeric: tabular-nums`. Chữ đ
 
 **File:** `designs/GiongDoc - Màn hình chính v2 (nghe theo dòng).dc.html`
 
-Cửa sổ 1440×900. Xếp dọc: thanh tiêu đề 32px → thanh menu 30px → thanh công cụ 44px → dải tab tệp 36px → *(thanh tìm kiếm)* → *(dải cảnh báo)* → vùng ba cột (co giãn) → *(thanh phát 46px)* → thanh trạng thái 28px.
+Cửa sổ 1440×900. Xếp dọc: thanh tiêu đề 32px → thanh menu 30px → thanh công cụ 44px → *(thanh tìm kiếm)* → *(dải cảnh báo)* → vùng ba cột (co giãn) → *(thanh phát 46px)* → thanh trạng thái 28px.
 
 ### Thanh tiêu đề (32px)
 Logo 16px bo 3px nền accent, tên tệp + `— Giọng Việt`. Bên phải ba nút cửa sổ 46×32px; nút đóng khi rê chuột nền `#c42b1c` chữ trắng.
@@ -133,7 +133,7 @@ Logo 16px bo 3px nền accent, tên tệp + `— Giọng Việt`. Bên phải ba
 
 | Menu | Mục |
 |---|---|
-| Tệp | Mở tệp… `Ctrl+O` · Dán văn bản `Ctrl+V` · Lưu `Ctrl+S` · Xuất file âm thanh `Ctrl+E` · Đóng tệp `Ctrl+W` |
+| Tệp | Mở tệp… `Ctrl+O` · Mở từ Google Docs… · Dán văn bản `Ctrl+V` · Lưu `Ctrl+S` · Xuất file âm thanh `Ctrl+E` · Đóng tệp `Ctrl+W` |
 | Chỉnh sửa | Hoàn tác `Ctrl+Z` · Làm lại `Ctrl+Y` · Cắt `Ctrl+X` · Sao chép `Ctrl+C` · Tìm và thay thế `Ctrl+H` |
 | Chèn | Thẻ cảm xúc `Alt+1…3` · Khoảng lặng 1 giây `Alt+S` · Ngắt đoạn `Enter` |
 | Giọng | Đổi giọng đọc `Ctrl+G` · Nghe mẫu giọng `Ctrl+M` · Thư viện giọng · Nhân bản giọng từ file… |
@@ -162,13 +162,16 @@ Khi máy chủ mất kết nối, hết lượt, hoặc giọng đang tải: (8)
 
 Menu **Thẻ cảm xúc** rộng 260px: dòng đầu ghi *Chèn vào đoạn N* (N là đoạn đang chọn), rồi ba mục `[cười]` Alt+1 · `[thở dài]` Alt+2 · `[hắng giọng]` Alt+3, mỗi mục là một chip bên trái và phím tắt bên phải; cuối cùng là **Gỡ thẻ khỏi đoạn này**. Chọn một thẻ thì thẻ hiện ngay đầu đoạn đang chọn dưới dạng chip.
 
-### Dải tab tệp (36px)
-Mỗi tab cao 34px, rộng tối đa 230px, bo `7px 7px 0 0`, gồm icon tài liệu + tên tệp + dấu × đóng. Tab đang mở: nền `layer`, viền trên/trái/phải `stroke`, tên đậm 600, icon màu accent. Tab khác: trong suốt, chữ `txt2`. Cuối dải là nút `+` 28px (Tệp mới).
+### Danh sách tệp (trong cột trái, không có dải tab)
+Tệp đang mở **không nằm trên một dải tab riêng** mà là danh sách con của hồ sơ trong cột trái, thụt vào 9px và có vạch trái 2px. Mỗi tệp cao 30px: icon tài liệu 13px + tên 13px + dấu × đóng (18px, hiện chữ `txt3`, rê chuột thành `txt`). Tệp đang xem: nền `sel`, tên đậm 600, icon và vạch trái màu `acc`.
 
-Đóng tab cuối cùng thì còn lại một tab *Chưa đặt tên* rỗng. Dải tab thuộc về hồ sơ đang chọn.
+- Bấm một tệp để xem; **nháy đúp để đổi tên** (ô nhập tại chỗ, viền `acc`, `Enter` lưu, `Esc` bỏ).
+- Cuối danh sách là **Thêm tệp** (cao 28px, chữ `txt3`, icon dấu cộng) — mở thêm một tệp trong hồ sơ đó.
+- Đóng tệp cuối cùng thì còn lại một tệp rỗng tên *Văn bản mới 1*.
+- Danh sách tệp thuộc về hồ sơ đang chọn; hồ sơ khác giữ danh sách riêng của nó.
 
 ### Thanh tìm và thay thế (ẩn/hiện)
-Nằm ngay dưới dải tab, nền `layer`, viền `stroke2`, bo 6px, cao khoảng 46px: nhãn *Tìm* + ô nhập 180px (viền dưới 2px accent, có con trỏ nháy) + `1/1` + đường ngăn + nhãn *Thay bằng* + ô nhập 180px + nút **Thay thế** + nút **Thay tất cả** + dấu × đóng ở góc phải.
+Nằm ngay dưới thanh công cụ, nền `layer`, viền `stroke2`, bo 6px, cao khoảng 46px: nhãn *Tìm* + ô nhập 180px (viền dưới 2px accent, có con trỏ nháy) + `1/1` + đường ngăn + nhãn *Thay bằng* + ô nhập 180px + nút **Thay thế** + nút **Thay tất cả** + dấu × đóng ở góc phải.
 
 ### Dải cảnh báo (ẩn/hiện)
 Xem mục *Trạng thái lỗi và chờ*.
@@ -176,7 +179,14 @@ Xem mục *Trạng thái lỗi và chờ*.
 ### Cột trái — Hồ sơ đọc (240px)
 Đầu cột: nút ba gạch 32px (thu gọn) + tiêu đề **Hồ sơ đọc** 14px/600.
 
-Danh sách hồ sơ, mỗi mục cao khoảng 52px: icon 17px, tên 14px, dưới là tên giọng 12px màu `txt3` (cắt bằng ellipsis nếu dài). Mục đang chọn: nền `layer`, viền 1px `stroke`, tên đậm 600, và một vạch dọc 3×18px bo 2px màu `acc` ở `left:2px` căn giữa theo chiều dọc. Bấm để đổi hồ sơ.
+Danh sách hồ sơ mở theo **hồ sơ đang chọn**: chỉ hồ sơ đang chọn hiện danh sách tệp của nó và mục *Thêm tệp*; các hồ sơ khác thu về một dòng. Bấm một hồ sơ là chọn và mở nó cùng lúc — không có nút thu gọn riêng, không có trạng thái đóng/mở phải nhớ.
+
+- **Hồ sơ đang chọn** (nền `layer`, viền `stroke`, tên đậm 600, vạch dọc 3px `acc`): tên 14px + tên giọng 12px, rồi danh sách tệp thụt vào 9px với vạch trái 2px, mỗi tệp cao 30px (icon tài liệu + tên + dấu × đóng), cuối cùng là *Thêm tệp* cao 28px.
+- **Hồ sơ thu gọn** (~69px): tên 14px + tên giọng 12px + dòng thứ ba là **tên tệp đang xem** (icon tài liệu 11px, 12px `txt3`, cắt bằng ellipsis); bên phải ghi số tệp (`3 tệp`), có chấm đỏ 6px phía trước nếu hồ sơ đó đang có tệp mắc lỗi phải sửa.
+
+Nhờ vậy chiều cao cột trái không phụ thuộc số tệp của các hồ sơ khác: một hồ sơ mở 8 tệp cũng không đẩy hồ sơ nào ra khỏi khung.
+
+Mỗi mục hồ sơ cao khoảng 52px khi chỉ có tên và giọng: icon 17px, tên 14px, dưới là tên giọng 12px màu `txt3` (cắt bằng ellipsis nếu dài). Mục đang chọn: nền `layer`, viền 1px `stroke`, tên đậm 600, và một vạch dọc 3×18px bo 2px màu `acc` ở `left:2px` căn giữa theo chiều dọc. Bấm để đổi hồ sơ.
 
 Dưới danh sách: **Tạo hồ sơ mới** (nút chìm, icon dấu cộng).
 
@@ -219,7 +229,49 @@ Vùng đọc làm việc như Notepad, không có chế độ *xem* / *sửa* ri
 - Số từ, số đoạn, thứ tự và ước tính thời lượng cập nhật theo từng thao tác sửa.
 - Sửa đoạn đã nghe/đã xuất → áp tình huống *Âm thanh cũ sau khi sửa văn bản*.
 
-**Trạng thái rỗng:** khung nét đứt 1.5px `stroke2`, rộng 500px, bo 8px, nền `layer2`, đệm 44×32px, canh giữa. Bên trong: icon clipboard 52px mờ .75 → tiêu đề 18px/600 *Dán văn bản vào đây để bắt đầu* → hai dòng 14px *Nhấn Ctrl+V, hoặc kéo thả tệp .txt, .docx, .rtf vào cửa sổ này.* / *Hồ sơ đang chọn: **{tên hồ sơ}** — {tên giọng}.* → hai nút: **Dán văn bản** (accent) và **Chọn tệp từ máy…** (viền).
+**Trạng thái rỗng:** khung nét đứt 1.5px `stroke2`, rộng 500px, bo 8px, nền `layer2`, đệm 44×32px, canh giữa. Bên trong: icon clipboard 52px mờ .75 → tiêu đề 18px/600 *Dán văn bản vào đây để bắt đầu* → hai dòng 14px *Nhấn Ctrl+V, hoặc kéo thả tệp .txt, .docx, .rtf vào cửa sổ này.* / *Hồ sơ đang chọn: **{tên hồ sơ}** — {tên giọng}.* → ba nút: **Dán văn bản** (accent), **Chọn tệp từ máy…** (viền) và **Mở từ Google Docs…** (viền).
+
+### Mở tài liệu từ Google Docs
+
+Hai đường vào: menu *Tệp → Mở từ Google Docs…* và nút thứ ba ở trạng thái rỗng. Hộp thoại rộng 620px, bo 8px, phủ lên màn chính (màn nền `rgba(0,0,0,.34)`).
+
+Đầu hộp: tiêu đề 18px/600 **Mở tài liệu Google Docs** + dòng phụ đổi theo bước + dấu × 28px. Ba bước dùng chung một hộp:
+
+**Bước 1 — đăng nhập** (chỉ khi chưa đăng nhập). Icon tài liệu trong vòng tròn 46px nền `acc-soft` → *Đăng nhập Google để xem danh sách tài liệu* (15.5px/600) → đoạn giải thích: đăng nhập một lần, và Giọng Việt chỉ xin quyền **đọc**, không sửa không xoá gì trên Drive → nút accent **Đăng nhập bằng Google** → liên kết *Hoặc dán link tài liệu, không cần đăng nhập* (nhảy thẳng sang thẻ *Dán link*). Dòng phụ đầu hộp: *Cần đăng nhập Google một lần để đọc danh sách tài liệu*.
+
+**Bước 2 — chọn tài liệu.** Hai thẻ **Từ Drive** / **Dán link** (thẻ đang chọn nền `acc`, chữ `acc-txt`). Khi đã đăng nhập, bên phải hàng thẻ hiện email `chuaanlac.vp@gmail.com` + liên kết *Đổi tài khoản* (quay về bước đăng nhập).
+
+- *Từ Drive*: ô tìm 34px (icon kính lúp + *Tìm theo tên tài liệu…*), rồi danh sách cao tối đa 290px, cuộn được. Mỗi dòng: icon tài liệu 17px + tên 14px + dòng phụ 12.5px *ai sửa lần cuối · khi nào*; dòng đang chọn nền `acc-soft`, viền `acc`, tên đậm 600, dấu tích `acc` bên phải. Bấm để chọn, nháy đúp để mở luôn. Không khớp thì hiện *Không có tài liệu nào khớp “{từ khoá}”. / Thử tên khác, hoặc dán link tài liệu ở thẻ bên cạnh.*
+- *Dán link*: nhãn *Link tài liệu Google Docs* + ô nhập viền dưới 2px `acc`, gợi ý `https://docs.google.com/document/d/…`; dưới là ô chú thích nền `ctl`: tài liệu phải bật **“Bất kỳ ai có đường liên kết đều xem được”**, cách này không cần đăng nhập — tiện khi mượn máy hoặc dùng máy chung. Nút **Mở tài liệu** chỉ bật khi link có dạng `docs.google.com/document`.
+
+**Bước 3 — đang tải.** Vòng xoay 34px + *Đang tải {tên tài liệu}…* (15px/600) + *Tải xong sẽ mở ra như một tệp văn bản thường.* Xong thì tài liệu mở thành một tab tệp mới trong hồ sơ đang dùng.
+
+Chân hộp nền `layer2`: chú thích 12.5px bên trái đổi theo bước (`{số} tài liệu · nháy đúp để mở nhanh` / *Không có tài liệu nào khớp* / *Bấm Huỷ nếu bạn không muốn mở tài liệu này nữa*), rồi **Huỷ** (viền) và **Mở tài liệu** (accent; chuyển màu `dis` khi chưa chọn được gì).
+
+Ba tài liệu mẫu trên Drive: *Thư cảm ơn cuối năm* — Bạn sửa lần cuối · 14:02 hôm nay · *Thông báo lễ tổng kết năm học 2026* — Cô Hạnh sửa lần cuối · hôm qua · *Danh sách khen thưởng học kỳ hai* — Thầy Dũng sửa lần cuối · 9/8/2026.
+
+**Tệp mở từ Google Docs** có thêm một chip ở đầu vùng đọc, ngay sau dòng thống kê: bo tròn 22px, nền `acc-soft`, viền `acc`, icon vòng lặp + *Google Docs · lấy lúc 14:02*. Tooltip *Tệp này lấy từ Google Docs lúc 14:02 — bấm để lấy bản mới nhất*. Bấm chip: icon xoay, chữ đổi thành *Đang lấy bản mới từ Google Docs…*, xong thì ghi lại giờ lấy mới. Tệp mở từ máy không có chip này.
+
+### Tab bản ghép
+
+Bấm **Mở bản ghép để nghe** ở màn *Văn bản ghép* thì bản ghép mở thành **một tệp trong hồ sơ đang dùng** (thêm vào danh sách tệp ở cột trái), tên tệp là tên mẫu (`Danh sách công đức`), nội dung là các đoạn đã ghép sẵn và đánh số liên tục: đầu danh sách → tên nhóm → từng dòng → câu xen giữa → cuối. Nghe riêng từng đoạn, nghe toàn bộ, xuất file đều như tệp thường. Khác tệp thường ba điểm:
+
+- **Chip ở đầu vùng đọc**, cùng kiểu chip Google Docs: *Bản ghép · 248 dòng · lấy lúc 14:58*, bấm để lấy dữ liệu mới (icon xoay, chữ đổi thành *Đang lấy dữ liệu mới từ bảng tính…*). Cạnh chip là liên kết **Mở mẫu ghép ›** về màn 7.
+- **Đoạn tĩnh sửa được tại chỗ** như mọi tệp khác, và sửa ở đây ghi thẳng vào mẫu.
+- **Đoạn động không sửa tại chỗ**: có vạch dọc 2px `acc` ở lề trái, không nhận con trỏ gõ. Bấm vào đoạn thì ngay dưới đoạn hiện một dải `acc-soft`: *Đoạn này do bảng tính sinh ra, không sửa trực tiếp ở đây.* + liên kết **Sửa mẫu câu ›**. Gợi ý ở đầu vùng đọc đổi thành *Đoạn có vạch xanh lấy từ bảng tính · phần bạn viết sửa như Notepad · nút ▶ để nghe riêng đoạn*.
+
+**Bảng tính cập nhật giữa lúc đang đọc.** Nguyên tắc: **không bao giờ đổi đoạn đang đọc hoặc đã đọc; chỉ nối thêm vào phần chưa đọc.** App tự kiểm tra 5 phút một lần, so bản mới với bản đang đọc theo khoá dòng rồi xử theo bốn trường hợp:
+
+| Trường hợp | Xử lý |
+|---|---|
+| Dòng mới nằm sau chỗ đang đọc | chèn im lặng vào đúng vị trí của nó — đọc tới là đọc đủ, không hỏi gì |
+| Dòng mới thuộc chỗ đã đọc qua | dồn vào **đợt bổ sung ở cuối danh sách**, trước câu xen giữa và câu kết, có câu dẫn *Sau đây là danh sách bổ sung.*; chip vàng báo `3 dòng mới, đã thêm vào cuối` |
+| Dòng đã sửa | chưa đọc thì cập nhật im lặng; đã đọc rồi thì giữ nguyên buổi đọc và báo qua tình huống *Bạn vừa sửa văn bản, bản đã nghe là bản cũ* + nút *Đọc lại 2 dòng* |
+| Dòng bị xoá | chưa đọc thì bỏ khỏi phần còn lại; đang đọc dòng đó thì đọc hết dòng rồi mới bỏ, không cắt giữa câu |
+
+Hai chốt kèm theo: bấm *Nghe toàn bộ* thì **lấy dữ liệu một lần trước khi đọc**; bấm *Xuất file âm thanh* thì **chốt dữ liệu tại thời điểm bấm** — bảng tính đổi giữa lúc xuất không làm hỏng tệp, xuất xong mới báo *Có 3 dòng mới sau khi bắt đầu xuất*.
+
+Bản mẫu dựng tab này trong hồ sơ *Danh sách, biểu mẫu* với mười dòng đầu của 248 dòng; bấm chip là thêm đợt bổ sung ba dòng vào cuối để xem đúng hành vi trên.
 
 ### Cột phải (300px)
 
@@ -262,7 +314,7 @@ Chân, nền `layer2`: ước tính `Ước tính 1 phút 28 giây · khoảng 1
 Bấm *Bắt đầu xuất*: hộp thoại đóng, thanh trạng thái chuyển sang *Đang xuất… 34%*, khoảng 2 giây sau hiện thông báo góc dưới phải rộng 360px: **Đã xuất xong tệp âm thanh** + `{tên tệp} · {thời lượng} · {dung lượng}` + `Lưu tại: Tài liệu\GiongDoc\Xuất` + hai nút **Mở thư mục** / **Đóng**.
 
 ### Trạng thái lỗi và chờ
-Dải cảnh báo nằm giữa dải tab và vùng ba cột, cách hai bên 8px, bo 6px, viền 1px: icon 18px + tiêu đề 14px/600 + dòng giải thích 13.5px + nút hành động bên phải. Lỗi dùng bộ `err`, cảnh báo dùng bộ `warn`.
+Dải cảnh báo nằm giữa thanh công cụ và vùng ba cột, cách hai bên 8px, bo 6px, viền 1px: icon 18px + tiêu đề 14px/600 + dòng giải thích 13.5px + nút hành động bên phải. Lỗi dùng bộ `err`, cảnh báo dùng bộ `warn`.
 
 | Tình huống | Tiêu đề | Nội dung | Nút | Ảnh hưởng khác |
 |---|---|---|---|---|
@@ -282,14 +334,14 @@ Nguyên tắc viết lỗi: nói điều đã xảy ra, trấn an là dữ liệ
 **File:** `designs/GiongDoc - Soát văn bản.dc.html`
 **Mục đích:** tìm những chỗ máy sẽ đọc sai và sửa trước khi xuất.
 
-Là một chế độ phủ lên cửa sổ chính: cột trái và cột phải của màn chính vẫn thấy nhưng mờ đi (opacity .55), phần giữa là nội dung của màn này.
+Là một chế độ phủ lên cửa sổ chính: **cột trái (hồ sơ đọc kèm danh sách tệp) và cột phải (thẻ hồ sơ — giọng — điều chỉnh và thẻ Cần chú ý) của màn chính vẫn hiện nguyên nội dung**, chỉ mờ đi (opacity .55) và không bấm được (`pointer-events:none`); phần giữa là nội dung của màn này. Hai cột đó giữ ngữ cảnh — người dùng biết mình đang soát tệp nào, trong hồ sơ nào, bằng giọng nào.
 
 Thanh công cụ riêng cao 42px có **hai tab**:
 
 1. **Chỗ cần chú ý** — danh sách lỗi
 2. **Văn bản sau chuẩn hoá** — so sánh gốc với cách máy đọc
 
-Tab đang chọn: nền `acc-soft`, chữ và viền `acc`. Bên phải thanh: *Lần soát cuối: 14:03 · tự động soát khi mở tệp* (tab 1) hoặc *11 chỗ sẽ được đọc khác văn bản gốc · 16 đoạn* (tab 2).
+Tab đang chọn: nền `acc-soft`, chữ và viền `acc`. Bên phải thanh: *Lần soát cuối: 14:03 · tự động soát khi mở tệp* (tab 1) hoặc *11 chỗ sẽ được đọc khác văn bản gốc · 15 đoạn* (tab 2).
 
 ### Tab 1 — Chỗ cần chú ý
 Trên: vùng văn bản, mỗi đoạn có gạch chân lượn sóng dưới chỗ có vấn đề (đỏ `err` cho lỗi, vàng `warn` cho cảnh báo, `text-underline-offset: 5px`, `text-decoration-skip-ink: none`) và nhãn loại lỗi ở lề phải.
@@ -316,7 +368,7 @@ Chân: chú thích *Chuẩn hoá chỉ ảnh hưởng đến âm thanh, văn b�
 
 ## Khung chung của các màn phụ
 
-Bốn màn 4, 5, 6 dùng chung một khung: thanh tiêu đề 32px (logo + tên màn + `— Giọng Việt` + nút **‹ Màn hình chính** dạng chip bo tròn 22px nền `sub-h`, rồi ba nút cửa sổ bên phải) → vùng nội dung chia hai cột: **cột trái 240px** là danh sách nhóm/bộ lọc, **cột phải** là một thẻ nền `layer` viền `stroke` bo 8px chiếm hết chỗ còn lại.
+Các màn 4, 5, 6 và 7 dùng chung một khung: thanh tiêu đề 32px (logo + tên màn + `— Giọng Việt` + nút **‹ Màn hình chính** dạng chip bo tròn 22px nền `sub-h`, rồi ba nút cửa sổ bên phải) → vùng nội dung chia hai cột: **cột trái 240px** là danh sách nhóm/bộ lọc, **cột phải** là một thẻ nền `layer` viền `stroke` bo 8px chiếm hết chỗ còn lại.
 
 Mục đang chọn ở cột trái: nền `layer`, viền 1px `stroke`, chữ đậm 600, vạch dọc 3×18px màu `acc` ở `left:2px`. Đầu cột trái có mũi tên quay lại 30px + tên màn 16px/600. Đáy cột trái là một dòng thông tin phụ 13px màu `txt3`.
 
@@ -410,13 +462,134 @@ Nội dung mẫu giữ nguyên, ví dụ: *Ngôn ngữ giao diện — Áp dụn
 
 ---
 
+## Màn hình 7 — Văn bản ghép
+
+**File:** `designs/GiongDoc - Văn bản ghép.dc.html`
+**Mục đích:** đọc một danh sách dài mà chỉ phải viết một lần. Người dùng viết phần **tĩnh** (câu mở đầu, câu xen giữa, câu kết), khai một **mẫu câu** cho mỗi dòng, và phần **động** lấy từ bảng tính — bảng thêm dòng thì bản đọc tự có dòng mới, không phải gõ lại.
+
+Một **mẫu ghép** giữ đủ: nguồn dữ liệu, cách khớp cột, luật lọc và nhóm, bốn khối nội dung. Mẫu ghép thuộc hồ sơ **Danh sách, biểu mẫu**; một hồ sơ giữ **nhiều mẫu ghép**. Bản mẫu có sẵn hai mẫu: *Danh sách công đức* (248 dòng) và *Quỹ khuyến học tháng 8* (96 dòng).
+
+Màn này **không dành riêng cho một loại danh sách nào**. Từ vựng ở giao diện là từ vựng chung (cột, dòng, nhóm, cách đọc); nội dung riêng của từng loại nằm trong mẫu sẵn.
+
+Dùng khung chung của các màn phụ, thêm cột thứ ba và một thanh dưới: thanh tiêu đề 32px → *(dải cảnh báo dữ liệu cũ)* → vùng ba cột (cột trái 240px · thẻ giữa co giãn · cột phải 392px, đệm ngoài 8px) → thanh dưới 46px.
+
+### Thư viện mẫu ghép
+Đầu cột trái không còn là tiêu đề tĩnh mà là **ô chọn mẫu**: mũi tên quay lại 30px + tên mẫu 15px/600 + chevron. Bấm mở menu 268px, bo 8px, có đổ bóng:
+
+- nhãn `MẪU GHÉP TRONG HỒ SƠ NÀY` rồi danh sách mẫu, mỗi mục cao 38px: tên 14px + dòng phụ 12px `{số} dòng · {loại mẫu}`; mẫu đang mở nền `acc-soft`, tên đậm 600, dấu tích `acc` bên phải
+- đường ngăn, rồi **Tạo mẫu ghép mới…** (chữ `acc`, icon dấu cộng) · **Đổi tên mẫu này** · **Xoá mẫu này** (chỉ hiện khi hồ sơ có từ hai mẫu)
+
+*Đổi tên* biến tiêu đề thành ô nhập viền dưới 2px `acc`, tự chọn hết chữ; `Enter` lưu, `Esc` bỏ, bấm ra ngoài cũng lưu.
+
+**Hộp thoại tạo mẫu mới** rộng 660px: tiêu đề 20px/600 **Tạo mẫu ghép mới** + dòng phụ *Chọn loại danh sách gần giống của bạn. Tên cột, mẫu câu và câu chữ đều sửa lại được sau.* Thân là lưới hai cột, mỗi thẻ nền `layer2` viền `stroke` bo 6px (rê chuột: viền `acc`, nền `acc-soft`): tên 14.5px/600 + mô tả 13px + dòng cột gợi ý 12.5px `txt3`. Bấm một thẻ là tạo mẫu và mở ngay ở mục *Nguồn dữ liệu*; tên trùng thì thêm ` (2)`. Chân hộp: chú thích *Mẫu mới được thêm vào hồ sơ Danh sách, biểu mẫu — các mẫu đang có không đổi.* + **Huỷ**.
+
+Sáu mẫu sẵn:
+
+| Mẫu | Dùng cho | Cột gợi ý | Dòng mẫu |
+|---|---|---|---|
+| Danh sách công đức | sổ công đức của chùa, đền, nhà thờ | Tên · Số tiền · Ngày · Đợt · Pháp danh | 248 |
+| Quyên góp, ủng hộ | quỹ khuyến học, ủng hộ bão lụt, quỹ lớp | Người ủng hộ · Số tiền · Ngày · Tổ dân phố · Hiện vật | 96 |
+| Chi trả, bảng lương | chi trả lương, trợ cấp, tiền hỗ trợ | Họ và tên · Số tiền nhận · Ngày chi trả · Bộ phận · Số quyết định | 64 |
+| Khen thưởng, kết quả | học sinh đạt danh hiệu, kết quả thi, trúng tuyển | Họ và tên · Lớp · Điểm trung bình · Danh hiệu · Ngày xét | 132 |
+| Lịch trực, phân công | lịch trực cơ quan, phân công theo ngày | Ngày trực · Người trực · Bộ phận · Ca · Điện thoại | 42 |
+| Thông báo tìm người, tạm trú | loa phát thanh phường: tìm người, nhắn tin, tạm trú | Họ và tên · Năm sinh · Địa chỉ · Loại thông báo · Số liên hệ | 18 |
+
+Mỗi mẫu sẵn mang theo: tên bảng tính, sáu cột kèm *Dùng làm* + *Cách đọc* đoán trước, mẫu câu, văn bản đầu / xen giữa / cuối, câu đọc tên nhóm, và bốn dòng dữ liệu mẫu để dựng cột xem trước.
+
+### Dải cảnh báo dữ liệu cũ (ẩn/hiện)
+Bộ `warn`, nằm ngay dưới thanh tiêu đề: **Chưa lấy được danh sách mới, đang dùng bản đã tải lúc 14:03 hôm nay** + *{số} dòng của bản cũ vẫn đọc và xuất được bình thường. Nếu bảng tính vừa thêm dòng, hãy thử lấy lại trước khi đọc.* + nút chìm **Vẫn dùng bản cũ** và nút viền **Thử lấy lại**. Không lấy được dữ liệu **không bao giờ** làm dừng buổi đọc.
+
+### Cột trái — các phần của bản ghép
+Bảy mục, mỗi mục cao tối thiểu 38px: chấm 7px + tên 14px + dòng phụ 12px `txt3`. Chấm `ok` = phần này đang được đọc, chấm rỗng viền `stroke2` = đang tắt, chấm `warn` = mục có chỗ cần xem lại. Mục đang chọn: nền `layer`, viền `stroke`, tên đậm 600, vạch dọc 3×18px `acc` ở `left:2px`.
+
+| Mục | Dòng phụ |
+|---|---|
+| Nguồn dữ liệu | tên cách lấy đang chọn |
+| Khớp cột | `5 cột đang dùng` (thêm ` · cần xem lại` khi có vấn đề) |
+| Lọc & nhóm | `bỏ dòng thiếu · gộp trùng · nhóm theo cột`, hoặc *không lọc* |
+| Đầu danh sách | `Đang bật · 4 đoạn` / *Đang tắt* |
+| Mẫu câu mỗi dòng | `Luôn đọc · 248 dòng` |
+| Câu xen giữa | `Sau mỗi 30 dòng` / *Đang tắt* |
+| Cuối danh sách | `Đang bật · 4 đoạn` / *Đang tắt* |
+
+Đáy cột, tách bằng `divider`: *Mẫu này thuộc hồ sơ **Danh sách, biểu mẫu**. Các hồ sơ khác không bị ảnh hưởng.* và nút chìm **Trả mẫu về ban đầu** (xoá mọi thay đổi của mọi mẫu).
+
+### Thẻ giữa
+Đầu thẻ 52px: tên mục 17px/600 + một dòng giải thích 13px `txt3` (*Nơi lấy danh sách và lúc nào lấy lại* · *Phần mềm tự đoán, bạn sửa lại nếu đoán sai* · *Dòng nào được đọc, đọc theo thứ tự nào* · *Phần động — mỗi dòng bảng tính thành một câu* · *Phần tĩnh — bạn viết một lần, dùng cho mọi lần đọc*). Ba mục tĩnh (Đầu danh sách, Câu xen giữa, Cuối danh sách) có thêm công tắc bên phải: *Đang đọc phần này* / *Đang bỏ qua phần này*.
+
+Đầu thân thẻ, khi có chỗ cần xem lại, là một dải `warn` liệt kê từng vấn đề, kèm nút **Mở Khớp cột** nếu đang không ở mục đó. Năm vấn đề được phát hiện, tính lại theo thiết lập thật:
+- mẫu câu đang trống — *các dòng trong bảng tính sẽ không được đọc*
+- mẫu câu dùng một biến mà không cột nào cấp dữ liệu, hoặc cột đó đang đặt *Bỏ qua*
+- hai cột cùng đặt *Nhóm theo cột này* hoặc cùng đặt *Lọc theo ngày* — nói rõ cột nào được dùng, cột nào bị bỏ
+- bật đọc tên nhóm nhưng chưa có cột *Nhóm theo cột này*
+- chưa có cột *Lọc theo ngày* nên bộ lọc khoảng ngày bị bỏ qua
+
+**Nguồn dữ liệu.** Ba lựa chọn tròn: *Dán link chia sẻ công khai* (bảng tính phải bật “Bất kỳ ai có đường liên kết đều xem được”) · *Đăng nhập Google* (dùng được cả bảng riêng tư) · *File trên máy* (.xlsx hoặc .csv, không cần mạng). Lựa chọn đang dùng: nền `acc-soft`, viền `acc`, nhãn **Đang dùng**. Dưới đó là ô nhập nguồn (viền dưới 2px `acc`) + nút **Kiểm tra kết nối**, rồi hai ô chọn **Bảng trong tệp** (danh sách theo mẫu) và **Dòng tiêu đề** (Dòng 1 · Dòng 2 · Dòng 3 · Không có dòng tiêu đề).
+
+Nhãn `LẤY DỮ LIỆU MỚI` rồi ba hàng: *Bấm nút để lấy dữ liệu mới* — **Luôn bật** · *Tự kiểm tra định kỳ* — công tắc, `5 phút một lần`, chỉ kiểm tra, không tự đổi giữa lúc đang đọc · *Khi không lấy được* — **Đã chọn**: dùng bản đã tải lần trước và báo rõ dữ liệu ngày nào.
+
+**Khớp cột.** Dải `acc-soft` giải thích: phần mềm đọc dòng tiêu đề và tự đoán cách dùng từng cột; cột nào cũng chèn được vào mẫu câu, trừ cột đặt *Bỏ qua*; **Cách đọc** quyết định máy đọc ô đó thành gì.
+
+Bảng: Cột (38px) · Cột trong sheet (co giãn, hai dòng: tiêu đề 14px/600 + `Ví dụ: …` 12.5px) · Dùng làm (158px) · Cách đọc (168px) · Chèn được (104px). Hai trục độc lập:
+
+- **Dùng làm** — `Dùng trong câu` · `Nhóm theo cột này` · `Lọc theo ngày` · `Bỏ qua`. Mỗi mẫu chỉ dùng được **một** cột nhóm và **một** cột lọc ngày; cột thứ hai cùng vai thì hàng đó nền `warn-bg`, ô chọn viền và chữ `err`, mất chip biến. Cột đặt *Bỏ qua* để nền trong suốt, chữ `txt3`.
+- **Cách đọc** — `Nguyên văn` · `Số tiền` · `Ngày tháng` · `Số thứ tự` · `Đọc từng chữ số` · `Tên riêng (đọc chậm)` · `Điểm, số thập phân` · `Viết tắt đọc đầy`. Đây là thứ quyết định cột xem trước: `2.500.000` → “hai triệu năm trăm nghìn đồng”, `0912 345 678` → “không chín một hai ba bốn năm sáu bảy tám”, `9,8` → “chín phẩy tám”, `1958` → “một nghìn chín trăm năm mươi tám”, `QĐ 142/2026` → “quyết định một trăm bốn mươi hai năm hai nghìn không trăm hai mươi sáu”.
+
+Biến sinh từ tiêu đề cột, bỏ dấu và bỏ khoảng trắng: `Số tiền` → `{sotien}`, `Pháp danh` → `{phapdanh}`, `Họ và tên` → `{hovaten}`. Chú thích cuối bảng: *Cột đặt “Bỏ qua” vẫn nằm trong sheet, chỉ là không đọc tới. Mỗi mẫu chỉ có một cột nhóm và một cột lọc ngày.*
+
+Sáu cột của mẫu *Danh sách công đức*: A *Tên* — Dùng trong câu / Tên riêng · B *Số tiền* — Dùng trong câu / Số tiền · C *Ngày* — Lọc theo ngày / Ngày tháng · D *Đợt* — Nhóm theo cột này / Nguyên văn · E *Pháp danh* — Dùng trong câu / Tên riêng · F *Ghi chú* — Bỏ qua.
+
+**Lọc & nhóm.** Ba công tắc kèm ảnh hưởng thật: *Bỏ dòng thiếu dữ liệu* — `4 dòng bị bỏ` · *Gộp dòng trùng* — `2 dòng gộp lại`, mở ra thêm một dòng **So trùng theo cột** (ô chọn chữ cột) và câu *Hai dòng có cùng {tên cột} được coi là một*; mẫu có cột đọc kiểu *Số tiền* thì ghi thêm “số tiền được cộng gộp” · *Giữ đúng thứ tự trong sheet* — `Theo bảng tính`, tắt thì `Số lớn trước`.
+
+Rồi nhãn `KHOẢNG NGÀY` với hai ô ngày 170px (**Từ ngày** / **Đến ngày**) và chú thích *Lấy theo cột {tên cột}. Bỏ trống hai ô này thì đọc toàn bộ danh sách.* — chưa có cột lọc ngày thì chú thích đổi thành *Chưa có cột nào đặt “Lọc theo ngày”, nên bộ lọc này chưa có tác dụng.*
+
+Cuối là nhãn `NHÓM THEO CỘT` với công tắc *Đọc tên nhóm trước mỗi nhóm* — `{số} nhóm`, chú thích ghi cột nhóm và câu sẽ đọc, ví dụ “Đợt cúng dường Rằm tháng Bảy.”
+
+**Bốn mục nội dung** dùng chung một ô soạn: nhãn bên trái, số đếm bên phải (`4 đoạn · 612 ký tự`; mẫu câu đếm ký tự), ô nhập nhiều dòng viền dưới 2px `acc`, chữ 15px dòng cao 1.65, cao tối thiểu 260px (mẫu câu 120px), kéo cao được. Mục tĩnh có chú thích *Cách dòng một lần là ngắt đoạn — phần mềm sẽ nghỉ một nhịp ở đó.*
+
+*Câu xen giữa* có thêm một hàng trên ô soạn: **Đọc câu này sau mỗi** [10 · 20 · 30 · 40 · 50 · 100] **dòng**, bên phải là `Sẽ đọc 8 lần trong 248 dòng`.
+
+*Mẫu câu mỗi dòng* có thêm nhãn `CHÈN DỮ LIỆU TỪ SHEET` và một hàng chip bo 15px: tên biến (chữ đơn cách, đậm 600) + tiêu đề cột; tooltip ghi cột nguồn và cách đọc. Chip đã dùng trong mẫu: nền `acc-soft`, viền và chữ `acc`. Bấm chip chèn biến **vào đúng vị trí con trỏ**. Dưới cùng là chú thích về cách đọc, dẫn sang **Cách đọc** ở mục Khớp cột và **Từ điển phát âm** (màn 5).
+
+### Cột phải — Bản ghép hoàn chỉnh (392px)
+Đầu thẻ 44px: **Bản ghép hoàn chỉnh** + `4 khối · 259 đoạn` (mặc định của mẫu công đức; bật *Câu xen giữa* thành `5 khối · 267 đoạn`). Thân cuộn, mỗi khối là một hộp bo 5px với vạch trái 3px: khối lấy từ bảng tính dùng viền và vạch `acc`, nền `acc-soft`; khối tĩnh dùng viền `stroke`, vạch `stroke2`, nền `layer2`. Đầu khối là nhãn 11.5px viết hoa (*Đầu danh sách · tĩnh* · *Tên nhóm · từ Google Sheet* · *Danh sách · từ Google Sheet* — nguồn là tệp trên máy thì ghi *từ tệp trên máy* · *Câu xen giữa · tĩnh* · *Cuối danh sách · tĩnh*) + số đếm bên phải (`4 đoạn`, `248 dòng`, `lặp 8 lần`, `nhóm 1/3`).
+
+Khối danh sách hiện bốn dòng đầu đã đánh số và **đã áp Cách đọc của từng cột** — đây là chỗ người dùng thấy trước máy sẽ đọc thành gì. Biến không có cột cấp dữ liệu hiện thành `(chưa có cột ten)`. Chân thẻ nền `layer2`: *Khối viền xanh là phần lấy từ bảng tính, sẽ tự đổi theo dữ liệu. Khối viền xám là phần bạn viết, không đổi.*
+
+### Thanh dưới (46px)
+Chấm trạng thái + nhãn: *Dữ liệu cũ — lấy lúc 14:03 hôm nay · 248 dòng* (chấm `warn`) hoặc *Đã cập nhật 14:58 hôm nay · 248 dòng · tự kiểm tra 5 phút một lần* (chấm `ok`). Rồi nút viền **Lấy dữ liệu mới**. Đẩy sang phải: `259 đoạn · khoảng 39 phút` (ước tính 9 giây mỗi đoạn) và nút accent **Mở bản ghép để nghe** — mở bản ghép thành một tab tệp ở màn hình chính (xem *Tab bản ghép* ở màn hình 1).
+
+### Trạng thái của màn này
+Trạng thái chia hai tầng: danh sách mẫu, và thiết lập **riêng của từng mẫu**.
+
+| Tên | Mặc định | Ý nghĩa |
+|---|---|---|
+| `maus` | 2 mẫu sẵn | danh sách mẫu ghép của hồ sơ (id, mẫu gốc, tên) |
+| `mau` | 0 | mẫu đang mở |
+| `nav` | 0 | mục đang chọn ở cột trái |
+| `docs[id].src` / `.srcVal` | theo mẫu | cách lấy dữ liệu và đường dẫn của từng cách |
+| `docs[id].sheet` / `.headRow` | theo mẫu / `Dòng 1` | bảng trong tệp và dòng tiêu đề |
+| `docs[id].auto` | true | tự kiểm tra định kỳ |
+| `docs[id].roles` | theo mẫu | `{Dùng làm, Cách đọc}` của từng cột |
+| `docs[id].rule` / `.dupCol` | cả ba bật / cột đầu | bỏ dòng thiếu, gộp trùng (theo cột nào), giữ thứ tự |
+| `docs[id].group` | true | đọc tên nhóm trước mỗi nhóm |
+| `docs[id].on` | `dau` bật, `giua` tắt, `cuoi` bật | ba phần tĩnh có được đọc hay không |
+| `docs[id].text` | bốn khối của mẫu | nội dung đầu, mẫu câu, câu xen giữa, cuối |
+| `docs[id].sauMoi` | `30` | đọc câu xen giữa sau mỗi bao nhiêu dòng |
+| `docs[id].dFrom` / `.dTo` | 1/7/2026 – 15/8/2026 | khoảng ngày |
+| `stale` | true | đang dùng bản dữ liệu cũ |
+
+Mọi thay đổi được lưu ngay trên máy (khoá `giongviet.ghep.v2`), mở lại vẫn còn; **Trả mẫu về ban đầu** xoá hết.
+
+---
+
 ## Trạng thái ứng dụng
 
 | Tên | Kiểu | Mặc định | Ý nghĩa |
 |---|---|---|---|
 | `profile` | số | 0 | hồ sơ đang chọn |
 | `profiles` | mảng | 4 hồ sơ | tên, giọng, tốc độ, cao độ, âm lượng |
-| `tabsByProfile` | map | theo bảng hồ sơ | danh sách tệp mở của từng hồ sơ |
+| `tabsByProfile` | map | theo bảng hồ sơ | danh sách tệp mở của từng hồ sơ (hiện trong cột trái) |
 | `activeByProfile` | map | 0 | tệp đang xem của từng hồ sơ |
 | `view` | `san_sang` \| `dang_doc` \| `rong` | `san_sang` | trạng thái vùng đọc |
 | `situation` | 7 giá trị | `binh_thuong` | tình huống lỗi / chờ |
@@ -430,13 +603,18 @@ Nội dung mẫu giữ nguyên, ví dụ: *Ngôn ngữ giao diện — Áp dụn
 | `chips` | map | `{A: {11: '[hắng giọng]'}}` | thẻ cảm xúc theo đoạn |
 | `exportOpen` / `exporting` / `toast` | boolean | false | ba bước của luồng xuất |
 | `theme` | `sang` \| `toi` | `sang` | chế độ màu |
+| `gStep` | `signin` \| `list` \| `loading` \| — | — | bước của hộp thoại Google Docs |
+| `gSigned` | boolean | false | đã đăng nhập Google |
+| `gTab` | số | 0 | 0 = từ Drive, 1 = dán link |
+| `gSel` / `gQuery` / `gLink` | số / chữ / chữ | 0 / rỗng / rỗng | tài liệu đang chọn, từ khoá tìm, link đã dán |
+| `gPull` / `gAt` | boolean / giờ | false / `14:02` | đang lấy bản mới từ Google Docs, giờ lấy gần nhất |
 
 Chuyển trạng thái:
 - bấm nút ▶ của một đoạn → `view = 'dang_doc'`, `mode = 'one'`, `pos = sel = N`; hết đoạn thì `view = 'san_sang'`
 - sửa chữ trong một đoạn → cập nhật mảng đoạn của tài liệu đang xem; `Enter`/`Backspace`/`Delete` tách và nối đoạn; đoạn bỏ trống bị gỡ khỏi mảng khi rời khỏi đoạn
 - **Nghe toàn bộ** → `view = 'dang_doc'`, `mode = 'all'`, `pos = 1`
 - tạm dừng → `view = 'san_sang'` (giữ `pos`); dừng → `view = 'san_sang'`
-- đổi hồ sơ hoặc đổi tab → `view = 'san_sang'`, `pos = sel = 1`
+- đổi hồ sơ hoặc đổi tệp → `view = 'san_sang'`, `pos = sel = 1`
 - **Xuất** → `exportOpen` → `exporting` (≈2 giây) → `toast`
 - mở một menu → đóng các menu còn lại; bấm ra ngoài → đóng tất cả
 
@@ -454,6 +632,7 @@ Chuyển trạng thái:
 | `GiongDoc - Thư viện giọng.dc.html` | Thư viện giọng |
 | `GiongDoc - Từ điển phát âm.dc.html` | Từ điển phát âm |
 | `GiongDoc - Cài đặt.dc.html` | Cài đặt |
+| `GiongDoc - Văn bản ghép.dc.html` | Văn bản ghép — thư viện mẫu ghép từ bảng tính |
 
 Các file liên kết với nhau bằng đường dẫn tương đối — mở file màn hình chính trong trình duyệt là bấm đi lại được giữa các màn. Mọi màn phụ có nút **‹ Màn hình chính** ở thanh tiêu đề.
 

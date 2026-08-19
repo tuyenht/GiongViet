@@ -15,27 +15,28 @@ a{color:var(--acc)}a:hover{color:var(--acc-h)}
 :root{
 --bg:#f3f3f3;--layer:#ffffff;--layer2:#fafafa;--stroke:rgba(0,0,0,.0578);--stroke2:rgba(0,0,0,.16);--divider:#e5e5e5;
 --txt:#1a1a1a;--txt2:#5d5d5d;--txt3:#767676;--dis:#a3a3a3;
---ctl:#fdfdfd;--ctl-h:#f6f6f6;--sub-h:rgba(0,0,0,.037);
+--ctl:#fdfdfd;--ctl-h:#f6f6f6;--sub-h:rgba(0,0,0,.037);--sel:rgba(0,0,0,.055);
 --acc:#0067c0;--acc-h:#1a75c6;--acc-txt:#ffffff;--acc-soft:rgba(0,103,192,.09);
---warn:#9d5d00;--warn-bg:rgba(247,184,75,.16);--err:#c42b1c;--err-bg:rgba(196,43,28,.10);
---info:#0067c0;--ok:#0f7b0f;--rail:#868686;--shadow:0 8px 16px rgba(0,0,0,.14);--mark:rgba(0,103,192,.14);
---chip-bg:rgba(0,0,0,.055);--chip-bd:rgba(0,0,0,.09);--chip-fg:#4a4a4a;
+--hl:rgba(0,103,192,.11);--chip-bg:rgba(0,0,0,.055);--chip-fg:#4a4a4a;--chip-bd:rgba(0,0,0,.09);
+--ok:#0f7b0f;--err:#c42b1c;--err-bg:#fdf3f4;--err-bd:#eecfd2;--warn:#9d5d00;--warn-bg:#fff9ec;--warn-bd:#f0e2c2;--rail:#868686;--close:#c42b1c;
+--mark:rgba(0,103,192,.14);--shadow:0 8px 16px rgba(0,0,0,.14);
 }
 :root[data-theme='dark']{
 --bg:#202020;--layer:#2b2b2b;--layer2:#272727;--stroke:rgba(255,255,255,.07);--stroke2:rgba(255,255,255,.10);--divider:#303030;
 --txt:#ffffff;--txt2:rgba(255,255,255,.73);--txt3:rgba(255,255,255,.60);--dis:rgba(255,255,255,.38);
---ctl:rgba(255,255,255,.06);--ctl-h:rgba(255,255,255,.084);--sub-h:rgba(255,255,255,.06);
+--ctl:rgba(255,255,255,.06);--ctl-h:rgba(255,255,255,.084);--sub-h:rgba(255,255,255,.06);--sel:rgba(255,255,255,.08);
 --acc:#4cc2ff;--acc-h:#47b1e8;--acc-txt:#000000;--acc-soft:rgba(76,194,255,.12);
---warn:#f7b84b;--warn-bg:rgba(247,184,75,.14);--err:#ff99a4;--err-bg:rgba(255,153,164,.12);
---info:#4cc2ff;--ok:#6ccb5f;--rail:#9a9a9a;--shadow:0 8px 16px rgba(0,0,0,.36);--mark:rgba(76,194,255,.2);
---chip-bg:rgba(255,255,255,.09);--chip-bd:rgba(255,255,255,.14);--chip-fg:rgba(255,255,255,.82);
+--hl:rgba(76,194,255,.13);--chip-bg:rgba(255,255,255,.09);--chip-fg:rgba(255,255,255,.82);--chip-bd:rgba(255,255,255,.14);
+--ok:#6ccb5f;--err:#ff99a4;--err-bg:#442726;--err-bd:#6b3a38;--warn:#fce100;--warn-bg:#3a3320;--warn-bd:#5c4f2a;--rail:#9a9a9a;--close:#c42b1c;
+--mark:rgba(76,194,255,.2);--shadow:0 8px 16px rgba(0,0,0,.36);
 }
+@keyframes spin{to{transform:rotate(360deg)}}
 </style>
 </helmet>
 
 <div style="min-height:100vh;padding:20px 24px 40px;background:#e6e6e6;font-family:'Segoe UI Variable Text','Segoe UI',Inter,system-ui,sans-serif;font-size:14px;color:#1a1a1a">
 
-<div style="display:flex;align-items:center;gap:14px;width:1440px;margin:0 auto 14px">
+<div style="display:flex;align-items:center;gap:14px;width:1440px;margin:0 auto 10px;flex-wrap:wrap">
   <span style="font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:#5d5d5d;font-weight:600">Soát văn bản</span>
   <div style="display:flex;gap:3px;padding:3px;background:#fdfdfd;border:1px solid rgba(0,0,0,.09);border-radius:6px;margin-left:auto">
     <sc-for list="{{ themeTabs }}" as="t" hint-placeholder-count="2">
@@ -43,228 +44,588 @@ a{color:var(--acc)}a:hover{color:var(--acc-h)}
     </sc-for>
   </div>
 </div>
+<div style="width:1440px;margin:0 auto 14px;font-size:13px;line-height:1.65;color:#5d5d5d">Vẫn là cửa sổ chính của Giọng Việt — cùng danh sách hồ sơ, cùng văn bản ở giữa. Bấm <strong style="color:#1a1a1a">Soát văn bản</strong> chỉ mở thêm bảng <strong style="color:#1a1a1a">Kết quả soát</strong> ở dưới; bấm một dòng cảnh báo thì đoạn tương ứng ở trên sáng lên.</div>
 
-<div style="width:1440px;height:900px;margin:0 auto;background:var(--bg);border:1px solid rgba(0,0,0,.22);border-radius:8px;box-shadow:0 16px 32px rgba(0,0,0,.22);overflow:hidden;display:flex;flex-direction:column;color:var(--txt)">
+<div style="position:relative;width:1440px;height:900px;margin:0 auto;background:var(--bg);border:1px solid rgba(0,0,0,.22);border-radius:8px;box-shadow:0 16px 32px rgba(0,0,0,.22);overflow:hidden;display:flex;flex-direction:column;color:var(--txt)">
 
   <div style="height:32px;flex:none;display:flex;align-items:center;padding-left:12px;background:var(--bg)">
-    <div style="display:flex;align-items:center;gap:9px">
-      <div style="width:16px;height:16px;border-radius:3px;background:var(--acc);display:flex;align-items:center;justify-content:center">
+    <div style="display:flex;align-items:center;gap:9px;min-width:0">
+      <div style="width:16px;height:16px;flex:none;border-radius:3px;background:var(--acc);display:flex;align-items:center;justify-content:center">
         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--acc-txt)" stroke-width="2.6" stroke-linecap="round"><path d="M4 9v6M9 5v14M14 8v8M19 11v2"/></svg>
       </div>
-      <span style="font-size:12.5px;color:var(--txt2)">thongbao-quoc-khanh.txt — Giọng Việt</span>
-      <a href="GiongDoc%20-%20M%C3%A0n%20h%C3%ACnh%20ch%C3%ADnh%20v2%20%28nghe%20theo%20d%C3%B2ng%29.dc.html" style="display:flex;align-items:center;gap:5px;flex:none;height:22px;padding:0 10px 0 7px;border-radius:11px;background:var(--sub-h);color:var(--txt2);font-size:12px;text-decoration:none;white-space:nowrap" style-hover="color:var(--txt)" title="Quay lại màn hình chính"><svg width="11" height="11" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M14 6l-6 6 6 6"/></svg>Màn hình chính</a>
+      <span style="font-size:12.5px;color:var(--txt2);white-space:nowrap">{{ windowTitle }}</span>
     </div>
     <div style="margin-left:auto;display:flex">
-      <div style="width:46px;height:32px;display:flex;align-items:center;justify-content:center;color:var(--txt3)"><svg width="10" height="10" viewBox="0 0 12 12" stroke="currentColor" stroke-width="1"><path d="M1 6h10"/></svg></div>
-      <div style="width:46px;height:32px;display:flex;align-items:center;justify-content:center;color:var(--txt3)"><svg width="10" height="10" viewBox="0 0 12 12" stroke="currentColor" stroke-width="1" fill="none"><rect x="1.5" y="1.5" width="9" height="9" rx="1"/></svg></div>
-      <div style="width:46px;height:32px;display:flex;align-items:center;justify-content:center;color:var(--txt);cursor:default" style-hover="background:#c42b1c;color:#fff"><svg width="10" height="10" viewBox="0 0 12 12" stroke="currentColor" stroke-width="1.1"><path d="M1.5 1.5l9 9M10.5 1.5l-9 9"/></svg></div>
+      <div style="width:46px;height:32px;display:flex;align-items:center;justify-content:center;color:var(--txt);cursor:default" style-hover="background:var(--sub-h)" title="Thu nhỏ"><svg width="10" height="10" viewBox="0 0 12 12" stroke="currentColor" stroke-width="1"><path d="M1 6h10"/></svg></div>
+      <div style="width:46px;height:32px;display:flex;align-items:center;justify-content:center;color:var(--txt);cursor:default" style-hover="background:var(--sub-h)" title="Phóng to"><svg width="10" height="10" viewBox="0 0 12 12" stroke="currentColor" stroke-width="1" fill="none"><rect x="1.5" y="1.5" width="9" height="9" rx="1"/></svg></div>
+      <div style="width:46px;height:32px;display:flex;align-items:center;justify-content:center;color:var(--txt);cursor:default" style-hover="background:var(--close);color:#fff" title="Đóng"><svg width="10" height="10" viewBox="0 0 12 12" stroke="currentColor" stroke-width="1.1"><path d="M1.5 1.5l9 9M10.5 1.5l-9 9"/></svg></div>
     </div>
   </div>
 
-  <div style="height:42px;flex:none;display:flex;align-items:center;gap:8px;padding:0 8px;background:var(--bg)">
-    <div onClick="{{ pickAudit }}" style="display:flex;align-items:center;gap:8px;height:32px;padding:0 11px;border-radius:4px;background:{{ t0bg }};color:{{ t0fg }};border:1px solid {{ t0bd }};cursor:default" style-hover="background:var(--sub-h)" title="Danh sách những chỗ dễ đọc sai">
-      <svg width="16" height="16" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h11M4 11h7M4 16h9"/><circle cx="17.5" cy="15.5" r="3.5"/><path d="M20.2 18.2L22.5 20.5"/></svg>
-      <span style="font-size:14px;font-weight:600;white-space:nowrap">Chỗ cần chú ý</span>
-    </div>
-    <div onClick="{{ pickNorm }}" style="display:flex;align-items:center;gap:8px;height:32px;padding:0 11px;border-radius:4px;background:{{ t1bg }};color:{{ t1fg }};border:1px solid {{ t1bd }};cursor:default" style-hover="background:var(--sub-h)" title="So sánh văn bản gốc với cách máy sẽ đọc">
-      <svg width="16" height="16" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4.5l1.7 4.3 4.3 1.7-4.3 1.7L12 16.5l-1.7-4.3L6 10.5l4.3-1.7z"/></svg>
-      <span style="font-size:14px;font-weight:600;white-space:nowrap">Văn bản sau chuẩn hoá</span>
-    </div>
-    <div style="margin-left:auto;font-size:13px;color:var(--txt3);white-space:nowrap">{{ topRight }}</div>
-  </div>
-
-  <sc-if value="{{ isAudit }}" hint-placeholder-val="{{ true }}">
-  <div style="flex:1;min-height:0;display:flex;flex-direction:column">
-
-  <div style="flex:1;min-height:0;display:flex;padding:0 8px">
-    <div style="width:240px;flex:none;display:flex;flex-direction:column;gap:6px;padding-right:8px;opacity:.55">
-      <div style="height:34px;background:var(--layer);border:1px solid var(--stroke);border-radius:5px"></div>
-      <div style="height:52px;background:var(--layer);border:1px solid var(--stroke);border-radius:5px"></div>
-      <div style="height:52px;background:var(--sub-h);border-radius:5px"></div>
-      <div style="height:52px;background:var(--sub-h);border-radius:5px"></div>
-    </div>
-
-    <div style="flex:1;min-width:0;display:flex;flex-direction:column;background:var(--layer);border:1px solid var(--stroke);border-radius:8px 8px 0 0;overflow:hidden">
-      <div style="height:38px;flex:none;display:flex;align-items:center;gap:12px;padding:0 14px;border-bottom:1px solid var(--divider)">
-        <span style="font-size:14px;font-weight:600;color:var(--txt)">thongbao-quoc-khanh.txt</span>
-        <span style="font-size:13px;color:var(--txt2)">215 từ · 16 đoạn</span>
-      </div>
-      <div style="position:relative;flex:1;min-height:0;overflow:hidden;padding:6px 0">
-        <div style="position:absolute;right:4px;top:2%;width:6px;height:52%;border-radius:3px;background:var(--rail);opacity:.4"></div>
-        <sc-for list="{{ lines }}" as="ln" hint-placeholder-count="8">          <div onClick="{{ ln.pick }}" style="display:flex;align-items:flex-start;padding:6px 0;background:{{ ln.bg }};cursor:default" style-hover="background:var(--sub-h)">
-            <span style="width:54px;flex:none;text-align:right;padding-right:16px;padding-top:4px;font-size:12.5px;color:var(--txt3);font-variant-numeric:tabular-nums">{{ ln.no }}</span>
-            <span style="flex:0 1 620px;min-width:0;font-size:18px;line-height:1.55;color:var(--txt);text-wrap:pretty">{{ ln.pre }}<span style="text-decoration:underline wavy {{ ln.mark }};text-decoration-skip-ink:none;text-underline-offset:5px">{{ ln.bad }}</span>{{ ln.post }}</span>
-            <span style="flex:none;margin-left:auto;padding-right:14px;padding-top:4px;font-size:13px;color:{{ ln.tagFg }};white-space:nowrap">{{ ln.tag }}</span>
+  <div style="height:30px;flex:none;display:flex;align-items:stretch;padding:0 6px;background:var(--bg);position:relative;z-index:46">
+    <sc-for list="{{ menus }}" as="m" hint-placeholder-count="6">
+      <div style="position:relative;display:flex;align-items:stretch">
+        <div onClick="{{ m.open }}" style="display:flex;align-items:center;padding:0 9px;font-size:14px;color:var(--txt);cursor:default;border-radius:4px;background:{{ m.bg }}" style-hover="background:var(--sub-h)">{{ m.label }}</div>
+        <sc-if value="{{ m.isOpen }}">
+          <div style="position:absolute;top:100%;left:0;min-width:250px;background:var(--layer);border:1px solid var(--stroke2);border-radius:8px;box-shadow:var(--shadow);padding:4px;z-index:50">
+            <sc-for list="{{ menuItems }}" as="mi" hint-placeholder-count="5">
+              <sc-if value="{{ mi.isSep }}">
+                <div style="height:1px;background:var(--divider);margin:5px 8px"></div>
+              </sc-if>
+              <sc-if value="{{ mi.isItem }}" hint-placeholder-val="{{ true }}">
+                <div onClick="{{ mi.run }}" style="display:flex;align-items:center;gap:18px;height:32px;padding:0 10px;border-radius:4px;cursor:default" style-hover="background:var(--sub-h)">
+                  <span style="flex:1;font-size:14px;color:{{ mi.fg }};white-space:nowrap">{{ mi.label }}</span>
+                  <span style="flex:none;font-size:13px;color:var(--txt3);white-space:nowrap">{{ mi.key }}</span>
+                </div>
+              </sc-if>
+            </sc-for>
           </div>
-        </sc-for>
+        </sc-if>
       </div>
-    </div>
-
-    <div style="width:320px;flex:none;padding-left:8px;opacity:.55">
-      <div style="height:100%;background:var(--layer);border:1px solid var(--stroke);border-radius:8px 8px 0 0"></div>
-    </div>
+    </sc-for>
   </div>
 
-  <div style="flex:none;height:302px;margin:8px 8px 0;background:var(--layer);border:1px solid var(--stroke);border-radius:8px;display:flex;flex-direction:column;overflow:hidden">
-    <div style="height:42px;flex:none;display:flex;align-items:center;gap:10px;padding:0 14px;border-bottom:1px solid var(--divider);background:var(--layer2)">
-      <span style="font-size:14px;font-weight:600;color:var(--txt)">Kết quả soát</span>
-      <div style="display:flex;gap:6px;margin-left:6px">
-        <sc-for list="{{ filters }}" as="f" hint-placeholder-count="3">
-          <div onClick="{{ f.pick }}" style="display:flex;align-items:center;gap:7px;height:28px;padding:0 11px;border-radius:14px;cursor:default;background:{{ f.bg }};border:1px solid {{ f.bd }};color:{{ f.fg }};font-size:13px;font-weight:600">
-            <span style="width:7px;height:7px;border-radius:4px;background:{{ f.dot }}"></span>
-            {{ f.label }}
-          </div>
-        </sc-for>
-      </div>
-      <div style="margin-left:auto;display:flex;gap:8px">
-        <div style="display:flex;align-items:center;height:30px;padding:0 12px;border-radius:4px;background:var(--ctl);border:1px solid var(--stroke2);font-size:13px;color:var(--txt);cursor:default" style-hover="background:var(--ctl-h)">Sửa tất cả có thể (5)</div>
-        <div style="display:flex;align-items:center;height:30px;padding:0 12px;border-radius:4px;font-size:13px;color:var(--txt2);cursor:default" style-hover="background:var(--sub-h)">Bỏ qua tất cả</div>
-      </div>
-    </div>
-
-    <div style="height:32px;flex:none;display:flex;align-items:center;border-bottom:1px solid var(--divider);font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--txt3);font-weight:600">
-      <span style="width:64px;flex:none;text-align:right;padding-right:12px">Đoạn</span>
-      <span style="width:150px;flex:none">Loại</span>
-      <span style="flex:1">Nội dung cảnh báo</span>
-      <span style="width:300px;flex:none">Đề xuất</span>
-      <span style="width:150px;flex:none;padding-right:14px;text-align:right">Hành động</span>
-    </div>
-
-    <div style="position:relative;flex:1;min-height:0;overflow:hidden">
-      <div style="position:absolute;right:4px;top:1%;width:6px;height:64%;border-radius:3px;background:var(--rail);opacity:.4"></div>
-      <sc-for list="{{ issues }}" as="it" hint-placeholder-count="6">
-        <div style="display:flex;align-items:center;height:38px;border-bottom:1px solid var(--divider);background:{{ it.bg }};cursor:default" style-hover="background:var(--sub-h)">
-          <span style="width:64px;flex:none;text-align:right;padding-right:12px;font-size:13px;color:var(--txt2);font-variant-numeric:tabular-nums">{{ it.line }}</span>
-          <span style="width:150px;flex:none;display:flex;align-items:center;gap:8px">
-            <span style="width:7px;height:7px;flex:none;border-radius:4px;background:{{ it.dot }}"></span>
-            <span style="font-size:13px;color:var(--txt2)">{{ it.kind }}</span>
-          </span>
-          <span style="flex:1;font-size:14px;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:12px">{{ it.msg }}</span>
-          <span style="width:300px;flex:none;font-size:14px;color:var(--txt2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:12px">{{ it.fix }}</span>
-          <span style="width:150px;flex:none;display:flex;justify-content:flex-end;gap:6px;padding-right:14px">
-            <span style="display:flex;align-items:center;height:26px;padding:0 10px;border-radius:4px;background:var(--ctl);border:1px solid var(--stroke2);font-size:13px;color:var(--txt)">{{ it.action }}</span>
-            <span style="display:flex;align-items:center;height:26px;padding:0 8px;border-radius:4px;font-size:13px;color:var(--txt3)">Bỏ qua</span>
-          </span>
-        </div>
-      </sc-for>
-    </div>
-  </div>
-  </div>
+  <sc-if value="{{ menuShown }}">
+    <div onClick="{{ closeMenu }}" style="position:absolute;inset:0;z-index:44"></div>
   </sc-if>
 
-  <sc-if value="{{ isNorm }}">
-    <div style="flex:1;min-height:0;display:flex;padding:0 8px">
-      <div style="width:240px;flex:none;display:flex;flex-direction:column;gap:6px;padding-right:8px;opacity:.55">
-        <div style="height:34px;background:var(--layer);border:1px solid var(--stroke);border-radius:5px"></div>
-        <div style="height:52px;background:var(--layer);border:1px solid var(--stroke);border-radius:5px"></div>
-        <div style="height:52px;background:var(--sub-h);border-radius:5px"></div>
-        <div style="height:52px;background:var(--sub-h);border-radius:5px"></div>
+  <div style="height:44px;flex:none;display:flex;align-items:center;gap:2px;padding:0 8px;background:var(--bg)">
+    <div style="display:flex;align-items:center;gap:8px;height:32px;padding:0 11px;border-radius:4px;cursor:default;color:var(--txt)" style-hover="background:var(--sub-h)" title="Dán văn bản từ clipboard (Ctrl+V)">
+      <svg width="16" height="16" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linejoin="round"><path d="M9 4h6v3H9z"/><path d="M7 5H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V7a2 2 0 00-2-2h-1"/></svg>
+      <span style="font-size:14px;white-space:nowrap">Dán văn bản</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;height:32px;padding:0 11px;border-radius:4px;cursor:default;color:var(--txt)" style-hover="background:var(--sub-h)" title="Mở tệp văn bản (Ctrl+O)">
+      <svg width="16" height="16" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linejoin="round"><path d="M3 7a2 2 0 012-2h3.5l2 2H19a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+      <span style="font-size:14px;white-space:nowrap">Mở file</span>
+    </div>
+    <div style="width:1px;height:22px;background:var(--stroke2);margin:0 10px"></div>
+    <a href="GiongDoc%20-%20M%C3%A0n%20h%C3%ACnh%20ch%C3%ADnh%20v2%20%28nghe%20theo%20d%C3%B2ng%29.dc.html" style="display:flex;align-items:center;gap:8px;height:32px;padding:0 11px;border-radius:4px;text-decoration:none;background:var(--acc-soft);border:1px solid var(--acc);color:var(--acc);font-weight:600" title="Bảng kết quả soát đang mở — bấm để đóng lại">
+      <svg width="16" height="16" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4 4L19 7"/><path d="M4 19h16"/></svg>
+      <span style="font-size:14px;white-space:nowrap">Soát văn bản</span>
+    </a>
+    <div style="display:flex;align-items:center;gap:8px;height:32px;padding:0 10px 0 11px;border-radius:4px;cursor:default;color:var(--txt)" style-hover="background:var(--sub-h)" title="Chèn thẻ cảm xúc vào đoạn đang chọn">
+      <svg width="16" height="16" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"><path d="M4 6h10M4 12h7M4 18h10"/><path d="M17.5 12.5h4M19.5 10.5v4"/></svg>
+      <span style="font-size:14px;white-space:nowrap">Thẻ cảm xúc</span>
+      <svg width="12" height="12" viewBox="0 0 24 24" stroke="var(--txt2)" stroke-width="1.9" fill="none" stroke-linecap="round"><path d="M6 9.5l6 6 6-6"/></svg>
+    </div>
+    <div style="margin-left:auto;display:flex;align-items:center;gap:2px">
+      <div style="display:flex;align-items:center;gap:8px;height:32px;padding:0 11px;border-radius:4px;cursor:default;color:var(--txt)" style-hover="background:var(--sub-h)" title="Tìm một từ trong văn bản và thay bằng từ khác (Ctrl+H)">
+        <svg width="16" height="16" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"><circle cx="11" cy="11" r="6"/><path d="M15.5 15.5L20 20"/></svg>
+        <span style="font-size:14px;white-space:nowrap">Tìm và thay thế</span>
+      </div>
+      <div style="width:1px;height:22px;background:var(--stroke2);margin:0 10px"></div>
+      <div style="display:flex;align-items:center;gap:8px;height:34px;padding:0 13px 0 12px;border-radius:4px;background:var(--ctl);border:1px solid var(--stroke2);color:var(--txt);font-size:14px;white-space:nowrap;cursor:default" style-hover="background:var(--ctl-h)" title="Nghe liền mạch toàn bộ văn bản từ đầu (Space)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5l12 7-12 7z"/></svg>
+        Nghe toàn bộ
+      </div>
+      <a href="GiongDoc%20-%20Xu%E1%BA%A5t%20file%20%C3%A2m%20thanh.dc.html" style="text-decoration:none;display:flex;align-items:center;gap:9px;height:34px;margin-left:6px;padding:0 15px;border-radius:4px;background:var(--ctl);border:1px solid var(--stroke2);color:var(--txt);font-size:14px;font-weight:600;white-space:nowrap;cursor:default" style-hover="filter:brightness(.96)" title="Mở hộp thoại xuất để chọn định dạng và nơi lưu (Ctrl+E)">
+        <svg width="16" height="16" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.7" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11m0 0l-4-4m4 4l4-4M4 19h16"/></svg>
+        Xuất file âm thanh
+      </a>
+    </div>
+  </div>
+
+  <div style="height:8px;flex:none"></div>
+
+  <div style="flex:1;min-height:0;display:flex;padding:0 8px 8px">
+
+    <div style="width:240px;flex:none;display:flex;flex-direction:column;padding-right:8px">
+      <div style="display:flex;align-items:center;gap:8px;height:38px;padding:0 8px">
+        <div style="width:32px;height:32px;flex:none;display:flex;align-items:center;justify-content:center;border-radius:4px;color:var(--txt);cursor:default" style-hover="background:var(--sub-h)" title="Thu gọn danh sách hồ sơ">
+          <svg width="15" height="15" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+        </div>
+        <span style="font-size:14px;font-weight:600;color:var(--txt)">Hồ sơ đọc</span>
       </div>
 
-      <div style="flex:1;min-width:0;display:flex;flex-direction:column;background:var(--layer);border:1px solid var(--stroke);border-radius:8px 8px 0 0;overflow:hidden">
-        <div style="flex:none;display:flex;align-items:center;gap:8px;padding:11px 14px;border-bottom:1px solid var(--divider);flex-wrap:wrap">
-          <span style="font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--txt3);font-weight:600;margin-right:4px;white-space:nowrap">Quy tắc đang bật</span>
-          <sc-for list="{{ rules }}" as="r" hint-placeholder-count="4">
-            <div onClick="{{ r.toggle }}" style="display:flex;align-items:center;gap:8px;height:30px;padding:0 12px 0 10px;border-radius:15px;cursor:default;background:{{ r.bg }};border:1px solid {{ r.bd }};color:{{ r.fg }}">
-              <span style="width:13px;height:13px;flex:none;display:flex;align-items:center;justify-content:center">
-                <sc-if value="{{ r.on }}"><svg width="13" height="13" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></svg></sc-if>
-                <sc-if value="{{ r.off }}"><svg width="11" height="11" viewBox="0 0 12 12" stroke="currentColor" stroke-width="1.4"><path d="M1.5 1.5l9 9M10.5 1.5l-9 9"/></svg></sc-if>
-              </span>
-              <span style="font-size:13.5px;white-space:nowrap">{{ r.label }}</span>
-              <span style="font-size:13px;opacity:.7;font-variant-numeric:tabular-nums">{{ r.n }}</span>
-            </div>
-          </sc-for>
-        </div>
-
-        <div style="flex:none;display:flex;height:32px;border-bottom:1px solid var(--divider);background:var(--layer2)">
-          <div style="width:52px;flex:none"></div>
-          <div style="flex:1;display:flex;align-items:center;font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--txt3);font-weight:600;padding-left:4px">Văn bản gốc</div>
-          <div style="width:1px;background:var(--divider)"></div>
-          <div style="flex:1;display:flex;align-items:center;font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--txt3);font-weight:600;padding-left:16px">Máy sẽ đọc thành</div>
-        </div>
-
-        <div style="flex:1;min-height:0;overflow:hidden">
-          <sc-for list="{{ rows }}" as="r" hint-placeholder-count="12">
-            <div onClick="{{ r.pick }}" style="display:flex;align-items:stretch;border-bottom:1px solid var(--divider);background:{{ r.bg }};cursor:default" style-hover="background:var(--sub-h)">
-              <div style="width:52px;flex:none;padding:10px 12px 10px 0;text-align:right;font-size:12.5px;color:var(--txt3);font-variant-numeric:tabular-nums">{{ r.no }}</div>
-              <div style="flex:1;min-width:0;padding:10px 12px 10px 4px;font-size:15px;color:var(--txt2);line-height:1.45;text-wrap:pretty">{{ r.src }}</div>
-              <div style="width:1px;background:var(--divider)"></div>
-              <div style="flex:1;min-width:0;padding:10px 16px;font-size:15px;color:var(--txt);line-height:1.45;text-wrap:pretty">
-                <sc-if value="{{ r.changed }}">
-                  <span>{{ r.pre }}</span><span style="background:var(--mark);border-radius:3px;padding:1px 3px;font-weight:600">{{ r.mark }}</span><span>{{ r.post }}</span>
-                </sc-if>
-                <sc-if value="{{ r.same }}">
-                  <span style="color:var(--txt3)">{{ r.out }}</span>
+      <div style="flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;margin-top:2px;padding-right:2px;display:flex;flex-direction:column;gap:7px;scrollbar-width:thin;scrollbar-color:transparent transparent" style-hover="scrollbar-color:var(--stroke2) transparent">
+        <sc-for list="{{ profiles }}" as="p" hint-placeholder-count="4">
+          <div>
+            <div onClick="{{ p.pick }}" style="display:flex;align-items:center;gap:6px;padding:7px 6px 7px 11px;border-radius:5px;cursor:default;background:{{ p.bg }};border:1px solid {{ p.bd }}" style-hover="background:{{ p.hov }}" title="{{ p.title }}">
+              <div style="flex:1;min-width:0">
+                <div style="font-size:14px;line-height:1.35;color:var(--txt);font-weight:{{ p.wt }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ p.name }}</div>
+                <div style="display:flex;align-items:center;gap:4px;font-size:12px;line-height:1.4;color:var(--txt3);min-width:0">
+                  <span style="min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ p.voice }}</span>
+                </div>
+                <sc-if value="{{ p.collapsed }}">
+                  <div style="display:flex;align-items:center;gap:5px;margin-top:1px;font-size:12px;line-height:1.4;color:var(--txt3);min-width:0" title="{{ p.curFile }}">
+                    <span style="display:flex;flex:none;color:var(--txt3)"><svg width="11" height="11" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linejoin="round"><path d="M14 3v5h5"/><path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8z"/></svg></span>
+                    <span style="min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ p.curFile }}</span>
+                  </div>
                 </sc-if>
               </div>
+              <sc-if value="{{ p.collapsed }}">
+                <span style="flex:none;display:flex;align-items:center;gap:5px;white-space:nowrap;font-size:12px;color:var(--txt3);font-variant-numeric:tabular-nums">
+                  <sc-if value="{{ p.hasErr }}">
+                    <span style="width:6px;height:6px;flex:none;border-radius:3px;background:var(--err)" title="Hồ sơ này có tệp đang có lỗi nên sửa trước khi xuất"></span>
+                  </sc-if>
+                  {{ p.nFiles }}
+                </span>
+              </sc-if>
             </div>
-          </sc-for>
-        </div>
 
-        <div style="flex:none;display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--layer2);border-top:1px solid var(--divider)">
-          <span style="font-size:13px;color:var(--txt3)">Chuẩn hoá chỉ ảnh hưởng đến âm thanh, văn bản gốc của bạn không thay đổi.</span>
-          <div style="margin-left:auto;display:flex;gap:8px">
-            <div style="display:flex;align-items:center;gap:9px;height:34px;padding:0 14px;border-radius:4px;background:var(--ctl);border:1px solid var(--stroke2);color:var(--txt);font-size:14px;white-space:nowrap;cursor:default" style-hover="background:var(--ctl-h)">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5l11 7-11 7z"/></svg>
-              Nghe thử đoạn đang chọn
-            </div>
-            <div style="display:flex;align-items:center;height:34px;padding:0 16px;border-radius:4px;background:var(--ctl);border:1px solid var(--stroke2);color:var(--txt);font-size:14px;white-space:nowrap;cursor:default" style-hover="background:var(--ctl-h)">Thêm vào từ điển phát âm</div>
+            <sc-if value="{{ p.open }}" hint-placeholder-val="{{ true }}">
+              <div style="display:flex;flex-direction:column;gap:1px;margin-top:2px">
+                <sc-for list="{{ p.files }}" as="f" hint-placeholder-count="2">
+                  <div onClick="{{ f.pick }}" style="display:flex;align-items:center;gap:7px;height:30px;padding:0 6px 0 15px;margin-left:9px;border-left:2px solid {{ f.rail }};border-radius:0 4px 4px 0;cursor:default;background:{{ f.bg }}" style-hover="background:var(--sub-h)" title="{{ f.title }}">
+                    <span style="display:flex;flex:none;color:{{ f.iconFg }}"><svg width="13" height="13" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linejoin="round"><path d="M14 3v5h5"/><path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8z"/></svg></span>
+                    <span style="flex:1;min-width:0;font-size:13px;color:{{ f.fg }};font-weight:{{ f.wt }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ f.name }}</span>
+                    <sc-if value="{{ f.hasErr }}">
+                      <span style="width:6px;height:6px;flex:none;border-radius:3px;background:var(--err)" title="Tệp này có lỗi nên sửa trước khi xuất"></span>
+                    </sc-if>
+                  </div>
+                </sc-for>
+                <div style="display:flex;align-items:center;gap:7px;height:28px;padding:0 6px 0 15px;margin-left:9px;border-left:2px solid transparent;border-radius:0 4px 4px 0;color:var(--txt3);font-size:12.5px;cursor:default" style-hover="background:var(--sub-h);color:var(--txt2)" title="Mở thêm một tệp trong hồ sơ này">
+                  <svg width="12" height="12" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.9" fill="none" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+                  Thêm tệp
+                </div>
+              </div>
+            </sc-if>
           </div>
+        </sc-for>
+
+        <div style="display:flex;align-items:center;gap:9px;height:34px;flex:none;padding:0 11px;border-radius:4px;color:var(--txt2);font-size:14px;cursor:default" style-hover="background:var(--sub-h);color:var(--txt)" title="Tạo hồ sơ đọc mới">
+          <svg width="15" height="15" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+          Tạo hồ sơ mới
         </div>
       </div>
 
-      <div style="width:320px;flex:none;padding-left:8px;opacity:.55">
-        <div style="height:100%;background:var(--layer);border:1px solid var(--stroke);border-radius:8px 8px 0 0"></div>
+      <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--divider);display:flex;flex-direction:column;gap:2px">
+        <a href="GiongDoc%20-%20Th%C6%B0%20vi%E1%BB%87n%20gi%E1%BB%8Dng.dc.html" style="display:flex;align-items:center;gap:11px;height:36px;padding:0 12px;border-radius:5px;color:var(--txt);font-size:14px;text-decoration:none" style-hover="background:var(--sub-h)">
+          <svg width="16" height="16" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"><path d="M12 4a3 3 0 013 3v5a3 3 0 01-6 0V7a3 3 0 013-3zM5 11a7 7 0 0014 0M12 18v3"/></svg>
+          Thư viện giọng
+        </a>
+        <a href="GiongDoc%20-%20V%C4%83n%20b%E1%BA%A3n%20gh%C3%A9p.dc.html" style="display:flex;align-items:center;gap:11px;height:36px;padding:0 12px;border-radius:5px;color:var(--txt);font-size:14px;text-decoration:none" style-hover="background:var(--sub-h)" title="Ghép phần tĩnh với danh sách từ Google Sheet">
+          <svg width="16" height="16" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5h16M4 10h7M4 14h7M4 18.5h16"/><path d="M15 12h5M17.5 9.5v5"/></svg>
+          Văn bản ghép
+        </a>
+        <a href="GiongDoc%20-%20C%C3%A0i%20%C4%91%E1%BA%B7t.dc.html" style="display:flex;align-items:center;gap:11px;height:36px;padding:0 12px;border-radius:5px;color:var(--txt);font-size:14px;text-decoration:none" style-hover="background:var(--sub-h)">
+          <svg width="16" height="16" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 3.5v2M12 18.5v2M4.5 12h2M17.5 12h2M6.7 6.7l1.4 1.4M15.9 15.9l1.4 1.4M17.3 6.7l-1.4 1.4M8.1 15.9l-1.4 1.4"/></svg>
+          Cài đặt
+        </a>
       </div>
     </div>
-  </sc-if>
 
-  <div style="height:28px;flex:none;display:flex;align-items:center;padding:0 12px;margin-top:8px;background:var(--layer2);border-top:1px solid var(--divider);font-size:12px;color:var(--txt2)">
-    <span>Đoạn {{ selLabel }}</span>
-    <span style="margin-left:auto;display:flex;align-items:center;gap:8px">
-      <span style="width:7px;height:7px;border-radius:4px;background:{{ statusDot }}"></span>
+    <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:8px">
+
+      <div style="flex:1;min-height:0;display:flex;flex-direction:column;background:var(--layer);border:1px solid var(--stroke);border-radius:8px;overflow:hidden">
+        <div style="height:38px;flex:none;display:flex;align-items:center;gap:10px;padding:0 16px;border-bottom:1px solid var(--divider)">
+          <span style="display:flex;flex:none;color:var(--txt3)"><svg width="14" height="14" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linejoin="round"><path d="M14 3v5h5"/><path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8z"/></svg></span>
+          <span style="flex:0 0 auto;max-width:340px;font-size:14px;font-weight:600;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ curFileName }}</span>
+          <span style="width:1px;height:16px;flex:none;background:var(--stroke2)"></span>
+          <span style="flex:none;white-space:nowrap;font-size:13.5px;color:var(--txt2);font-variant-numeric:tabular-nums">{{ docMeta }}</span>
+          <span style="flex:1 1 0;min-width:0;text-align:right;padding-left:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12.5px;color:var(--txt3)">{{ headerHint }}</span>
+        </div>
+
+        <sc-if value="{{ needScan }}">
+          <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:24px">
+            <div style="width:460px;text-align:center;border:1.5px dashed var(--stroke2);border-radius:8px;padding:38px 32px;background:var(--layer2)">
+              <div style="display:flex;justify-content:center;margin-bottom:14px;color:var(--txt3);opacity:.75">
+                <svg width="46" height="46" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.1" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4 4L19 7"/><path d="M4 19h16"/></svg>
+              </div>
+              <div style="font-size:17px;font-weight:600;color:var(--txt);margin-bottom:7px">Tệp này chưa được soát</div>
+              <div style="font-size:14px;line-height:1.6;color:var(--txt2);margin-bottom:18px;text-wrap:pretty">Máy sẽ đọc thử toàn bộ văn bản để tìm những chỗ dễ đọc sai. Thường mất khoảng 8 giây.</div>
+              <div onClick="{{ runScan }}" style="display:inline-flex;align-items:center;gap:9px;height:36px;padding:0 18px;border-radius:4px;background:var(--acc);color:var(--acc-txt);font-size:14px;font-weight:600;cursor:default" style-hover="background:var(--acc-h)">
+                <svg width="15" height="15" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4 4L19 7"/></svg>
+                Soát tệp này
+              </div>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ hasScan }}" hint-placeholder-val="{{ true }}">
+          <div style="flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;padding:8px 10px 8px 8px;scrollbar-width:thin;scrollbar-color:var(--stroke2) transparent">
+            <sc-for list="{{ lines }}" as="ln" hint-placeholder-count="10">
+              <div onClick="{{ ln.pick }}" style="display:flex;align-items:flex-start;width:100%;box-sizing:border-box;padding:7px 8px;border-radius:6px;background:{{ ln.bg }};box-shadow:{{ ln.bar }}" style-hover="background:var(--sub-h)">
+                <span style="width:30px;flex:none;display:flex;align-items:center;justify-content:flex-end;padding-right:12px;padding-top:3px;font-size:12.5px;color:{{ ln.noFg }};font-weight:{{ ln.noWt }};font-variant-numeric:tabular-nums;cursor:default">{{ ln.no }}</span>
+                <div style="flex:1 1 auto;min-width:0;display:flex;align-items:flex-start;gap:9px">
+                  <sc-if value="{{ ln.hasChip }}">
+                    <span style="flex:none;white-space:nowrap;margin-top:3px;font-size:12.5px;font-weight:600;line-height:1;padding:4px 8px;border-radius:4px;background:var(--chip-bg);border:1px solid var(--chip-bd);color:var(--chip-fg)" title="Thẻ cảm xúc">{{ ln.chip }}</span>
+                  </sc-if>
+                  <span style="flex:1 1 auto;min-width:0;padding-right:4px;font-size:16px;line-height:1.55;color:var(--txt);text-wrap:pretty">{{ ln.pre }}<span style="text-decoration:underline wavy {{ ln.mark }};text-decoration-skip-ink:none;text-underline-offset:5px">{{ ln.bad }}</span>{{ ln.post }}</span>
+                </div>
+                <span style="flex:none;padding-top:4px;padding-right:10px;font-size:12.5px;color:{{ ln.tagFg }};white-space:nowrap">{{ ln.tag }}</span>
+                <div style="width:30px;flex:none;display:flex;justify-content:flex-start;padding-top:1px;opacity:{{ ln.pbOp }}">
+                  <span style="display:flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:4px;border:1px solid var(--stroke2);background:var(--ctl);color:var(--txt2);cursor:default" style-hover="border-color:var(--acc);background:var(--acc-soft);color:var(--acc)" title="Nghe riêng đoạn này">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5l12 7-12 7z"/></svg>
+                  </span>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+      </div>
+
+      <sc-if value="{{ hasScan }}" hint-placeholder-val="{{ true }}">
+      <div style="flex:none;height:300px;display:flex;flex-direction:column;background:var(--layer);border:1px solid var(--stroke);border-radius:8px;overflow:hidden">
+        <div style="height:42px;flex:none;display:flex;align-items:center;gap:12px;padding:0 8px 0 14px;border-bottom:1px solid var(--divider);background:var(--layer2)">
+          <span style="flex:none;font-size:14px;font-weight:600;color:var(--txt);white-space:nowrap">Kết quả soát</span>
+          <div style="display:flex;gap:3px;padding:3px;background:var(--ctl);border:1px solid var(--stroke2);border-radius:6px">
+            <sc-for list="{{ panelTabs }}" as="t" hint-placeholder-count="2">
+              <div onClick="{{ t.pick }}" style="display:flex;align-items:center;height:26px;padding:0 11px;border-radius:4px;font-size:13.5px;font-weight:600;color:{{ t.fg }};background:{{ t.bg }};white-space:nowrap;cursor:default">{{ t.label }}</div>
+            </sc-for>
+          </div>
+          <span style="flex:1 1 0;min-width:0;font-size:13px;color:var(--txt3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ panelHint }}</span>
+          <sc-if value="{{ isAudit }}" hint-placeholder-val="{{ true }}">
+            <div style="flex:none;display:flex;align-items:center;height:30px;padding:0 12px;border-radius:4px;background:var(--ctl);border:1px solid var(--stroke2);font-size:13px;color:var(--txt);white-space:nowrap;cursor:default" style-hover="background:var(--ctl-h)">{{ fixAllLabel }}</div>
+            <div style="flex:none;display:flex;align-items:center;height:30px;padding:0 12px;border-radius:4px;font-size:13px;color:var(--txt2);white-space:nowrap;cursor:default" style-hover="background:var(--sub-h)">Bỏ qua tất cả</div>
+          </sc-if>
+          <a href="GiongDoc%20-%20M%C3%A0n%20h%C3%ACnh%20ch%C3%ADnh%20v2%20%28nghe%20theo%20d%C3%B2ng%29.dc.html" style="flex:none;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:4px;color:var(--txt2);text-decoration:none" style-hover="background:var(--sub-h);color:var(--txt)" title="Đóng bảng kết quả soát"><svg width="11" height="11" viewBox="0 0 12 12" stroke="currentColor" stroke-width="1.3"><path d="M1.5 1.5l9 9M10.5 1.5l-9 9"/></svg></a>
+        </div>
+
+        <sc-if value="{{ isAudit }}" hint-placeholder-val="{{ true }}">
+          <div style="height:38px;flex:none;display:flex;align-items:center;gap:6px;padding:0 14px;border-bottom:1px solid var(--divider)">
+            <sc-for list="{{ filters }}" as="f" hint-placeholder-count="3">
+              <div onClick="{{ f.pick }}" style="display:flex;align-items:center;gap:7px;height:26px;padding:0 11px;border-radius:13px;cursor:default;background:{{ f.bg }};border:1px solid {{ f.bd }};color:{{ f.fg }};font-size:13px;font-weight:600;white-space:nowrap">
+                <span style="width:7px;height:7px;border-radius:4px;background:{{ f.dot }}"></span>
+                {{ f.label }}
+              </div>
+            </sc-for>
+            <sc-if value="{{ kindOn }}">
+              <div onClick="{{ clearKind }}" style="display:flex;align-items:center;gap:8px;height:26px;padding:0 9px 0 11px;border-radius:13px;background:var(--acc-soft);border:1px solid var(--acc);color:var(--acc);font-size:13px;font-weight:600;white-space:nowrap;cursor:default" title="Bỏ lọc theo loại">
+                {{ kindLabel }}
+                <svg width="9" height="9" viewBox="0 0 12 12" stroke="currentColor" stroke-width="1.6"><path d="M1.5 1.5l9 9M10.5 1.5l-9 9"/></svg>
+              </div>
+            </sc-if>
+            <span style="margin-left:auto;font-size:12.5px;color:var(--txt3);white-space:nowrap">Bấm một dòng để nhảy tới đoạn tương ứng</span>
+          </div>
+
+          <div style="height:30px;flex:none;display:flex;align-items:center;border-bottom:1px solid var(--divider);font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--txt3);font-weight:600">
+            <span style="width:64px;flex:none;text-align:right;padding-right:12px">Đoạn</span>
+            <span style="width:140px;flex:none">Loại</span>
+            <span style="flex:1">Nội dung cảnh báo</span>
+            <span style="width:280px;flex:none">Đề xuất</span>
+            <span style="width:140px;flex:none;padding-right:14px;text-align:right">Hành động</span>
+          </div>
+
+          <div style="flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;scrollbar-width:thin;scrollbar-color:var(--stroke2) transparent">
+            <sc-for list="{{ issues }}" as="it" hint-placeholder-count="6">
+              <div onClick="{{ it.pick }}" style="display:flex;align-items:center;height:38px;border-bottom:1px solid var(--divider);background:{{ it.bg }};cursor:default" style-hover="background:var(--sub-h)">
+                <span style="width:64px;flex:none;text-align:right;padding-right:12px;font-size:13px;color:var(--txt2);font-variant-numeric:tabular-nums">{{ it.line }}</span>
+                <span style="width:140px;flex:none;display:flex;align-items:center;gap:8px">
+                  <span style="width:7px;height:7px;flex:none;border-radius:4px;background:{{ it.dot }}"></span>
+                  <span style="font-size:13px;color:var(--txt2)">{{ it.kind }}</span>
+                </span>
+                <span style="flex:1;font-size:14px;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:12px">{{ it.msg }}</span>
+                <span style="width:280px;flex:none;font-size:14px;color:var(--txt2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:12px">{{ it.fix }}</span>
+                <span style="width:140px;flex:none;display:flex;justify-content:flex-end;gap:6px;padding-right:14px">
+                  <span style="display:flex;align-items:center;height:26px;padding:0 10px;border-radius:4px;background:var(--ctl);border:1px solid var(--stroke2);font-size:13px;color:var(--txt)" style-hover="background:var(--ctl-h)">{{ it.action }}</span>
+                  <span style="display:flex;align-items:center;height:26px;padding:0 8px;border-radius:4px;font-size:13px;color:var(--txt3)" style-hover="background:var(--sub-h);color:var(--txt2)">Bỏ qua</span>
+                </span>
+              </div>
+            </sc-for>
+            <sc-if value="{{ noIssue }}">
+              <div style="padding:34px 14px;text-align:center;font-size:13.5px;line-height:1.6;color:var(--txt3);text-wrap:pretty">Không có cảnh báo nào thuộc nhóm này.</div>
+            </sc-if>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ isNorm }}">
+          <div style="height:38px;flex:none;display:flex;align-items:center;gap:6px;padding:0 14px;border-bottom:1px solid var(--divider)">
+            <span style="flex:none;font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--txt3);font-weight:600;margin-right:2px;white-space:nowrap">Quy tắc đang bật</span>
+            <sc-for list="{{ rules }}" as="r" hint-placeholder-count="4">
+              <div onClick="{{ r.toggle }}" style="display:flex;align-items:center;gap:7px;height:26px;padding:0 11px 0 9px;border-radius:13px;cursor:default;background:{{ r.bg }};border:1px solid {{ r.bd }};color:{{ r.fg }};white-space:nowrap">
+                <span style="width:12px;height:12px;flex:none;display:flex;align-items:center;justify-content:center">
+                  <sc-if value="{{ r.on }}"><svg width="12" height="12" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></svg></sc-if>
+                  <sc-if value="{{ r.off }}"><svg width="10" height="10" viewBox="0 0 12 12" stroke="currentColor" stroke-width="1.4"><path d="M1.5 1.5l9 9M10.5 1.5l-9 9"/></svg></sc-if>
+                </span>
+                <span style="font-size:13px">{{ r.label }}</span>
+                <span style="font-size:12.5px;opacity:.7;font-variant-numeric:tabular-nums">{{ r.n }}</span>
+              </div>
+            </sc-for>
+            <span style="margin-left:auto;font-size:12.5px;color:var(--txt3);white-space:nowrap">Chuẩn hoá chỉ ảnh hưởng đến âm thanh, văn bản gốc không đổi</span>
+          </div>
+
+          <div style="height:30px;flex:none;display:flex;border-bottom:1px solid var(--divider)">
+            <div style="width:52px;flex:none"></div>
+            <div style="flex:1;display:flex;align-items:center;font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--txt3);font-weight:600;padding-left:4px">Văn bản gốc</div>
+            <div style="width:1px;background:var(--divider)"></div>
+            <div style="flex:1;display:flex;align-items:center;font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--txt3);font-weight:600;padding-left:16px">Máy sẽ đọc thành</div>
+          </div>
+
+          <div style="flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;scrollbar-width:thin;scrollbar-color:var(--stroke2) transparent">
+            <sc-for list="{{ rows }}" as="r" hint-placeholder-count="8">
+              <div onClick="{{ r.pick }}" style="display:flex;align-items:stretch;border-bottom:1px solid var(--divider);background:{{ r.bg }};cursor:default" style-hover="background:var(--sub-h)">
+                <div style="width:52px;flex:none;padding:9px 12px 9px 0;text-align:right;font-size:12.5px;color:var(--txt3);font-variant-numeric:tabular-nums">{{ r.no }}</div>
+                <div style="flex:1;min-width:0;padding:9px 12px 9px 4px;font-size:14.5px;color:var(--txt2);line-height:1.45;text-wrap:pretty">{{ r.src }}</div>
+                <div style="width:1px;background:var(--divider)"></div>
+                <div style="flex:1;min-width:0;padding:9px 16px;font-size:14.5px;color:var(--txt);line-height:1.45;text-wrap:pretty">
+                  <sc-if value="{{ r.changed }}">
+                    <span>{{ r.pre }}</span><span style="background:var(--mark);border-radius:3px;padding:1px 3px;font-weight:600">{{ r.mark }}</span><span>{{ r.post }}</span>
+                  </sc-if>
+                  <sc-if value="{{ r.same }}">
+                    <span style="color:var(--txt3)">{{ r.out }}</span>
+                  </sc-if>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+      </div>
+      </sc-if>
+    </div>
+
+    <div style="width:300px;flex:none;display:flex;flex-direction:column;gap:8px;padding-left:8px;min-height:0">
+      <div style="flex:none;background:var(--layer);border:1px solid var(--stroke);border-radius:8px">
+        <div style="padding:11px 13px 12px">
+          <div style="font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--txt3);font-weight:600;margin-bottom:3px;white-space:nowrap">Hồ sơ đang dùng</div>
+          <div style="font-size:14px;font-weight:600;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ profileName }}</div>
+        </div>
+        <div style="height:1px;background:var(--divider)"></div>
+        <div style="padding:12px 13px 13px">
+          <div style="font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--txt3);font-weight:600;margin-bottom:9px">Giọng đọc</div>
+          <div style="display:flex;gap:6px">
+            <div style="flex:1;min-width:0;display:flex;align-items:center;gap:9px;height:36px;padding:0 8px 0 10px;border:1px solid var(--stroke2);border-radius:4px;background:var(--ctl);cursor:default" style-hover="background:var(--ctl-h)">
+              <span style="display:flex;color:var(--txt2)"><svg width="16" height="16" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"><path d="M12 4a3 3 0 013 3v5a3 3 0 01-6 0V7a3 3 0 013-3zM5 11a7 7 0 0014 0M12 18v3"/></svg></span>
+              <span style="flex:1;min-width:0;font-size:14px;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ voiceName }}</span>
+              <svg width="13" height="13" viewBox="0 0 24 24" stroke="var(--txt2)" stroke-width="1.8" fill="none" stroke-linecap="round"><path d="M6 9.5l6 6 6-6"/></svg>
+            </div>
+            <div style="width:36px;height:36px;flex:none;display:flex;align-items:center;justify-content:center;border:1px solid var(--stroke2);border-radius:4px;background:var(--ctl);color:var(--txt2);cursor:default" style-hover="background:var(--ctl-h);color:var(--txt)" title="Nghe mẫu giọng này (5 giây)">
+              <svg width="16" height="16" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"><path d="M4 9.5h3.5L12 5.5v13L7.5 14.5H4z"/><path d="M15.5 9.2a4 4 0 010 5.6"/><path d="M18 6.8a7.5 7.5 0 010 10.4"/></svg>
+            </div>
+          </div>
+        </div>
+        <div style="height:1px;background:var(--divider)"></div>
+        <div style="padding:11px 13px 13px">
+          <div style="display:flex;align-items:center;gap:8px;height:26px;margin:-4px -6px 0;padding:0 6px;border-radius:4px;cursor:default" style-hover="background:var(--sub-h)">
+            <span style="flex:none;white-space:nowrap;font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--txt3);font-weight:600">Điều chỉnh</span>
+            <span style="margin-left:auto;display:flex;flex:none;color:var(--txt2)"><svg width="13" height="13" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round"><path d="M6 9.5l6 6 6-6"/></svg></span>
+          </div>
+          <div style="margin-top:7px;font-size:13.5px;color:var(--txt2);font-variant-numeric:tabular-nums">{{ tuneSummary }}</div>
+        </div>
+      </div>
+
+      <sc-if value="{{ hasScan }}" hint-placeholder-val="{{ true }}">
+        <div style="flex:none;background:var(--layer);border:1px solid var(--stroke);border-radius:8px;padding:12px 13px 13px">
+          <div style="font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--txt3);font-weight:600;margin-bottom:7px">Cần chú ý</div>
+          <div style="font-size:13.5px;line-height:1.5;color:var(--txt2);margin-bottom:9px;text-wrap:pretty">{{ auditLead }}</div>
+          <div style="display:flex;flex-direction:column;gap:1px;margin:0 -7px 4px">
+            <sc-for list="{{ auditRows }}" as="a" hint-placeholder-count="4">
+              <div onClick="{{ a.go }}" style="display:flex;align-items:center;gap:9px;height:31px;padding:0 7px;border-radius:4px;cursor:default;background:{{ a.bg }}" style-hover="background:var(--sub-h)" title="{{ a.hint }}">
+                <span style="width:7px;height:7px;flex:none;border-radius:4px;background:{{ a.tone }}"></span>
+                <span style="flex:1;min-width:0;font-size:14px;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ a.label }}</span>
+                <span style="flex:none;min-width:22px;text-align:center;padding:2px 6px;border-radius:4px;font-size:12.5px;font-weight:600;color:{{ a.cfg }};background:{{ a.cbg }};font-variant-numeric:tabular-nums">{{ a.count }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <a href="GiongDoc%20-%20T%E1%BB%AB%20%C4%91i%E1%BB%83n%20ph%C3%A1t%20%C3%A2m.dc.html" style="display:flex;align-items:center;gap:6px;height:30px;margin:2px -7px -4px;padding:0 7px;border-radius:4px;font-size:13.5px;color:var(--acc);white-space:nowrap;text-decoration:none" style-hover="background:var(--sub-h)" title="Ghi cách đọc riêng cho từ ngữ của bạn">
+            Từ điển phát âm
+            <svg width="13" height="13" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.9" fill="none" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg>
+          </a>
+        </div>
+      </sc-if>
+    </div>
+  </div>
+
+  <div style="height:28px;flex:none;display:flex;align-items:center;padding:0 12px;background:var(--layer2);border-top:1px solid var(--divider);font-size:12px;color:var(--txt2)">
+    <span style="font-variant-numeric:tabular-nums">{{ statusCaret }}</span>
+    <span style="margin-left:auto;display:flex;align-items:center;gap:12px">
+      <span style="display:flex;align-items:center;gap:7px"><span style="width:7px;height:7px;border-radius:4px;background:var(--ok)"></span>VieNeu v3 Turbo · sẵn sàng</span>
+      <span style="width:1px;height:12px;background:var(--divider)"></span>
       <span>{{ statusRight }}</span>
     </span>
   </div>
 </div>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props="{&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;sang&quot;,&quot;toi&quot;],&quot;default&quot;:&quot;sang&quot;,&quot;tsType&quot;:&quot;'sang'|'toi'&quot;,&quot;section&quot;:&quot;Trạng thái&quot;}}">
+<script type="text/x-dc" data-dc-script data-props="{&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;sang&quot;,&quot;toi&quot;],&quot;default&quot;:&quot;sang&quot;,&quot;tsType&quot;:&quot;'sang'|'toi'&quot;,&quot;section&quot;:&quot;Trạng thái&quot;},&quot;tabMacDinh&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;chu-y&quot;,&quot;chuan-hoa&quot;],&quot;default&quot;:&quot;chu-y&quot;,&quot;tsType&quot;:&quot;'chu-y'|'chuan-hoa'&quot;,&quot;section&quot;:&quot;Trạng thái&quot;}}">
 class Component extends DCLogic {
-  state = { theme: null, filter: 0, sel: 1, tab: 0, rules: [true, true, true, false] };
+  state = { theme: null, tab: null, sel: 1, filter: 0, kind: null, open: 0, pf: 0, fi: 1, scanned: {}, rules: [true, true, true, false], menu: -1 };
+
   get theme() { return this.state.theme || this.props.theme || 'sang'; }
+  get tab() { return this.state.tab !== null ? this.state.tab : (this.props.tabMacDinh === 'chuan-hoa' ? 1 : 0); }
   componentDidMount() { this.applyTheme(); }
   componentDidUpdate() { this.applyTheme(); }
   applyTheme() { document.documentElement.setAttribute('data-theme', this.theme === 'toi' ? 'dark' : 'light'); }
 
-  normData() {
+  PROFILES() {
     return [
-      [1, 'THÔNG BÁO LỊCH NGHỈ LỄ QUỐC KHÁNH 2/9', true, 'Thông báo lịch nghỉ lễ Quốc khánh ', 'hai phần chín', '', ''],
-      [2, 'Kính gửi toàn thể cán bộ, nhân viên Công ty TNHH Bảo Sơn.', true, 'Kính gửi… Công ty ', 'trách nhiệm hữu hạn', ' Bảo Sơn.', ''],
-      [3, 'Căn cứ Bộ luật Lao động 2019 và thông báo của UBND TP.HCM…', true, 'Căn cứ… thông báo của ', 'Uỷ ban nhân dân Thành phố Hồ Chí Minh', '…', ''],
-      [4, 'Thời gian nghỉ tính từ thứ Hai ngày 31/8/2026…', true, 'Thời gian nghỉ tính từ thứ Hai ngày ', 'ba mươi mốt tháng tám năm hai nghìn không trăm hai mươi sáu', '…', ''],
-      [5, 'Các bộ phận… gửi qua email ngày 12/8.', true, 'Các bộ phận… gửi qua email ngày ', 'mười hai tháng tám', '.', ''],
-      [6, 'Phòng Kinh doanh — anh Trần Minh Đức', false, '', '', '', 'Phòng Kinh doanh anh Trần Minh Đức'],
-      [7, 'Phòng Kỹ thuật — anh Lê Hoàng Nam', false, '', '', '', 'Phòng Kỹ thuật anh Lê Hoàng Nam'],
-      [8, 'Phòng Kho vận — chị Phạm Thu Hà', false, '', '', '', 'Phòng Kho vận chị Phạm Thu Hà'],
-      [9, 'Nhân viên… đăng ký trước 17h00 ngày 25/8/2026…', true, 'Nhân viên… đăng ký trước ', 'mười bảy hắt không không', ' ngày hai mươi lăm tháng tám…', ''],
-      [10, 'Trong thời gian nghỉ lễ… số hotline 1900 6868, máy lẻ 2.', true, 'Trong thời gian nghỉ lễ… số hotline ', 'một chín không không sáu tám sáu tám', ', máy lẻ hai.', ''],
-      [11, '[hắng giọng] Kính chúc toàn thể anh chị em…', false, '', '', '', 'Kính chúc toàn thể anh chị em…'],
-      [14, 'TM. BAN GIÁM ĐỐC', true, '', 'Tê mờ', ' ban giám đốc', ''],
-      [16, 'Nguyễn Văn Tuyến', false, '', '', '', 'Nguyễn Văn Tuyến']
+      { name: 'Bài viết, văn bản', voice: 'Giọng Ngọc Linh', tune: 'Tốc độ 0 · Cao độ 0 · Âm lượng 100', files: ['Thư cảm ơn cuối năm.docx', 'thongbao-quoc-khanh.txt'] },
+      { name: 'Thông báo ngắn', voice: 'Giọng Xuân Vĩnh', tune: 'Tốc độ +10 · Cao độ 0 · Âm lượng 100', files: ['thong-bao-hop-giao-ban.txt'] },
+      { name: 'Sách nói', voice: 'Giọng bác Tuấn', tune: 'Tốc độ −10 · Cao độ 0 · Âm lượng 90', files: ['chuong-01-lang-que.docx'] },
+      { name: 'Danh sách, biểu mẫu', voice: 'Giọng Bình An', tune: 'Tốc độ 0 · Cao độ 0 · Âm lượng 100', files: ['danh-sach-cong-duc.txt', 'bieu-mau-thu-phi.txt'] }
     ];
   }
 
+  // sev: '' | 'err' | 'warn'. say = cách máy đọc phần gạch chân. norm = [trước, phần đọc khác, sau] khi chỗ đọc khác không trùng chỗ cảnh báo. plain = câu máy đọc khi chỉ bị lược ký tự.
+  DOCS() {
+    return {
+      A: { meta: '215 từ · 15 đoạn', scanAt: '14:03', paras: [
+        { n: 1, pre: 'THÔNG BÁO LỊCH NGHỈ LỄ QUỐC KHÁNH ', bad: '2/9', post: '', sev: 'err', kind: 'Ngày tháng', msg: '“2/9” trong tiêu đề sẽ đọc là “hai phần chín”', fix: 'Viết thành “mùng 2 tháng 9”', act: 'Sửa', say: 'mùng hai tháng chín' },
+        { n: 2, pre: 'Kính gửi toàn thể cán bộ, nhân viên Công ty ', bad: 'TNHH', post: ' Bảo Sơn.', sev: 'warn', kind: 'Viết tắt', msg: '“TNHH” sẽ đọc là “trách nhiệm hữu hạn”', fix: 'Giữ nguyên cách đọc này', act: 'Nghe', say: 'trách nhiệm hữu hạn' },
+        { n: 3, pre: 'Căn cứ Bộ luật Lao động 2019 và thông báo của ', bad: 'UBND TP.HCM', post: ', Ban Giám đốc thông báo lịch nghỉ lễ Quốc khánh năm 2026 như sau.', sev: 'warn', kind: 'Viết tắt', msg: '“UBND TP.HCM” sẽ đọc ở dạng đầy đủ', fix: 'Giữ nguyên cách đọc này', act: 'Nghe', say: 'Uỷ ban nhân dân Thành phố Hồ Chí Minh' },
+        { n: 4, pre: 'Thời gian nghỉ tính từ thứ Hai ngày 31/8/2026 đến hết thứ Tư ngày 2/9/2026, tổng cộng 3 ngày làm việc. Công ty làm việc trở lại bình thường từ sáng thứ Năm ngày 3/9.', bad: '', post: '', sev: 'warn', kind: 'Đoạn dài', msg: 'Đoạn 4 dài 168 ký tự, nên tách để dễ nghe', fix: 'Tách thành 2 đoạn', act: 'Tách',
+          norm: ['Thời gian nghỉ tính từ thứ Hai ngày ', 'ba mươi mốt tháng tám năm hai nghìn không trăm hai mươi sáu', ' đến hết thứ Tư ngày mùng hai tháng chín, tổng cộng ba ngày làm việc. Công ty làm việc trở lại bình thường từ sáng thứ Năm ngày mùng ba tháng chín.'] },
+        { n: 5, pre: 'Các bộ phận trực tiếp sản xuất bố trí người trực theo lịch đã gửi qua email ngày 12/8. Danh sách trực cụ thể như sau.', bad: '', post: '', sev: '',
+          norm: ['Các bộ phận trực tiếp sản xuất bố trí người trực theo lịch đã gửi qua email ngày ', 'mười hai tháng tám', '. Danh sách trực cụ thể như sau.'] },
+        { n: 6, pre: 'Phòng Kinh doanh ', bad: '—', post: ' anh Trần Minh Đức', sev: 'warn', kind: 'Ký tự lạ', msg: 'Ký tự “—” sẽ bị bỏ qua khi đọc', fix: 'Thay bằng dấu phẩy', act: 'Sửa', plain: 'Phòng Kinh doanh anh Trần Minh Đức' },
+        { n: 7, pre: 'Phòng Kỹ thuật — anh Lê Hoàng Nam', bad: '', post: '', sev: '', plain: 'Phòng Kỹ thuật anh Lê Hoàng Nam' },
+        { n: 8, pre: 'Phòng Kho vận — chị Phạm Thu Hà', bad: '', post: '', sev: '', plain: 'Phòng Kho vận chị Phạm Thu Hà' },
+        { n: 9, pre: 'Nhân viên có nhu cầu trực thay đăng ký với quản lý trực tiếp trước ', bad: '17h00', post: ' ngày 25/8/2026.', sev: 'err', kind: 'Giờ', msg: '“17h00” sẽ đọc là “mười bảy hắt không không”', fix: 'Viết thành “17 giờ”', act: 'Sửa', say: 'mười bảy hắt không không', norm: ['Nhân viên có nhu cầu trực thay đăng ký với quản lý trực tiếp trước ', 'mười bảy hắt không không', ' ngày hai mươi lăm tháng tám năm hai nghìn không trăm hai mươi sáu.'] },
+        { n: 10, pre: 'Trong thời gian nghỉ lễ, việc gấp xin liên hệ số hotline ', bad: '1900 6868', post: ', máy lẻ 2.', sev: 'warn', kind: 'Số điện thoại', msg: '“1900 6868” sẽ đọc từng chữ số', fix: 'Đọc theo nhóm 4 số', act: 'Đổi', say: 'một chín không không, sáu tám sáu tám', norm: ['Trong thời gian nghỉ lễ, việc gấp xin liên hệ số hotline ', 'một chín không không, sáu tám sáu tám', ', máy lẻ hai.'] },
+        { n: 11, chip: 'hắng giọng', pre: 'Kính chúc toàn thể anh chị em kỳ nghỉ lễ vui vẻ, an toàn bên gia đình.', bad: '', post: '', sev: '' },
+        { n: 12, pre: 'Trân trọng thông báo.', bad: '', post: '', sev: '' },
+        { n: 13, pre: '', bad: 'TM.', post: ' BAN GIÁM ĐỐC', sev: 'warn', kind: 'Viết tắt', msg: '“TM.” sẽ đọc là “tê mờ”', fix: 'Thêm vào từ điển phát âm', act: 'Thêm', say: 'Tê mờ' },
+        { n: 14, pre: 'Giám đốc điều hành', bad: '', post: '', sev: '' },
+        { n: 15, pre: '', bad: 'Nguyễn Văn Tuyến', post: '', sev: 'warn', kind: 'Tên riêng', msg: '“Nguyễn Văn Tuyến” có thể đọc sai dấu', fix: 'Thêm vào từ điển phát âm', act: 'Thêm' }
+      ] },
+      B: { meta: '96 từ · 7 đoạn', scanAt: '09:41', paras: [
+        { n: 1, pre: 'Kính gửi Quý khách hàng và Quý đối tác,', bad: '', post: '', sev: '' },
+        { n: 2, pre: 'Năm 2025 khép lại với nhiều thử thách. Công ty Bảo Sơn xin gửi lời cảm ơn chân thành đến Quý vị đã đồng hành cùng chúng tôi.', bad: '', post: '', sev: '',
+          norm: ['Năm ', 'hai nghìn không trăm hai mươi lăm', ' khép lại với nhiều thử thách. Công ty Bảo Sơn xin gửi lời cảm ơn chân thành đến Quý vị đã đồng hành cùng chúng tôi.'] },
+        { n: 3, pre: 'Tổng giá trị hợp đồng ký mới trong năm đạt ', bad: '4.200.000.000 ₫', post: '.', sev: 'err', kind: 'Đơn vị tiền', msg: 'Ký hiệu “₫” sẽ bị bỏ qua khi đọc', fix: 'Đọc thành “bốn tỷ hai trăm triệu đồng”', act: 'Sửa', say: 'bốn tỷ hai trăm triệu đồng' },
+        { n: 4, pre: 'Kế hoạch mở rộng nhà xưởng tại ', bad: 'TP.HCM', post: ' sẽ khởi động trong quý một.', sev: 'warn', kind: 'Viết tắt', msg: '“TP.HCM” sẽ đọc ở dạng đầy đủ', fix: 'Giữ nguyên cách đọc này', act: 'Nghe', say: 'Thành phố Hồ Chí Minh' },
+        { n: 5, pre: 'Lịch làm việc đầu năm bắt đầu từ ', bad: '02/01/2026', post: '.', sev: 'warn', kind: 'Ngày tháng', msg: '“02/01/2026” sẽ đọc là “không hai trên không một”', fix: 'Viết thành “ngày 2 tháng 1 năm 2026”', act: 'Sửa', say: 'ngày mùng hai tháng một năm hai nghìn không trăm hai mươi sáu' },
+        { n: 6, pre: 'Kính chúc Quý vị một năm mới an khang, thịnh vượng.', bad: '', post: '', sev: '' },
+        { n: 7, pre: 'Ban Giám đốc Công ty Bảo Sơn', bad: '', post: '', sev: '' }
+      ] },
+      C: { meta: '52 từ · 5 đoạn', scanAt: 'vừa xong', paras: [
+        { n: 1, pre: 'Kính gửi các anh chị,', bad: '', post: '', sev: '' },
+        { n: 2, pre: 'Cuộc họp giao ban tháng 8 diễn ra lúc ', bad: '8h30', post: ' ngày 20/8/2026 tại phòng họp tầng 3.', sev: 'err', kind: 'Giờ', msg: '“8h30” sẽ đọc là “tám hắt ba mươi”', fix: 'Viết thành “8 giờ 30”', act: 'Sửa', say: 'tám hắt ba mươi' },
+        { n: 3, pre: 'Đề nghị các bộ phận gửi báo cáo tháng về ', bad: 'P.HC', post: ' trước 17 giờ ngày 19/8.', sev: 'warn', kind: 'Viết tắt', msg: '“P.HC” sẽ đọc là “pê chấm hắt xê”', fix: 'Thêm vào từ điển phát âm', act: 'Thêm', say: 'pê chấm hắt xê' },
+        { n: 4, pre: 'Trân trọng.', bad: '', post: '', sev: '' },
+        { n: 5, pre: 'Phòng Hành chính', bad: '', post: '', sev: '' }
+      ] }
+    };
+  }
+
+  key() { return this.state.pf + ':' + this.state.fi; }
+  docId() {
+    const fixed = { '0:0': 'B', '0:1': 'A', '1:0': 'C' };
+    return fixed[this.key()] || (this.state.scanned[this.key()] ? 'C' : null);
+  }
+
   renderVals() {
-    const themeTabs = [['sang','Sáng'],['toi','Tối']].map(([id,label]) => ({
+    const themeTabs = [['sang', 'Sáng'], ['toi', 'Tối']].map(([id, label]) => ({
       label, bg: this.theme === id ? '#0067c0' : 'transparent', fg: this.theme === id ? '#fff' : '#5d5d5d',
       pick: () => this.setState({ theme: id })
     }));
+    const URL = {
+      chinh: 'GiongDoc - Màn hình chính v2 (nghe theo dòng).dc.html',
+      xuat: 'GiongDoc - Xuất file âm thanh.dc.html',
+      tudien: 'GiongDoc - Từ điển phát âm.dc.html',
+      thuvien: 'GiongDoc - Thư viện giọng.dc.html',
+      ghep: 'GiongDoc - Văn bản ghép.dc.html',
+      caidat: 'GiongDoc - Cài đặt.dc.html'
+    };
+    const go = (u) => () => { window.location.href = u; };
+    const rescan = () => {
+      const s = Object.assign({}, this.state.scanned);
+      s[this.key()] = true;
+      this.setState({ scanned: s, sel: 1, menu: -1 });
+    };
+    const MENUS = [
+      ['Tệp', [['Mở tệp…','Ctrl+O'],['Dán văn bản','Ctrl+V',go(URL.chinh)],['Lưu','Ctrl+S'],['Xuất file âm thanh','Ctrl+E',go(URL.xuat)],['Đóng tệp','Ctrl+W'],['-'],['Ghép danh sách từ Google Sheet…','',go(URL.ghep)],['-'],['Cài đặt…','',go(URL.caidat)],['Thoát','Alt+F4']]],
+      ['Chỉnh sửa', [['Hoàn tác','Ctrl+Z'],['Làm lại','Ctrl+Y'],['-'],['Cắt','Ctrl+X'],['Sao chép','Ctrl+C'],['Dán','Ctrl+V'],['Chọn tất cả','Ctrl+A'],['-'],['Tìm và thay thế','Ctrl+H'],['Soát lại tệp này','Ctrl+K',rescan]]],
+      ['Chèn', [['Thẻ cảm xúc','Alt+1…3',go(URL.chinh)],['Khoảng lặng 1 giây','Alt+S'],['Ngắt đoạn','Enter'],['-'],['Thêm cách đọc cho từ đang chọn…','',go(URL.tudien)]]],
+      ['Giọng', [['Đổi giọng đọc','Ctrl+G',go(URL.chinh)],['Nghe mẫu giọng','Ctrl+M'],['-'],['Thư viện giọng','',go(URL.thuvien)],['Nhân bản giọng từ file…','',go(URL.thuvien + '?nhanban=1')],['Thu âm để tạo giọng mới…','',go(URL.thuvien + '?thuam=1')],['-'],['Từ điển phát âm','',go(URL.tudien)]]],
+      ['Xem', [['Chỗ cần chú ý','',() => this.setState({ tab: 0, menu: -1 })],['Văn bản sau chuẩn hoá','',() => this.setState({ tab: 1, menu: -1 })],['-'],['Cỡ chữ lớn hơn','Ctrl+='],['Cỡ chữ nhỏ hơn','Ctrl+-'],['-'],['Toàn màn hình','F11'],['Giao diện tối','',() => this.setState({ theme: this.theme === 'toi' ? 'sang' : 'toi', menu: -1 })]]],
+      ['Trợ giúp', [['Hướng dẫn nhanh','F1'],['Danh sách phím tắt','Ctrl+/'],['Giới thiệu Giọng Việt',''],['-'],['Kiểm tra bản cập nhật',''],['Gửi phản hồi cho nhà phát triển','']]]
+    ];
+    const mi = this.state.menu;
+    const menus = MENUS.map(([label], i) => ({
+      label, bg: mi === i ? 'var(--sub-h)' : 'transparent', isOpen: mi === i,
+      open: () => this.setState({ menu: mi === i ? -1 : i })
+    }));
+    const menuItems = mi >= 0 ? MENUS[mi][1].map(([label, k, act]) => ({
+      label: label === '-' ? '' : label, key: label === '-' ? '' : k,
+      isSep: label === '-', isItem: label !== '-',
+      fg: act ? 'var(--txt)' : 'var(--txt3)',
+      run: act || (() => this.setState({ menu: -1 }))
+    })) : [];
 
-    const tab = this.state.tab;
-    const isAudit = tab === 0, isNorm = tab === 1;
+    const PR = this.PROFILES();
+    const pf = this.state.pf, fi = this.state.fi;
+    const docId = this.docId();
+    const doc = docId ? this.DOCS()[docId] : null;
+    const paras = doc ? doc.paras : [];
+    const curFileName = PR[pf].files[fi];
 
-    const ruleDefs = [['Số thành chữ','48'],['Viết tắt, ký hiệu','6'],['Ngày tháng','3'],['Bỏ dấu câu lặp','0']];
+    const profiles = PR.map((p, i) => {
+      const open = this.state.open === i;
+      const active = i === pf;
+      return {
+        name: p.name, voice: p.voice, open, collapsed: !open,
+        wt: active ? 600 : 400,
+        nFiles: p.files.length + ' tệp',
+        curFile: i === pf ? curFileName : p.files[0],
+        hasErr: i === pf ? !!paras.find((x) => x.sev === 'err') : i === 3,
+        bg: active ? 'var(--layer)' : 'transparent',
+        bd: active ? 'var(--stroke)' : 'transparent',
+        hov: active ? 'var(--layer)' : 'var(--sub-h)',
+        title: open ? 'Thu gọn hồ sơ này' : 'Mở hồ sơ ' + p.name,
+        pick: () => this.setState({ open: open ? -1 : i }),
+        files: p.files.map((name, j) => {
+          const cur = i === pf && j === fi;
+          return {
+            name, fg: cur ? 'var(--txt)' : 'var(--txt2)', wt: cur ? 600 : 400,
+            rail: cur ? 'var(--acc)' : 'var(--stroke2)',
+            bg: cur ? 'var(--sel)' : 'transparent',
+            iconFg: cur ? 'var(--acc)' : 'var(--txt3)',
+            hasErr: cur && !!paras.find((x) => x.sev === 'err'),
+            title: cur ? 'Tệp đang mở' : 'Mở tệp ' + name,
+            pick: () => this.setState({ pf: i, fi: j, sel: 1, filter: 0, kind: null })
+          };
+        })
+      };
+    });
+
+    const tab = this.tab, isAudit = tab === 0, isNorm = tab === 1;
+    const panelTabs = [['Chỗ cần chú ý', 0], ['Văn bản sau chuẩn hoá', 1]].map(([label, i]) => ({
+      label, bg: tab === i ? 'var(--acc)' : 'transparent', fg: tab === i ? 'var(--acc-txt)' : 'var(--txt2)',
+      pick: () => this.setState({ tab: i })
+    }));
+
+    const flagged = paras.filter((p) => p.sev);
+    const nErr = flagged.filter((p) => p.sev === 'err').length;
+    const nWarn = flagged.length - nErr;
+    const filters = [['Tất cả (' + flagged.length + ')', 'var(--txt3)'], ['Lỗi (' + nErr + ')', 'var(--err)'], ['Cảnh báo (' + nWarn + ')', 'var(--warn)']].map(([label, dot], i) => ({
+      label, dot,
+      bg: this.state.filter === i ? 'var(--acc-soft)' : 'transparent',
+      bd: this.state.filter === i ? 'var(--acc)' : 'var(--stroke2)',
+      fg: this.state.filter === i ? 'var(--acc)' : 'var(--txt2)',
+      pick: () => this.setState({ filter: i })
+    }));
+
+    const lines = paras.map((p) => ({
+      no: p.n, pre: p.pre, bad: p.bad, post: p.post, chip: p.chip || '', hasChip: !!p.chip,
+      tag: p.sev ? p.kind : '',
+      tagFg: p.sev === 'err' ? 'var(--err)' : 'var(--warn)',
+      mark: p.sev === 'err' ? 'var(--err)' : (p.sev === 'warn' ? 'var(--warn)' : 'transparent'),
+      bg: p.n === this.state.sel ? 'var(--hl)' : 'transparent',
+      bar: p.n === this.state.sel ? 'inset 3px 0 0 var(--acc)' : 'none',
+      noFg: p.n === this.state.sel ? 'var(--acc)' : 'var(--txt3)',
+      noWt: p.n === this.state.sel ? 600 : 400,
+      pbOp: p.n === this.state.sel ? 1 : .35,
+      pick: () => this.setState({ sel: p.n })
+    }));
+
+    const kindOn = !!this.state.kind;
+    const issues = flagged.filter((p) => {
+      if (this.state.filter === 1 && p.sev !== 'err') return false;
+      if (this.state.filter === 2 && p.sev !== 'warn') return false;
+      if (kindOn && p.kind !== this.state.kind) return false;
+      return true;
+    }).map((p) => ({
+      line: p.n, kind: p.kind, msg: p.msg, fix: p.fix, action: p.act,
+      dot: p.sev === 'err' ? 'var(--err)' : 'var(--warn)',
+      bg: p.n === this.state.sel ? 'var(--hl)' : 'transparent',
+      pick: () => this.setState({ sel: p.n })
+    }));
+
+    const rows = paras.map((p) => {
+      const src = p.pre + p.bad + p.post;
+      const norm = p.norm || (p.say ? [p.pre, p.say, p.post] : null);
+      return {
+        no: p.n, src, changed: !!norm, same: !norm,
+        pre: norm ? norm[0] : '', mark: norm ? norm[1] : '', post: norm ? norm[2] : '',
+        out: p.plain || src,
+        bg: p.n === this.state.sel ? 'var(--hl)' : 'transparent',
+        pick: () => this.setState({ sel: p.n })
+      };
+    });
+    const nChanged = rows.filter((r) => r.changed).length + paras.filter((p) => !p.norm && !p.say && p.plain).length;
+
+    const ruleDefs = [['Số thành chữ', '48'], ['Viết tắt, ký hiệu', '6'], ['Ngày tháng', '3'], ['Bỏ dấu câu lặp', '0']];
     const rules = ruleDefs.map(([label, n], i) => {
       const on = this.state.rules[i];
       return { label, n, on, off: !on,
@@ -274,66 +635,45 @@ class Component extends DCLogic {
         toggle: () => { const r = this.state.rules.slice(); r[i] = !r[i]; this.setState({ rules: r }); } };
     });
 
-    const rows = this.normData().map(([no, src, changed, pre, mark, post, plain]) => ({
-      no, src, changed, same: !changed, pre, mark, post, out: plain,
-      bg: no === this.state.sel ? 'var(--acc-soft)' : 'transparent',
-      pick: () => this.setState({ sel: no })
+    const byKind = [];
+    flagged.forEach((p) => {
+      const hit = byKind.find((k) => k.label === p.kind);
+      if (hit) { hit.count += 1; if (p.sev === 'err') hit.err = true; }
+      else byKind.push({ label: p.kind, count: 1, err: p.sev === 'err' });
+    });
+    const auditRows = byKind.map((k) => ({
+      label: k.label, count: k.count,
+      tone: k.err ? 'var(--err)' : 'var(--warn)',
+      cfg: k.err ? 'var(--err)' : 'var(--warn)',
+      cbg: k.err ? 'var(--err-bg)' : 'var(--warn-bg)',
+      bg: this.state.kind === k.label ? 'var(--hl)' : 'transparent',
+      hint: 'Chỉ xem cảnh báo loại “' + k.label + '” ở bảng dưới',
+      go: () => this.setState({ kind: this.state.kind === k.label ? null : k.label, filter: 0, tab: 0 })
     }));
 
-    const filterDefs = [['Tất cả (9)', 'var(--txt3)'], ['Lỗi (2)', 'var(--err)'], ['Cảnh báo (7)', 'var(--warn)']];
-    const filters = filterDefs.map(([label, dot], i) => ({
-      label, dot,
-      bg: this.state.filter === i ? 'var(--acc-soft)' : 'transparent',
-      bd: this.state.filter === i ? 'var(--acc)' : 'var(--stroke2)',
-      fg: this.state.filter === i ? 'var(--acc)' : 'var(--txt2)',
-      pick: () => this.setState({ filter: i })
-    }));
-
-    const rowDefs = [
-      [1, 'THÔNG BÁO LỊCH NGHỈ LỄ QUỐC KHÁNH ', '2/9', '', 'err', 'đọc thành “hai phần chín”'],
-      [2, 'Kính gửi toàn thể cán bộ, nhân viên Công ty ', 'TNHH', ' Bảo Sơn.', 'warn', 'viết tắt'],
-      [3, 'Căn cứ Bộ luật Lao động 2019 và thông báo của ', 'UBND TP.HCM', ', Ban Giám đốc thông báo lịch nghỉ lễ Quốc khánh năm 2026 như sau.', 'warn', 'viết tắt'],
-      [4, 'Thời gian nghỉ tính từ thứ Hai ngày 31/8/2026 đến hết thứ Tư ngày 2/9/2026, tổng cộng 3 ngày làm việc. Công ty làm việc trở lại bình thường từ sáng thứ Năm ngày 3/9.', '', '', 'warn', 'đoạn dài'],
-      [5, 'Các bộ phận trực tiếp sản xuất bố trí người trực theo lịch đã gửi qua email ngày 12/8. Danh sách trực cụ thể như sau.', '', '', '', ''],
-      [6, 'Phòng Kinh doanh ', '—', ' anh Trần Minh Đức', 'warn', 'ký tự bị bỏ qua'],
-      [7, 'Phòng Kỹ thuật — anh Lê Hoàng Nam', '', '', '', ''],
-      [8, 'Phòng Kho vận — chị Phạm Thu Hà', '', '', '', '']
-    ];
-    const lines = rowDefs.map(([no, pre, bad, post, sev, tag]) => ({
-      no, pre, bad, post, tag,
-      bg: no === this.state.sel ? 'var(--acc-soft)' : 'transparent',
-      mark: sev === 'err' ? 'var(--err)' : (sev === 'warn' ? 'var(--warn)' : 'transparent'),
-      tagFg: sev === 'err' ? 'var(--err)' : 'var(--warn)',
-      pick: () => this.setState({ sel: no })
-    }));
-
-    const issueDefs = [
-      [1, 'Ngày tháng', 'err', '“2/9” trong tiêu đề sẽ đọc là “hai phần chín”', 'Viết thành “mùng 2 tháng 9”', 'Sửa'],
-      [9, 'Giờ', 'err', '“17h00” sẽ đọc là “mười bảy hắt không không”', 'Viết thành “17 giờ”', 'Sửa'],
-      [2, 'Viết tắt', 'warn', '“TNHH” sẽ đọc là “trách nhiệm hữu hạn”', 'Giữ nguyên cách đọc này', 'Nghe'],
-      [3, 'Viết tắt', 'warn', '“UBND TP.HCM” sẽ đọc ở dạng đầy đủ', 'Giữ nguyên cách đọc này', 'Nghe'],
-      [4, 'Đoạn dài', 'warn', 'Đoạn 4 dài 168 ký tự, nên tách để dễ nghe', 'Tách thành 2 đoạn', 'Tách'],
-      [6, 'Ký tự lạ', 'warn', 'Ký tự “—” sẽ bị bỏ qua khi đọc', 'Thay bằng dấu phẩy', 'Sửa'],
-      [10, 'Số điện thoại', 'warn', '“1900 6868” sẽ đọc từng chữ số', 'Đọc theo nhóm 4 số', 'Đổi'],
-      [14, 'Viết tắt', 'warn', '“TM.” sẽ đọc là “tê mờ”', 'Thêm vào từ điển phát âm', 'Thêm'],
-      [16, 'Tên riêng', 'warn', '“Nguyễn Văn Tuyến” có thể đọc sai dấu', 'Thêm vào từ điển phát âm', 'Thêm']
-    ];
-    const issues = issueDefs.map(([line, kind, sev, msg, fix, action]) => ({
-      line, kind, msg, fix, action,
-      dot: sev === 'err' ? 'var(--err)' : 'var(--warn)',
-      bg: line === this.state.sel ? 'var(--acc-soft)' : 'transparent'
-    }));
-
-    return { themeTabs, filters, lines, issues, rules, rows,
-      isAudit, isNorm,
-      pickAudit: () => this.setState({ tab: 0 }),
-      pickNorm: () => this.setState({ tab: 1 }),
-      t0bg: isAudit ? 'var(--acc-soft)' : 'transparent', t0fg: isAudit ? 'var(--acc)' : 'var(--txt)', t0bd: isAudit ? 'var(--acc)' : 'transparent',
-      t1bg: isNorm ? 'var(--acc-soft)' : 'transparent', t1fg: isNorm ? 'var(--acc)' : 'var(--txt)', t1bd: isNorm ? 'var(--acc)' : 'transparent',
-      topRight: isAudit ? 'Lần soát cuối: 14:03 · tự động soát khi mở tệp' : '11 chỗ sẽ được đọc khác văn bản gốc · 16 đoạn',
-      selLabel: this.state.sel,
-      statusDot: isAudit ? 'var(--warn)' : 'var(--acc)',
-      statusRight: isAudit ? '9 chỗ cần chú ý · 2 lỗi nên sửa trước khi xuất' : 'Chuẩn hoá theo 3 quy tắc đang bật' };
+    return {
+      themeTabs, menus, profiles, lines, issues, rows, rules, filters, panelTabs, auditRows,
+      menuItems, menuShown: mi >= 0,
+      closeMenu: () => this.setState({ menu: -1 }),
+      isAudit, isNorm, kindOn, kindLabel: this.state.kind || '',
+      clearKind: () => this.setState({ kind: null }),
+      noIssue: issues.length === 0,
+      hasScan: !!doc, needScan: !doc,
+      runScan: () => { const s = Object.assign({}, this.state.scanned); s[this.key()] = true; this.setState({ scanned: s, sel: 1 }); },
+      windowTitle: 'Giọng Việt — ' + curFileName + (doc ? ' — đang soát' : ''),
+      curFileName, docMeta: doc ? doc.meta : 'chưa soát',
+      headerHint: doc ? 'Đã soát lúc ' + doc.scanAt + ' · tự động soát lại khi tệp thay đổi' : 'Bấm “Soát tệp này” để bắt đầu',
+      profileName: PR[pf].name, voiceName: PR[pf].voice, tuneSummary: PR[pf].tune,
+      panelHint: isAudit
+        ? (flagged.length + ' chỗ cần chú ý · ' + nErr + ' lỗi nên sửa trước khi xuất')
+        : (nChanged + ' chỗ sẽ được đọc khác văn bản gốc'),
+      fixAllLabel: 'Sửa tất cả có thể (' + flagged.filter((p) => p.act === 'Sửa').length + ')',
+      auditLead: nErr > 0
+        ? flagged.length + ' chỗ cần chú ý, trong đó ' + nErr + ' lỗi nên sửa trước khi xuất.'
+        : flagged.length + ' chỗ cần chú ý, không có lỗi nặng.',
+      statusCaret: doc ? 'Đoạn ' + this.state.sel + ' / ' + paras.length : 'Chưa mở đoạn nào',
+      statusRight: doc ? 'Đã soát lúc ' + doc.scanAt : 'Tệp chưa soát'
+    };
   }
 }
 </script>
