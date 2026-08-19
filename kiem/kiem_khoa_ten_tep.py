@@ -88,21 +88,54 @@ CN = _GOC / "giaodien_moi" / "cau_noi_moi.py"
 GD = _GOC / "ui-moi" / "giao-dien.js"
 TT = _GOC / "ui-moi" / "trang-thai.js"
 
-for so in (557, 599):
-    print(f"  cau_noi_moi.py:{so}| {dong_nguon(CN, so)}")
-print(f"  giao-dien.js:947| {dong_nguon(GD, 947)}")
-print(f"  giao-dien.js:948| {dong_nguon(GD, 948)}")
-print(f"  giao-dien.js:958| {dong_nguon(GD, 958)}")
-print(f"  giao-dien.js:960| {dong_nguon(GD, 960)}")
-print(f"  giao-dien.js:962| {dong_nguon(GD, 962)}")
-print(f"  trang-thai.js:126| {dong_nguon(TT, 126)}")
+# Cắt theo NỘI DUNG, không theo số dòng. Trước đây mục này neo cứng vào
+# cau_noi_moi.py 557/599 và giao-dien.js 947/948/958/960/962. Đo ngày 19/8: năm
+# số của giao-dien.js đã trôi sang chỗ khác hẳn và in ra classList.toggle
+# ('dang-doc') / cuonToiDoanHienTai — rác, chẳng dính gì tới khoá tên tệp — mà
+# bài VẪN XANH vì chúng chỉ nằm trong print(). Neo cứng vào tệp đang sửa hằng
+# ngày thì hỏng lặng lẽ như thế. Dự án đã vấp đúng họ này ở kiem_so_nguoi_nhom.py.
+def cau_tra_ve(tep, ten_ham):
+    """Câu return đầu tiên trong thân một hàm, tìm bằng tên hàm."""
+    dong = tep.read_text(encoding="utf-8").splitlines()
+    i = next((k for k, d in enumerate(dong) if d.startswith(f"    def {ten_ham}")
+              or d.startswith(f"def {ten_ham}")), -1)
+    if i < 0:
+        return f"KHÔNG TÌM THẤY def {ten_ham}"
+    for d in dong[i:i + 80]:
+        if "return {" in d and '"ten"' in d:
+            return d
+    return f"KHÔNG THẤY câu return có 'ten' trong {ten_ham}"
 
-ok('"ten": p.name' in dong_nguon(CN, 557),
-   "moi_doc_danh_sach trả ten = p.name (tên trần)", dong_nguon(CN, 557).strip())
-ok('"ten": p.name' in dong_nguon(CN, 599),
-   "moi_doc_tep trả ten = p.name (tên trần)", dong_nguon(CN, 599).strip())
-ok('"duongDan": str(p)' in dong_nguon(CN, 599),
+
+def khoi_ham_js(tep, mo_dau, so_dong=30):
+    """Thân một hàm JS, cắt bằng dòng mở đầu chứ không bằng số dòng."""
+    dong = tep.read_text(encoding="utf-8").splitlines()
+    i = next((k for k, d in enumerate(dong) if d.startswith(mo_dau)), -1)
+    return dong[i:i + so_dong] if i >= 0 else []
+
+
+ds_ham = cau_tra_ve(CN, "moi_doc_danh_sach")
+tep_ham = cau_tra_ve(CN, "moi_doc_tep")
+print(f"  cau_noi_moi.py moi_doc_danh_sach| {ds_ham.strip()}")
+print(f"  cau_noi_moi.py moi_doc_tep      | {tep_ham.strip()}")
+print(f"  cau_noi_moi.py moi_dan_van_ban  | {cau_tra_ve(CN, 'moi_dan_van_ban').strip()}")
+for d in khoi_ham_js(GD, "function datTaiLieu"):
+    if any(x in d for x in ("kq.ten", "TAI_LIEU[ten]", "chuaLuu.delete(ten)",
+                            "[ten]: kq.duongDan", "[ten]: kq.loai")):
+        print(f"  giao-dien.js datTaiLieu| {d.strip()}")
+tt = TT.read_text(encoding="utf-8").splitlines()
+print("  trang-thai.js| " + next(d.strip() for d in tt if d.startswith("const theCuaDoan")))
+
+ok('"ten": p.name' in ds_ham,
+   "moi_doc_danh_sach trả ten = p.name (tên trần)", ds_ham.strip())
+ok('"ten": p.name' in tep_ham,
+   "moi_doc_tep trả ten = p.name (tên trần)", tep_ham.strip())
+ok('"duongDan": str(p)' in tep_ham,
    "đường dẫn ĐẦY ĐỦ vẫn có trong cùng gói tin, chỉ là không dùng làm khoá")
+# Năm dòng print bên trên chỉ có ích khi chúng trỏ đúng vào datTaiLieu. Canh
+# luôn điều đó, không thì lần sau lại in rác mà không ai biết.
+ok(any("TAI_LIEU[ten]" in d for d in khoi_ham_js(GD, "function datTaiLieu")),
+   "datTaiLieu vẫn là chỗ ghi TAI_LIEU theo tên trần")
 # Tìm theo NỘI DUNG, không theo số dòng: thêm bớt vài dòng ở đầu tệp là lát cắt
 # theo số dòng trỏ sai chỗ, rồi phép kiểm đỏ lên vì lý do chẳng liên quan gì.
 ok(any("kq.ten" in d for d in GD.read_text(encoding="utf-8").splitlines()),

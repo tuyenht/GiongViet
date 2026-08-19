@@ -230,8 +230,18 @@ ok("moi_bat_dau_xuat" in gd, "co goi sang Python de xuat that")
 ok("moi_huy_xuat" in gd, "co duong huy")
 ok(gd.count("'11,6 MB'") <= 1,
    "khong con dung luong bia trong duong Python", gd.count("'11,6 MB'"))
-sau = gd[gd.find("async function batDauXuat"):]
-ok("api('moi_bat_dau_xuat'" in sau[:800], "batDauXuat goi Python truoc tien")
+# Cat dung THAN ham batDauXuat (toi dau ngoac dong o cot 0), roi doi chieu THU TU
+# hai moc trong do. Truoc day cho canh la "nam trong 800 ky tu dau" — mot cua so
+# CUNG, nen them may dong chu thich vao dau ham la do, du ma nguon dung hon truoc.
+# Da xay ra that: L1 chen khoi chu thich giai thich vi sao phai ep gui, day loi goi
+# ra moc 901, va bai nay do 101 ky tu vi ly do chang lien quan gi toi nut gia.
+than = gd[gd.find("async function batDauXuat"):]
+than = than[:than.find("\n}\n") + 2]
+i_goi = than.find("api('moi_bat_dau_xuat'")
+i_man = than.find("exporting: true")
+ok(i_goi >= 0, "batDauXuat co goi Python that trong than ham")
+ok(0 <= i_goi < i_man, "goi Python TRUOC khi mo man tien do, khong ve san man rong",
+   f"goi o {i_goi}, mo man o {i_man}")
 
 print("\n--- M. MP3 va WAV 24 bit chay THAT bang ffmpeg cua du an ---")
 ff = Path(_GOC + r"\ffmpeg\bin\ffmpeg.exe")
