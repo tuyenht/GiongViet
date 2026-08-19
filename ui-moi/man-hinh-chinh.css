@@ -2,7 +2,8 @@
    Đi kèm app.css (token + control). Mọi kích thước lấy từ README mục
    "Màn hình 1 — Màn hình chính".
 
-   Xếp dọc: tiêu đề 32 → menu 30 → công cụ 44 → tab 36 → (tìm) → (cảnh báo)
+   Xếp dọc: tiêu đề 32 → menu 30 → công cụ 44 → (tìm) → (cảnh báo)
+   Danh sách tệp nằm trong cột trái, lồng dưới hồ sơ của nó — không còn dải tab.
    → ba cột (co giãn) → (thanh phát 46) → trạng thái 28. */
 
 .man-chinh { height: 100vh; display: flex; flex-direction: column; background: var(--bg); }
@@ -65,26 +66,43 @@
 }
 .nut--vien.dang-phat:hover:not(:disabled) { background: var(--acc-soft); }
 
-/* ============================================================ dải tab 36 */
+/* ====================================== cây tệp trong cột trái (thay dải tab)
 
-.daitab { height: 36px; flex: none; display: flex; align-items: flex-end; gap: 2px;
-          padding: 0 8px; }
-.tab { height: 34px; max-width: 230px; display: flex; align-items: center; gap: 8px;
-       padding: 0 6px 0 11px; border: 1px solid transparent; border-bottom: 0;
-       border-radius: 7px 7px 0 0; background: transparent; color: var(--txt2);
-       transition: background .15s; }
-.tab:hover { background: var(--sub-h); }
-.tab.dang-xem { background: var(--layer); border-color: var(--stroke); color: var(--txt);
-                font-weight: 600; }
-.tab.dang-xem .tab__icon { color: var(--acc); }
-.tab__icon { flex: none; color: var(--txt3); display: flex; }
-.tab__ten { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis;
+   Vạch trái 2px là thứ nối hàng tệp về hàng hồ sơ của nó; thụt 9px để mắt thấy
+   ngay đây là cấp dưới. Hàng đang xem đổi vạch sang màu nhấn. */
+
+.tepds { display: flex; flex-direction: column; gap: 1px; margin-top: 2px; }
+.tep { height: 30px; display: flex; align-items: center; gap: 8px;
+       margin-left: 9px; padding: 0 6px 0 15px;
+       border-left: 2px solid var(--stroke2); border-radius: 0 4px 4px 0;
+       color: var(--txt2); transition: background .15s; }
+/* Hover CHỪA hàng đang xem. Bản mẫu không chừa, mà --sub-h lại nhạt hơn
+   --ctl-h, nên rê chuột vào tệp đang mở làm nó nhạt đi - trông như vừa bị bỏ
+   chọn. Với người lớn tuổi đó là tín hiệu sai, nên ở đây cố ý lệch bản mẫu. */
+.tep:hover:not(.dang-xem) { background: var(--sub-h); }
+.tep.dang-xem { background: var(--ctl-h); border-left-color: var(--acc);
+                color: var(--txt); font-weight: 600; }
+/* Bàn phím tới được mà không thấy mình đang đứng ở đâu thì cũng như không tới. */
+.tep:focus-visible { outline: 2px solid var(--acc); outline-offset: -2px; }
+.tep__icon { flex: none; color: var(--txt3); display: flex; }
+.tep.dang-xem .tep__icon { color: var(--acc); }
+.tep__ten { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis;
             white-space: nowrap; font-size: 13px; }
-.tab__dong { width: 20px; height: 20px; flex: none; border: 0; border-radius: 4px;
+.tep__dong { width: 18px; height: 18px; flex: none; border: 0; border-radius: 4px;
              background: transparent; color: var(--txt3); display: flex;
              align-items: center; justify-content: center; }
-.tab__dong:hover { background: var(--sel); color: var(--txt); }
-.daitab__them { width: 28px; height: 28px; margin-bottom: 3px; }
+.tep__dong:hover { background: var(--sel); color: var(--txt); }
+.tep--sua { padding-right: 4px; }
+.tep__o { flex: 1; min-width: 0; height: 22px; padding: 0 5px;
+          border: 1px solid var(--acc); border-radius: 4px;
+          background: var(--ctl); color: var(--txt);
+          font: 400 13px inherit; }
+.tep__them { height: 28px; width: calc(100% - 9px); justify-content: flex-start;
+             gap: 8px; margin-left: 9px; padding: 0 6px 0 15px;
+             color: var(--txt3); font-size: 13px; }
+.tep__them:hover { background: var(--sub-h); color: var(--txt2); }
+/* Cột thu còn 44px thì không còn chỗ cho hàng tệp - ẩn cả cụm, y như .hoso__than. */
+.trai.thu-gon .tepds { display: none; }
 
 /* ============================================================ thanh tìm và thay thế */
 

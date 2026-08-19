@@ -19,7 +19,9 @@ let batSuKien = {};
 function nutGia(id = '') {
   return {
     id, dataset: {}, style: {}, classList: { toggle() {}, add() {}, remove() {} },
-    scrollTop: 0, value: '', focus() {}, remove() {}, appendChild() {},
+    // select() có mặt vì <input> thật luôn có — thiếu nó thì bài kiểm đỏ ở chỗ
+    // sản phẩm chạy tốt, tức là DOM giả nói dối chứ không phải mã nguồn sai.
+    scrollTop: 0, value: '', focus() {}, select() {}, remove() {}, appendChild() {},
     querySelector: () => nutGia(), querySelectorAll: () => [],
     getBoundingClientRect: () => ({ left: 0, width: 200 }),
     set innerHTML(v) { if (this.id === 'goc') HTML = v; }, get innerHTML() { return ''; },
@@ -124,13 +126,31 @@ function goPhim(soDoan, phim, { vt = 0, chu = 'abc', ...them } = {}) {
   return daChan;                       // có chặn hành vi mặc định hay không
 }
 
-console.log('--- A. Khung dọc đủ 9 tầng ---');
+/* BẤM CHUỘT THẬT vào handler click, cùng lý lẽ với goPhim: canh hành vi chứ
+   không canh dấu hiệu. `dat()` chạy đồng bộ ngay đầu chuyenSang() nên trạng
+   thái đã đổi khi hàm này trả về, dù phần đuôi của chuyenSang còn chờ Python. */
+function bam(sel, ds = {}) {
+  const nut = { dataset: ds, closest: (s) => (s === sel ? nut : null) };
+  let daChan = false;
+  batSuKien.click({
+    target: nut,
+    stopPropagation() { daChan = true; },
+    preventDefault() {},
+  });
+  return daChan;
+}
+
+console.log('--- A. Khung dọc đủ 8 tầng ---');
+// Dải tab ngang đã bỏ theo bản thiết kế; danh sách tệp chuyển vào cột trái.
+// Canh luôn rằng nó KHÔNG mọc lại, không thì gỡ xong lại có người dựng lại.
 for (const [cls, ten] of [['tieude', 'thanh tiêu đề'], ['menu', 'thanh menu'],
-  ['congcu', 'thanh công cụ'], ['daitab', 'dải tab'], ['thanchinh', 'vùng ba cột'],
+  ['congcu', 'thanh công cụ'], ['thanchinh', 'vùng ba cột'],
   ['trai', 'cột trái'], ['doc', 'vùng đọc'], ['phai', 'cột phải'],
   ['trangthai', 'thanh trạng thái']]) {
   ok(co(`class="${cls}`) || co(` ${cls}"`) || co(`"${cls}"`), ten);
 }
+ok(!co('class="daitab') && !co('data-tab=') && !co('id="themTab"'),
+   'KHÔNG còn dải tab ngang — danh sách tệp nằm trong cột trái');
 
 console.log('\n--- B. Thanh công cụ đúng đặc tả ---');
 ok(co('Dán văn bản') && HTML.indexOf('Dán văn bản') < HTML.indexOf('Mở file'),
@@ -294,11 +314,146 @@ ok(!co('Đã lưu 14:02'), 'KHÔNG in cứng "Đã lưu 14:02"');
 ok(co('Hồ sơ:'), 'thanh trạng thái vẫn nói hồ sơ đang dùng');
 ok(!co('UTF-8') && !co('CRLF') && !co('100%</span>'), 'KHÔNG còn UTF-8 / CRLF / mức phóng to');
 
-console.log('\n--- G. Dải tab ---');
-ok(dem('class="tab') >= 2, '2 tab của hồ sơ 1', String(dem('data-tab=')));
-ok(co('thongbao-quoc-khanh.txt'), 'tên tệp trên tab');
-ok(co('data-dongtab='), 'tab đóng được');
-ok(co('id="themTab"'), 'nút + thêm tab');
+console.log('\n--- G. Cây tệp trong cột trái ---');
+/* Đếm data-tep= chứ KHÔNG đếm 'class="tep'. Phép canh cũ đếm 'class="tab' và
+   trúng cả tab__icon / tab__ten / tab__dong, nên MỘT tab đã cho 4 — nó xanh kể
+   cả khi dải chỉ còn một tệp. Thuộc tính data- thì mỗi hàng đúng một cái. */
+ok(dem('data-tep=') === 2, 'hồ sơ 1 bung ra đúng 2 hàng tệp', String(dem('data-tep=')));
+ok(co('thongbao-quoc-khanh.txt'), 'tên tệp hiện trên hàng tệp');
+ok(co('data-dongtep='), 'đóng được từng tệp');
+ok(co('id="themTep"') && co('Thêm tệp'), 'có lối Thêm tệp');
+ok(co('class="tepds"'), 'danh sách tệp lồng trong cột trái');
+// Chỉ hồ sơ ĐANG CHỌN mới bung danh sách tệp. Bốn hồ sơ mà bung cả bốn thì cột
+// trái dài ra theo số tệp của hồ sơ người dùng không xem — đúng thứ bản thiết
+// kế nêu tên để tránh.
+ok(dem('class="tepds"') === 1, 'chỉ MỘT hồ sơ bung danh sách tệp', String(dem('class="tepds"')));
+ok(dem('class="tep dang-xem"') === 1, 'đúng một hàng tệp được đánh dấu đang xem',
+   String(dem('class="tep dang-xem"')));
+
+/* Hàng tệp phải nằm NGOÀI thẻ .hoso. .hoso là <button>, mà HTML cấm nút lồng
+   trong nút: trình duyệt tự đẩy nút × ra ngoài và cú bấm rơi nhầm chỗ. Đứng
+   ngoài cũng tránh [data-hoso] nuốt mất cú bấm, vì closest() đi ngược lên cây. */
+{
+  const iHoso = HTML.indexOf('data-hoso="0"');
+  const iDong = HTML.indexOf('</button>', iHoso);
+  const iCum = HTML.indexOf('class="tepds"');
+  ok(iCum > iDong, 'cụm tệp bắt đầu SAU khi thẻ .hoso đã đóng — không nút lồng nút');
+}
+
+/* Ba mục dưới đây ĐỔI THẬT danh sách tệp, nên phải trả trạng thái về chỗ cũ khi
+   xong. Không trả là các mục sau chạy trên một tài liệu rỗng và đỏ lên vì lý do
+   chẳng liên quan gì tới thứ chúng canh — đã vấp đúng thế một lần lúc viết. */
+chay('globalThis.__Scu = S');
+// TAI_LIEU là object toàn cục bị sửa TẠI CHỖ, nên trả S về chỗ cũ vẫn chưa đủ:
+// mục G5 đổi khoá của nó và các mục sau đọc phải kho rỗng.
+chay('globalThis.__TLcu = { ...TAI_LIEU }');
+
+console.log('\n--- G2. Cây tệp: bấm thật, không chỉ soi chuỗi ---');
+{
+  chay("dat({ ...S, man: 'chinh' })");
+  const truoc = chay('S.activeByProfile[S.profile]');
+  bam('[data-tep]', { tep: '1' });
+  ok(truoc === 0 && chay('S.activeByProfile[S.profile]') === 1,
+     'bấm hàng tệp thứ hai thì tệp đang xem đổi theo',
+     `${truoc} → ${chay('S.activeByProfile[S.profile]')}`);
+
+  const n1 = chay('tabDangMo(S).length');
+  bam('#themTep');
+  const n2 = chay('tabDangMo(S).length');
+  ok(n2 === n1 + 1, 'Thêm tệp đẻ ra đúng một hàng', `${n1} → ${n2}`);
+  ok(chay('S.activeByProfile[S.profile]') === n2 - 1, 'và nhảy sang hàng vừa tạo');
+  ok(co('Văn bản mới 1'), 'hàng chưa đặt tên mang nhãn tự sinh "Văn bản mới 1"');
+
+  // Nút × phải chặn sự kiện nổi lên, không thì vừa đóng tệp vừa nhảy tệp.
+  ok(bam('[data-dongtep]', { dongtep: '0' }),
+     'nút đóng chặn sự kiện nổi lên (stopPropagation)');
+  ok(chay('tabDangMo(S).length') === n2 - 1, 'đóng một hàng thì danh sách ngắn đi',
+     String(chay('tabDangMo(S).length')));
+}
+
+console.log('\n--- G3. Đóng tệp cuối cùng vẫn còn đúng một hàng rỗng ---');
+{
+  chay("dat({ ...S, tabsByProfile: { ...S.tabsByProfile, [S.profile]: ['mot.txt'] },"
+       + ' activeByProfile: { ...S.activeByProfile, [S.profile]: 0 } })');
+  bam('[data-dongtep]', { dongtep: '0' });
+  ok(chay('tabDangMo(S).length') === 1, 'không bao giờ còn 0 tệp — đường nạp văn bản '
+     + 'đổ vào ô rỗng ấy', String(chay('tabDangMo(S).length')));
+  ok(co('Văn bản mới 1'), 'hàng còn lại là ô rỗng mang nhãn tự sinh');
+}
+
+console.log('\n--- G4. Cột thu gọn 44px thì cụm tệp tự ẩn ---');
+{
+  chay('dat({ ...S, rail: true })');
+  ok(co('trai thu-gon'), 'cột đang ở chế độ thu gọn');
+  const css = readFileSync(join(UI, '..', 'ui-moi', 'man-hinh-chinh.css'), 'utf8');
+  ok(/\.trai\.thu-gon \.tepds\s*\{[^}]*display:\s*none/.test(css),
+     'CSS ẩn cụm tệp khi thu gọn — không thì cột 44px vỡ');
+}
+
+/* Đổi tên tệp là phép NGUY HIỂM NHẤT của cây tệp, vì tên tệp không phải nhãn -
+   nó là KHOÁ của năm kho. Dời thiếu một kho là bài vẫn nằm trong bộ nhớ dưới
+   khoá cũ mà màn hình báo trống, hoặc thẻ cảm xúc của bài này nhảy sang bài kia. */
+console.log('\n--- G5. Nháy đúp đổi tên phải dời CẢ NĂM kho ---');
+{
+  chay("dat({ ...globalThis.__Scu, man: 'chinh' })");
+  const cu = chay('tabDangMo(S)[0]');
+  chay(`dat({ ...S, duongDanTep: { ...S.duongDanTep, ['${cu}']: 'C:\\\\thu\\\\a.txt' },`
+       + ` loaiTep: { ...S.loaiTep, ['${cu}']: 'congduc' } })`);
+  chay(`TAI_LIEU['${cu}'] = TAI_LIEU['${cu}'] || { doan: [], chuY: {} }`);
+
+  batSuKien.dblclick({
+    target: { closest: (s) => (s === '[data-tep]' ? { dataset: { tep: '0' } } : null) },
+    preventDefault() {},
+  });
+  ok(co('tep__o') && co('id="oTenTep"'), 'nháy đúp mở ô gõ lại tên',
+     `suaTenTep = ${chay('String(suaTenTep)')}`);
+
+  chay("doiTenTep(0, 'ten-hoan-toan-moi.txt')");
+  const m = 'ten-hoan-toan-moi.txt';
+  ok(chay('tabDangMo(S)[0]') === m, 'mảng tệp mang tên mới', chay('tabDangMo(S)[0]'));
+  ok(chay(`!!TAI_LIEU['${m}'] && !TAI_LIEU['${cu}']`), 'kho nội dung dời sang tên mới');
+  ok(chay(`S.duongDanTep['${m}'] === 'C:\\\\thu\\\\a.txt' && !S.duongDanTep['${cu}']`),
+     'kho đường dẫn dời theo — Ctrl+S vẫn ghi đúng chỗ cũ');
+  ok(chay(`S.loaiTep['${m}'] === 'congduc' && !S.loaiTep['${cu}']`),
+     'kho loại tệp dời theo — không đọc nhầm danh sách thành văn xuôi');
+  ok(chay(`!S.chips['${cu}']`), 'kho thẻ cảm xúc không còn kẹt ở tên cũ');
+
+  // Trùng tên thì TỪ CHỐI. Hai tệp cùng tên dùng chung nội dung và thẻ - đúng
+  // cái lỗi mà cả bộ kiểm khoá-tên-tệp sinh ra để canh.
+  chay("dat({ ...S, tabsByProfile: { ...S.tabsByProfile,"
+       + " [S.profile]: ['a.txt', 'b.txt'] } })");
+  chay("doiTenTep(1, 'a.txt')");
+  ok(chay("tabDangMo(S)[1]") === 'b.txt', 'đổi thành tên đã có thì TỪ CHỐI, giữ tên cũ',
+     chay('tabDangMo(S)[1]'));
+}
+console.log('\n--- G6. Bàn phím với tới được hàng tệp ---');
+{
+  chay("dat({ ...globalThis.__Scu, man: 'chinh' })");
+  ok(co('data-tep="0"') && co('tabindex="0"'), 'hàng tệp nhận được nét chọn của bàn phím');
+  ok(co('role="button"'), 'trình đọc màn hình hiểu hàng tệp là thứ bấm được');
+
+  // Gõ Enter THẬT khi nét chọn đang đứng ở hàng tệp thứ hai.
+  const truoc = chay('S.activeByProfile[S.profile]');
+  ctx.document.activeElement = { tagName: 'DIV', dataset: { tep: '1' } };
+  batSuKien.keydown({ key: 'Enter', preventDefault() {} });
+  ctx.document.activeElement = { tagName: 'DIV' };
+  ok(truoc === 0 && chay('S.activeByProfile[S.profile]') === 1,
+     'Enter trên hàng tệp thì mở tệp ấy', `${truoc} → ${chay('S.activeByProfile[S.profile]')}`);
+
+  /* Space PHẢI rơi xuống phím Nghe toàn cục, không bị hàng tệp nuốt. Người dùng
+     đứng trong cột trái bấm Space mà loa im là lỗi khó đoán nhất. */
+  chay("dat({ ...S, activeByProfile: { ...S.activeByProfile, [S.profile]: 0 } })");
+  ctx.document.activeElement = { tagName: 'DIV', dataset: { tep: '1' } };
+  batSuKien.keydown({ key: ' ', preventDefault() {} });
+  ctx.document.activeElement = { tagName: 'DIV' };
+  ok(chay('S.activeByProfile[S.profile]') === 0,
+     'Space KHÔNG bị hàng tệp nuốt — vẫn là phím Nghe');
+}
+
+// Trả cả hai về mốc trước mục G2: S bằng dat(), TAI_LIEU bằng cách dọn sạch rồi
+// chép lại — không thể gán đè vì các nơi khác đang giữ chính tham chiếu ấy.
+chay('Object.keys(TAI_LIEU).forEach((k) => delete TAI_LIEU[k]);'
+     + ' Object.assign(TAI_LIEU, globalThis.__TLcu); dat(globalThis.__Scu)');
 
 console.log('\n--- H. Thanh phát: chưa phát thì KHÔNG hiện ---');
 ok(!co('class="phat"'), 'chưa phát → không có thanh phát');

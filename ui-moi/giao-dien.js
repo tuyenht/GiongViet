@@ -214,20 +214,6 @@ const veMenuThe = () => `
     <button class="roi__muc" data-the=""><span class="roi__ten">Gỡ thẻ khỏi đoạn này</span></button>
   </div>`;
 
-// ---------------------------------------------------------------- dải tab
-
-const veDaiTab = () => `
-  <div class="daitab">
-    ${tabDangMo(S).map((ten, i) => `
-      <div class="tab${i === S.activeByProfile[S.profile] ? ' dang-xem' : ''}" data-tab="${i}">
-        <span class="tab__icon">${ic('tep', 14)}</span>
-        <span class="tab__ten">${esc(ten || 'Chưa đặt tên')}</span>
-        <button class="tab__dong" data-dongtab="${i}" title="Đóng tệp">${ic('dong', 9)}</button>
-      </div>`).join('')}
-    <button class="nut nut--icon daitab__them" id="themTab"
-            title="Mở thêm một tệp trong hồ sơ này">${ic('cong', 14)}</button>
-  </div>`;
-
 // ---------------------------------------------------------------- tìm · cảnh báo
 
 const veThanhTim = () => !S.find ? '' : `
@@ -283,6 +269,62 @@ function veCanhBao() {
 
 const ICON_HO_SO = ['baiviet', 'danto', 'sach', 'danhsach'];
 
+/* Hàng tệp nào đang được gõ lại tên. Để ở tầng module chứ không nhét vào S:
+   phanCanLuu() ghi thẳng S xuống hoso-v2.json, mà "đang gõ dở tên" thì không
+   phải thứ đáng nhớ qua lần chạy sau. Cùng chỗ với chuaLuu vì cùng bản chất. */
+let suaTenTep = null;
+
+/* Tên hiện trên hàng tệp. Tệp chưa đặt tên mang khoá rỗng, và ĐÁNH SỐ THEO VỊ
+   TRÍ đúng như bản mẫu (blankLabel): đóng một ô rỗng ở giữa thì các ô rỗng sau
+   tự tụt số. Giữ y vậy để hai bên không lệch nhau. */
+function nhanTep(ds, j) {
+  if (ds[j]) return ds[j];
+  let n = 0;
+  for (let k = 0; k <= j; k++) if (!ds[k]) n++;
+  return 'Văn bản mới ' + n;
+}
+
+/* Danh sách tệp lồng trong hàng hồ sơ. Chỉ hồ sơ đang chọn mới bung ra - nhờ
+   vậy chiều cao cột trái không phụ thuộc số tệp của các hồ sơ khác.
+
+   Hàng tệp đứng NGOÀI thẻ .hoso chứ không lồng vào trong, vì .hoso là <button>
+   và HTML cấm nút lồng trong nút - nút × sẽ bị trình duyệt đẩy văng ra ngoài.
+   Đứng ngoài cũng tránh luôn chuyện [data-hoso] bắt mất cú bấm: bộ bắt sự kiện
+   hỏi [data-hoso] trước, mà closest() đi ngược lên cây. */
+function veCayTep(i) {
+  if (i !== S.profile) return '';
+  const ds = tabDangMo(S);
+  const dangXem = S.activeByProfile[S.profile];
+  return `
+    <div class="tepds">
+      ${ds.map((ten, j) => {
+        const nhan = nhanTep(ds, j);
+        const on = j === dangXem;
+        if (suaTenTep === `${i}:${j}`) {
+          return `<div class="tep tep--sua">
+            <span class="tep__icon">${ic('tep', 13)}</span>
+            <input class="tep__o" id="oTenTep" spellcheck="false"
+                   value="${esc(nhan)}" data-suatep="${j}">
+          </div>`;
+        }
+        /* tabindex + role: hàng tệp là <div> chứ không phải <button>, vì bên
+           trong đã có nút ×, mà nút lồng trong nút thì trình duyệt tự đẩy ra
+           ngoài. Không có hai thuộc tính này thì người chỉ dùng bàn phím không
+           tới được hàng nào - dải tab cũ vướng đúng lỗi đó, đừng bê sang. */
+        return `<div class="tep${on ? ' dang-xem' : ''}" data-tep="${j}"
+                     tabindex="0" role="button" aria-current="${on}"
+                     title="${esc(nhan)} · nháy đúp để đổi tên">
+          <span class="tep__icon">${ic('tep', 13)}</span>
+          <span class="tep__ten">${esc(nhan)}</span>
+          <button class="tep__dong" data-dongtep="${j}" title="Đóng tệp">${ic('dong', 9)}</button>
+        </div>`;
+      }).join('')}
+      <button class="nut tep__them" id="themTep"
+              title="Mở thêm một tệp trong hồ sơ này">
+        ${ic('cong', 12)}<span>Thêm tệp</span></button>
+    </div>`;
+}
+
 function veCotTrai() {
   return `
   <div class="trai${S.rail ? ' thu-gon' : ''}">
@@ -301,7 +343,7 @@ function veCotTrai() {
           <span class="hoso__than">
             <span class="hoso__ten">${esc(h.ten)}</span>
             <span class="hoso__giong">${esc(g ? g.ten : '')}</span>
-          </span></button>`;
+          </span></button>${veCayTep(i)}`;
       }).join('')}
       <button class="nut trai__lienket nhan-chu" data-lenh="Tạo hồ sơ mới" style="margin-top:4px"
               title="Tạo hồ sơ đọc mới">
@@ -661,7 +703,7 @@ function ve() {
       <div class="manphu">${veGiua()}</div>`
     : `${veThanhTieuDe(ten, null)}
       ${veVienKeo()}
-    ${veMenu()}${veCongCu()}${veDaiTab()}${veThanhTim()}${veCanhBao()}
+    ${veMenu()}${veCongCu()}${veThanhTim()}${veCanhBao()}
     <div class="thanchinh${S.man !== 'chinh' ? ' thanchinh--phu' : ''}">${veCotTrai()}${
       veGiua()}${veCotPhai()}</div>
     ${veThanhPhat()}${veTrangThai()}`;
@@ -1604,13 +1646,22 @@ document.addEventListener('click', (e) => {
   if ((n = t('[data-menu]')))   return dat(moMenu(S, +n.dataset.menu));
   if ((n = t('[data-lenh]')))   { const f = LENH[n.dataset.lenh];
                                   return f ? f() : dat(dongHetMenu(S)); }
-  if ((n = t('[data-hoso]')))   return chuyenSang(doiHoSo(S, +n.dataset.hoso));
-  if ((n = t('[data-dongtab]'))) { e.stopPropagation();
-                                   const i = +n.dataset.dongtab;
+  /* Ba nhánh cây tệp hỏi TRƯỚC [data-hoso]. Hàng tệp nằm ngoài thẻ .hoso nên
+     closest() không trúng nó, nhưng để trước thì thứ tự đọc khớp thứ tự nhìn
+     thấy trên màn hình, và thêm hàng vào trong hồ sơ sau này cũng không gãy. */
+  if (t('#themTep'))            { suaTenTep = null; return chuyenSang(themTab(S)); }
+  if ((n = t('[data-dongtep]'))) { e.stopPropagation();
+                                   const i = +n.dataset.dongtep;
+                                   suaTenTep = null;
                                    return hoiTruocKhiDongTep(tabDangMo(S)[i],
                                             () => chuyenSang(dongTab(S, i))); }
-  if ((n = t('[data-tab]')))    return chuyenSang(doiTab(S, +n.dataset.tab));
-  if (t('#themTab'))            return chuyenSang(themTab(S));
+  if (t('.tep__o'))             return;          // đang gõ tên, đừng cướp cú bấm
+  if ((n = t('[data-tep]')))    { const i = +n.dataset.tep;
+                                  if (suaTenTep) { suaTenTep = null; ve(); }
+                                  if (i === S.activeByProfile[S.profile]) return;
+                                  return chuyenSang(doiTab(S, i)); }
+  if ((n = t('[data-hoso]')))   { suaTenTep = null;
+                                  return chuyenSang(doiHoSo(S, +n.dataset.hoso)); }
   /* Bấm vào chính chữ đang sửa được thì để yên cho con trỏ đứng đó - dat() ở
      dưới sẽ vẽ lại vùng đọc và ném con trỏ về đầu bài. */
   if (t('.doan__chu[contenteditable]')) {
@@ -1806,6 +1857,73 @@ document.addEventListener('click', (e) => {
   }
 });
 
+/* Đổi tên một tệp trong hồ sơ đang dùng.
+
+   Tên tệp KHÔNG chỉ là nhãn - nó là KHOÁ của năm kho: TAI_LIEU (nội dung),
+   S.duongDanTep, S.loaiTep, S.chips (thẻ cảm xúc) và chuaLuu. Đổi nhãn mà quên
+   dời năm kho ấy là bài biến mất khỏi màn hình trong khi vẫn nằm nguyên trong
+   bộ nhớ dưới khoá cũ. Nên hàm này dời cả năm, không sửa mỗi mảng tab.
+
+   Không đụng tệp trên đĩa: S.duongDanTep đi theo tên mới, nên Ctrl+S vẫn ghi
+   đúng chỗ cũ và tệp gốc của người dùng giữ nguyên tên. */
+function doiTenTep(j, tenGo) {
+  const ds = tabDangMo(S).slice();
+  const cu = ds[j];
+  const moi = String(tenGo || '').trim();
+
+  suaTenTep = null;
+  // Xoá trắng ô = thôi không đặt tên nữa, quay về nhãn tự sinh. Giống bản mẫu,
+  // và ngược với ô tên HỒ SƠ (bỏ trống thì giữ tên cũ) - hai chỗ cố ý khác nhau.
+  if (moi === nhanTep(ds, j)) { ve(); return; }
+  if (moi && ds.some((x, k) => k !== j && x === moi)) {
+    moBao(`Hồ sơ này đã có tệp tên “${moi}”. Hai tệp trùng tên sẽ dùng chung `
+          + 'nội dung và thẻ cảm xúc, nên xin đặt tên khác.', 'Trùng tên tệp');
+    ve();
+    return;
+  }
+
+  const doiKhoa = (kho) => {
+    if (!cu || !kho || !(cu in kho)) return kho;
+    const ra = { ...kho };
+    if (moi) ra[moi] = ra[cu];
+    delete ra[cu];
+    return ra;
+  };
+  if (cu && TAI_LIEU[cu]) {
+    if (moi) TAI_LIEU[moi] = TAI_LIEU[cu];
+    delete TAI_LIEU[cu];
+  }
+  if (cu && chuaLuu.has(cu)) { chuaLuu.delete(cu); if (moi) chuaLuu.add(moi); }
+  const dd = doiKhoa(S.duongDanTep);
+  const lt = doiKhoa(S.loaiTep);
+  const ch = doiKhoa(S.chips);
+
+  ds[j] = moi;
+  dat({ ...S, tabsByProfile: { ...S.tabsByProfile, [S.profile]: ds },
+        duongDanTep: dd, loaiTep: lt, chips: ch });
+  // Vân tay mở đầu bằng tên tệp, nên đổi tên là vân tay đổi theo. Gửi lại để
+  // bên Python đọc đúng bài này chứ không phải bài mang tên cũ.
+  guiDoanSangPython();
+}
+
+function moODoiTenTep(e) {
+  const h = e.target.closest('[data-tep]');
+  if (!h) return false;
+  e.preventDefault();
+  suaTenTep = `${S.profile}:${+h.dataset.tep}`;
+  ve();
+  const o = $('#oTenTep');
+  if (o) { o.focus(); o.select(); }
+  return true;
+}
+
+/* Rời ô cũng lưu, đúng như bản mẫu: người lớn tuổi hay gõ xong rồi bấm ra chỗ
+   khác chứ không nhấn Enter, mất chữ vừa gõ là mất niềm tin. */
+function chotTenTepNeuDangGo(e) {
+  const o = e.target.closest && e.target.closest('.tep__o');
+  if (o && suaTenTep) doiTenTep(+o.dataset.suatep, o.value);
+}
+
 /* Gõ trong ô Tìm thì chạy tìm ngay, không phải bấm nút. Nhớ chữ vào S để lần
    vẽ lại không xoá mất thứ người dùng đang gõ. */
 /* Chạm vào dải mép = bắt đầu kéo đổi cỡ. Phải bắt ở `mousedown` chứ không
@@ -1826,6 +1944,10 @@ document.addEventListener('mousedown', (e) => {
    Người lớn tuổi làm theo thói quen cả đời chứ không đi tìm nút; thiếu cái này
    là họ nháy đúp mấy lần rồi tưởng chương trình đơ. */
 document.addEventListener('dblclick', (e) => {
+  // Nháy đúp hàng tệp = đổi tên. Gộp vào cùng một chỗ bắt thay vì đăng ký thêm
+  // một listener nữa: cả tệp này chỉ có MỘT chỗ bắt cho mỗi loại sự kiện, và
+  // hai listener cùng loại thì thứ tự chạy thành thứ ngầm không ai thấy.
+  if (moODoiTenTep(e)) return;
   const thanh = e.target.closest('.tieude');
   // Trừ ba nút cửa sổ: nháy đúp trúng nút Đóng mà lại phóng to thì vô lý.
   if (!thanh || e.target.closest('.cuaso')) return;
@@ -1875,6 +1997,7 @@ document.addEventListener('input', (e) => {
   if (nut) chuDangGo(nut);
 });
 document.addEventListener('focusout', (e) => {
+  chotTenTepNeuDangGo(e);
   const nut = _nutChu(e);
   if (nut) roiDoanDangGo(nut);
 });
@@ -1895,6 +2018,16 @@ document.addEventListener('keydown', (e) => {
       e.preventDefault();
       if (document.activeElement.blur) document.activeElement.blur();
       return LENH['Lưu']();
+    }
+    /* Ô đổi tên tệp: Enter chốt, Escape bỏ. Phải chặn ở đây chứ không để rơi
+       xuống nhánh phím tắt chung - Escape ở dưới đóng menu rồi vẽ lại, ô nhập
+       biến mất mà tên vẫn nguyên, trông y như máy treo. */
+    if (document.activeElement.classList
+        && document.activeElement.classList.contains('tep__o')) {
+      const o = document.activeElement;
+      if (e.key === 'Enter')  { e.preventDefault(); return doiTenTep(+o.dataset.suatep, o.value); }
+      if (e.key === 'Escape') { e.preventDefault(); suaTenTep = null; return ve(); }
+      return;
     }
     if (dangGoChu) {
       /* Ctrl+A phải bôi đen CẢ BÀI như Notepad. Để mặc thì nó chỉ bôi trong
@@ -1967,6 +2100,17 @@ document.addEventListener('keydown', (e) => {
       e.preventDefault(); toiKetQua(e.shiftKey ? -1 : 1);
     }
     return;
+  }
+  /* Enter trên hàng tệp đang được bàn phím chọn = mở tệp ấy. Space CỐ Ý không
+     nhận: Space là phím Nghe/Dừng toàn cục, cướp nó ở đây là người dùng đứng
+     trong cột trái bấm Space rồi không hiểu vì sao loa không chạy. */
+  if (e.key === 'Enter' && document.activeElement
+      && document.activeElement.dataset
+      && document.activeElement.dataset.tep !== undefined) {
+    e.preventDefault();
+    const i = +document.activeElement.dataset.tep;
+    if (i === S.activeByProfile[S.profile]) return;
+    return chuyenSang(doiTab(S, i));
   }
   if (e.ctrlKey && e.key.toLowerCase() === 'v') { e.preventDefault(); return danVanBan(); }
   if (e.ctrlKey && e.key.toLowerCase() === 'o') { e.preventDefault(); return moTep(); }
