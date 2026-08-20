@@ -550,6 +550,27 @@ console.log('\n--- J2. Dải cảnh báo: mọi nút đều làm thật ---');
   chay('dat(globalThis.__Scu)');
 }
 
+/* Lỗi THẬT từ Python phải hiện đúng chuyện đã xảy ra. Gói dựng dưới đây chép
+   nguyên hình dạng mà giaodien/mo_hinh.py đẩy sang khi máy thiếu bộ giọng —
+   tình huống có thật và hay gặp nhất với người dùng lớn tuổi. */
+console.log('\n--- J3. Máy thiếu bộ giọng: nói đúng việc phải làm ---');
+{
+  chay("dat({ ...globalThis.__Scu, loiThat: { tieu_de: 'Chưa có bộ giọng VieNeu-TTS',"
+       + " chi_tiet: 'Máy chưa cài bộ giọng VieNeu-TTS. Cách cài: mở thư mục chương"
+       + " trình, bấm đúp vào tệp CaiDat.bat rồi làm theo hướng dẫn trên màn hình.',"
+       + " nut: [{ nhan: 'Kiểm tra lại', act: 'thuLaiMoHinh' }] } })");
+  ok(co('Chưa có bộ giọng VieNeu-TTS'), 'hiện đúng tiêu đề lỗi thật của máy này');
+  ok(co('CaiDat.bat'), 'chỉ đúng việc phải làm — hướng dẫn cài có sẵn từ bản cũ');
+  ok(co('Kiểm tra lại'), 'dựng nút từ chính gói Python gửi');
+  ok(!co('Kiểm tra lại mạng') && !co('máy chủ đọc'),
+     'KHÔNG còn nói máy chủ hay mạng — chương trình chạy hoàn toàn trên máy');
+  ok(co('Bỏ qua'), 'luôn có đường đóng dải lại, không nhốt người dùng');
+
+  bam('[data-loithat]', { loithat: '' });
+  ok(!chay('S.loiThat'), 'bấm Bỏ qua thì dải biến đi');
+  chay('dat(globalThis.__Scu)');
+}
+
 console.log('\n--- K. Đang tạo âm thanh ---');
 chay("dat({ ...S, situation: 'dang_tao' })");
 ok(co('Đang tạo âm thanh cho đoạn'), 'thanh phát dạng chờ');

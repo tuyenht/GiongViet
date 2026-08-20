@@ -249,6 +249,27 @@ function lyDoKhoa(S) {
 }
 
 function veCanhBao() {
+  /* Lỗi THẬT từ Python đứng trên mọi tình huống mẫu: nó nói đúng chuyện vừa
+     xảy ra trên máy này, còn bảng DAI_CANH_BAO là chữ dựng sẵn. Nút lấy thẳng
+     từ gói (Python đã kèm sẵn "Kiểm tra lại" / "Đọc tiếp" cùng mã việc). */
+  if (S.loiThat) {
+    const l = S.loiThat;
+    const nut = (l.nut && l.nut.length ? l.nut : [{ nhan: 'Đóng', act: '' }]);
+    return `
+  <div class="dai dai--err">
+    <span class="dai__icon">${ic('canhbao', 18)}</span>
+    <span class="dai__than">
+      <span class="dai__ten">${esc(l.tieu_de || 'Có lỗi xảy ra')}</span>
+      <div class="dai__noi">${esc(l.chi_tiet || '')}</div>
+    </span>
+    <span class="dai__nut">${nut.map((n, i) =>
+      `<button class="nut ${i === 0 ? 'nut--acc' : 'nut--vien'}"
+               data-loithat="${esc(n.act || '')}">${esc(n.nhan)}</button>`).join('')}
+      <button class="nut nut--vien" data-loithat="" title="Bỏ qua thông báo này"
+              >Bỏ qua</button></span>
+  </div>`;
+  }
+
   const d = DAI_CANH_BAO[S.situation];
   if (!d) return '';
   const giong = GIONG.find((g) => g.ma === hoSoDangDung(S).giong);
@@ -1679,6 +1700,15 @@ document.addEventListener('click', (e) => {
   const t = (s) => e.target.closest(s);
   let n;
 
+  /* Nút trên dải LỖI THẬT. Mã việc do Python gửi kèm, và bên ấy đã có sẵn
+     xu_ly_loi(act) từ bản cũ: thuLaiMoHinh nạp lại bộ giọng, docTiep đọc tiếp
+     từ chỗ hỏng. Không viết lại, chỉ gọi. Mã rỗng = chỉ dọn dải đi. */
+  if ((n = t('[data-loithat]'))) {
+    const act = n.dataset.loithat;
+    dat({ ...S, loiThat: null });
+    if (act && coPython()) api('xu_ly_loi', act);
+    return;
+  }
   if ((n = t('[data-canhbao]'))) { const f = LENH_CANH_BAO[n.dataset.canhbao];
                                    return f ? f() : undefined; }
   if ((n = t('[data-menu]')))   return dat(moMenu(S, +n.dataset.menu));
@@ -2276,7 +2306,15 @@ datNguoiNhan((goi) => {
     return;
   }
   if (goi.state === 'loi' && goi.loi) {
-    dat({ ...S, view: 'san_sang', situation: 'mat_ket_noi' });
+    /* GIỮ nguyên gói lỗi để dải cảnh báo nói đúng chuyện đã xảy ra.
+
+       Trước đây chỗ này nuốt sạch nội dung gói và chỉ đặt situation
+       'mat_ket_noi', nên máy thiếu bộ giọng thì người dùng đọc được câu "Không
+       kết nối được máy chủ đọc… Kiểm tra lại mạng" trong một chương trình chạy
+       hoàn toàn trên máy, không dùng mạng một giây nào. Còn hướng dẫn cài thật
+       — mo_hinh.py _huong_dan_cai(), "bấm đúp tệp CaiDat.bat" — thì nằm sẵn
+       trong gói mà không bao giờ hiện ra. */
+    dat({ ...S, view: 'san_sang', situation: 'binh_thuong', loiThat: goi.loi });
   }
 });
 
