@@ -128,9 +128,25 @@ function goPhim(soDoan, phim, { vt = 0, chu = 'abc', ...them } = {}) {
 
 /* BẤM CHUỘT THẬT vào handler click, cùng lý lẽ với goPhim: canh hành vi chứ
    không canh dấu hiệu. `dat()` chạy đồng bộ ngay đầu chuyenSang() nên trạng
-   thái đã đổi khi hàm này trả về, dù phần đuôi của chuyenSang còn chờ Python. */
-function bam(sel, ds = {}) {
-  const nut = { dataset: ds, closest: (s) => (s === sel ? nut : null) };
+   thái đã đổi khi hàm này trả về, dù phần đuôi của chuyenSang còn chờ Python.
+
+   CÂY TỔ TIÊN là phần bắt buộc, không phải trang trí. Trong DOM thật, nút × nằm
+   BÊN TRONG hàng tệp, nên một cú bấm vào nó khớp CẢ `[data-dongtep]` LẪN
+   `[data-tep]` — closest() đi ngược lên cây. Nút giả chỉ khớp đúng một selector
+   thì bộ kiểm mù cả họ lỗi "sự kiện nổi lên document" mà CLAUDE.md ghi là đã vấp
+   thật: bỏ `return` ở nhánh đóng tệp, hoặc đảo thứ tự hai nhánh, đều vẫn XANH.
+
+   `bam('[data-dongtep]', {dongtep:'0'}, [['[data-tep]', {tep:'0'}]])` = bấm nút ×
+   của hàng tệp 0, và nút ấy nằm trong hàng 0. */
+function bam(sel, ds = {}, toTien = []) {
+  const cay = [[sel, ds], ...toTien];
+  const nut = {
+    dataset: ds,
+    closest: (s) => {
+      const m = cay.find(([k]) => k === s);
+      return m ? { dataset: m[1], closest: nut.closest } : null;
+    },
+  };
   let daChan = false;
   batSuKien.click({
     target: nut,
@@ -364,18 +380,33 @@ console.log('\n--- G2. Cây tệp: bấm thật, không chỉ soi chuỗi ---');
   ok(chay('S.activeByProfile[S.profile]') === n2 - 1, 'và nhảy sang hàng vừa tạo');
   ok(co('Văn bản mới 1'), 'hàng chưa đặt tên mang nhãn tự sinh "Văn bản mới 1"');
 
-  // Nút × phải chặn sự kiện nổi lên, không thì vừa đóng tệp vừa nhảy tệp.
-  ok(bam('[data-dongtep]', { dongtep: '0' }),
+  /* Bấm nút × ĐÚNG NHƯ DOM thật: nút nằm TRONG hàng tệp, nên cú bấm khớp cả hai
+     selector. Đây là chỗ bộ kiểm từng mù — nút giả chỉ khớp một selector thì bỏ
+     `return` ở nhánh đóng tệp hay đảo thứ tự hai nhánh đều vẫn xanh. */
+  const dangXemTruoc = chay('S.activeByProfile[S.profile]');
+  ok(bam('[data-dongtep]', { dongtep: '0' }, [['[data-tep]', { tep: '0' }]]),
      'nút đóng chặn sự kiện nổi lên (stopPropagation)');
   ok(chay('tabDangMo(S).length') === n2 - 1, 'đóng một hàng thì danh sách ngắn đi',
      String(chay('tabDangMo(S).length')));
+
+  /* Bấm × trên hàng KHÔNG phải hàng đang xem thì chỉ được đóng hàng ấy, tuyệt
+     đối không được nhảy sang nó. Nếu nhánh đóng tệp thiếu `return` hoặc đứng
+     SAU nhánh đổi tệp, phép này đỏ. */
+  chay("dat({ ...S, tabsByProfile: { ...S.tabsByProfile, [S.profile]: ['a.txt', 'b.txt', 'c.txt'] },"
+       + ' activeByProfile: { ...S.activeByProfile, [S.profile]: 0 } })');
+  bam('[data-dongtep]', { dongtep: '2' }, [['[data-tep]', { tep: '2' }]]);
+  ok(chay("tabDangMo(S).join(',')") === 'a.txt,b.txt',
+     'bấm × hàng cuối thì đóng đúng hàng ấy', chay("tabDangMo(S).join(',')"));
+  ok(chay('S.activeByProfile[S.profile]') === 0,
+     'và KHÔNG nhảy sang hàng vừa đóng — nhánh đóng đứng trước nhánh đổi tệp',
+     String(chay('S.activeByProfile[S.profile]')));
 }
 
 console.log('\n--- G3. Đóng tệp cuối cùng vẫn còn đúng một hàng rỗng ---');
 {
   chay("dat({ ...S, tabsByProfile: { ...S.tabsByProfile, [S.profile]: ['mot.txt'] },"
        + ' activeByProfile: { ...S.activeByProfile, [S.profile]: 0 } })');
-  bam('[data-dongtep]', { dongtep: '0' });
+  bam('[data-dongtep]', { dongtep: '0' }, [['[data-tep]', { tep: '0' }]]);
   ok(chay('tabDangMo(S).length') === 1, 'không bao giờ còn 0 tệp — đường nạp văn bản '
      + 'đổ vào ô rỗng ấy', String(chay('tabDangMo(S).length')));
   ok(co('Văn bản mới 1'), 'hàng còn lại là ô rỗng mang nhãn tự sinh');

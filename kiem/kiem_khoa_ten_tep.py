@@ -95,16 +95,30 @@ TT = _GOC / "ui-moi" / "trang-thai.js"
 # bài VẪN XANH vì chúng chỉ nằm trong print(). Neo cứng vào tệp đang sửa hằng
 # ngày thì hỏng lặng lẽ như thế. Dự án đã vấp đúng họ này ở kiem_so_nguoi_nhom.py.
 def cau_tra_ve(tep, ten_ham):
-    """Câu return đầu tiên trong thân một hàm, tìm bằng tên hàm."""
+    """Câu return đầu tiên trong thân một hàm, tìm bằng tên hàm.
+
+    Khớp tên hàm ĐẦY ĐỦ (`def ten(`) chứ không khớp tiền tố: có `moi_doc_tep`
+    và `moi_doc_tep_v2` cạnh nhau thì khớp tiền tố bắt trúng hàm sai mà không
+    ai biết.
+
+    Và dừng ở CUỐI THÂN HÀM, không quét cứng 80 dòng. Quét tràn sang hàm kế
+    tiếp là phép canh vẫn xanh nhờ câu return của một hàm khác — đúng lúc hàm
+    thật đã bị sửa hỏng.
+    """
     dong = tep.read_text(encoding="utf-8").splitlines()
-    i = next((k for k, d in enumerate(dong) if d.startswith(f"    def {ten_ham}")
-              or d.startswith(f"def {ten_ham}")), -1)
+    i = next((k for k, d in enumerate(dong)
+              if d.strip().startswith(f"def {ten_ham}(")), -1)
     if i < 0:
         return f"KHÔNG TÌM THẤY def {ten_ham}"
-    for d in dong[i:i + 80]:
+    thut = len(dong[i]) - len(dong[i].lstrip())
+    for d in dong[i + 1:]:
+        con = d.strip()
+        # Hết thân hàm: một dòng có nội dung, thụt bằng hoặc ít hơn dòng `def`.
+        if con and (len(d) - len(d.lstrip())) <= thut:
+            break
         if "return {" in d and '"ten"' in d:
             return d
-    return f"KHÔNG THẤY câu return có 'ten' trong {ten_ham}"
+    return f"KHÔNG THẤY câu return có 'ten' trong thân {ten_ham}"
 
 
 def khoi_ham_js(tep, mo_dau, so_dong=30):
@@ -132,6 +146,15 @@ ok('"ten": p.name' in tep_ham,
    "moi_doc_tep trả ten = p.name (tên trần)", tep_ham.strip())
 ok('"duongDan": str(p)' in tep_ham,
    "đường dẫn ĐẦY ĐỦ vẫn có trong cùng gói tin, chỉ là không dùng làm khoá")
+# moi_dan_van_ban trước đây chỉ được IN ra chứ không có phép canh nào — đúng cái
+# bệnh mà bài này sinh ra để chữa. Nó là đường DÁN CHỮ, việc Hướng dẫn nhanh bảo
+# làm đầu tiên, và là ca nặng nhất vì bản dán không có tệp nào trên đĩa để mở lại.
+dan_ham = cau_tra_ve(CN, "moi_dan_van_ban")
+ok('"ten": "Văn bản đã dán"' in dan_ham,
+   "moi_dan_van_ban trả tên CỐ ĐỊNH — dán hai lần là hai bản cùng một khoá",
+   dan_ham.strip())
+ok('"duongDan": ""' in dan_ham,
+   "và KHÔNG có đường dẫn, nên khoá theo đường dẫn không cứu được ca dán")
 # Năm dòng print bên trên chỉ có ích khi chúng trỏ đúng vào datTaiLieu. Canh
 # luôn điều đó, không thì lần sau lại in rác mà không ai biết.
 ok(any("TAI_LIEU[ten]" in d for d in khoi_ham_js(GD, "function datTaiLieu")),

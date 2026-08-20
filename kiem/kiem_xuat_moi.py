@@ -235,11 +235,38 @@ ok(gd.count("'11,6 MB'") <= 1,
 # CUNG, nen them may dong chu thich vao dau ham la do, du ma nguon dung hon truoc.
 # Da xay ra that: L1 chen khoi chu thich giai thich vi sao phai ep gui, day loi goi
 # ra moc 901, va bai nay do 101 ky tu vi ly do chang lien quan gi toi nut gia.
-than = gd[gd.find("async function batDauXuat"):]
-than = than[:than.find("\n}\n") + 2]
+def than_ham_js(nguon, mo_dau):
+    """Than mot ham JS, cat bang cach DEM NGOAC chu khong bang dinh dang.
+
+    Cach cu cat toi chuoi "\\n}\\n" - tuc la trong vao mot dau ngoac dong nam
+    dung cot 0. Ai bo ham vao mot khoi khac, hay dat ngoac dong o cho khac, la
+    cua so co lai con vai ky tu va phep canh xanh gia; con mot refactor lanh
+    manh thi do. Dem ngoac thi khong phu thuoc cach trinh bay.
+    """
+    i = nguon.find(mo_dau)
+    if i < 0:
+        return ""
+    j = nguon.find("{", i)
+    if j < 0:
+        return ""
+    sau = 0
+    for k in range(j, len(nguon)):
+        c = nguon[k]
+        if c == "{":
+            sau += 1
+        elif c == "}":
+            sau -= 1
+            if sau == 0:
+                return nguon[i:k + 1]
+    return nguon[i:]
+
+
+than = than_ham_js(gd, "async function batDauXuat")
+ok(len(than) > 0, "cat duoc than ham batDauXuat")
 i_goi = than.find("api('moi_bat_dau_xuat'")
 i_man = than.find("exporting: true")
 ok(i_goi >= 0, "batDauXuat co goi Python that trong than ham")
+ok(i_man >= 0, "batDauXuat co mo man tien do")
 ok(0 <= i_goi < i_man, "goi Python TRUOC khi mo man tien do, khong ve san man rong",
    f"goi o {i_goi}, mo man o {i_man}")
 
