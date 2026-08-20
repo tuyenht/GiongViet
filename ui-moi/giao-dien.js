@@ -81,26 +81,24 @@ const MENUS = [
            ['Ghép danh sách từ Google Sheet…', '', 'Chưa làm — màn Văn bản ghép chưa dựng'],
            ['-'],
            ['Cài đặt…', ''], ['Thoát', 'Alt+F4']]],
-  /* ĐÃ GỠ (13/8): Hoàn tác · Làm lại · Cắt · Sao chép · Khoảng lặng 1 giây ·
-     Ngắt đoạn. Sáu mục ấy bấm vào chỉ đóng menu rồi thôi, và không mục nào
-     nối được: chúng cần một VÙNG SOẠN THẢO để sửa chữ tại chỗ, mà vùng đọc
-     không có contenteditable cũng chẳng có textarea — văn bản chỉ đổi được
-     qua Tìm và thay thế. Ngày nào có vùng soạn thảo thì thêm lại một thể.
-
-     GIỮ "Thẻ cảm xúc": nó KHÔNG cần sửa văn bản. datThe() gắn thẻ cho đoạn
+  /* GIỮ "Thẻ cảm xúc": nó KHÔNG cần sửa văn bản. datThe() gắn thẻ cho đoạn
      đang chọn vào S.chips, và ba thẻ là tính năng thật của VieNeu. Trước đây
      chỉ Alt+1…3 chạy được, còn bấm chuột thì chết vì S.tags không nơi nào bật
-     lên — nay nối vào LENH. */
-  /* Sáu mục Hoàn tác…Chọn tất cả: trình duyệt tự lo trong vùng contenteditable,
-     nhưng CHƯA có lệnh riêng để bấm từ menu, và Ctrl+A hiện chỉ chọn trong MỘT
-     đoạn chứ không cả bài. Nói thật thế, đừng nối bừa vào một lệnh gần giống. */
+     lên — nay nối vào LENH.
+
+     Hoàn tác · Làm lại · Cắt · Sao chép · Dán để XÁM và nói thật: trình duyệt
+     tự lo bốn việc ấy ngay trong vùng chữ, nhưng chưa có lệnh riêng bấm từ
+     menu. Đừng nối bừa vào một lệnh gần giống.
+
+     "Chọn tất cả" thì ĐÃ nối: chonTatCa() bôi đen cả bài, gọi được từ cả ba
+     đường — Ctrl+A trong bài, Ctrl+A ngoài bài, và mục menu này. */
   ['Chỉnh sửa', [['Hoàn tác', 'Ctrl+Z', 'Bấm phím Ctrl+Z ngay trong chữ thì được; nút menu chưa nối'],
                  ['Làm lại', 'Ctrl+Y', 'Bấm phím Ctrl+Y ngay trong chữ thì được; nút menu chưa nối'],
                  ['-'],
                  ['Cắt', 'Ctrl+X', 'Bấm phím Ctrl+X ngay trong chữ thì được; nút menu chưa nối'],
                  ['Sao chép', 'Ctrl+C', 'Bấm phím Ctrl+C ngay trong chữ thì được; nút menu chưa nối'],
                  ['Dán', 'Ctrl+V', 'Chưa làm — dán tại con trỏ khác với “Dán văn bản” ở menu Tệp'],
-                 ['Chọn tất cả', 'Ctrl+A', 'Chưa làm — Ctrl+A hiện chỉ chọn trong một đoạn'],
+                 ['Chọn tất cả', 'Ctrl+A'],
                  ['-'],
                  ['Tìm và thay thế', 'Ctrl+H'], ['Soát văn bản', 'Ctrl+K']]],
   ['Chèn', [['Thẻ cảm xúc', 'Alt+1…3'],
@@ -161,7 +159,7 @@ const nhac = (binhThuong, lyDo) => ` title="${esc(lyDo || binhThuong)}"`;
 function veCongCu() {
   const coVanBan = hienNgheVaXuat(S, TAI_LIEU);
   const dangPhat = S.view === 'dang_doc';
-  const mo = coVanBan ? '' : ' disabled';        // chưa có văn bản thì chuyển màu dis
+  const mo = coVanBan ? '' : ' la-khoa';         // chưa có văn bản thì chuyển màu dis
   const khoa = biKhoa(S) || !moHinhSanSang();
   const viKhoa = lyDoKhoa(S);
   const chuaCoChu = coVanBan ? '' : 'Chưa có văn bản — hãy Dán văn bản hoặc Mở tệp trước';
@@ -172,27 +170,27 @@ function veCongCu() {
     <button class="nut" data-lenh="Mở tệp…"${nhac('Mở tệp văn bản (Ctrl+O)')
       }>${ic('thumuc')}<span>Mở file</span></button>
     <span class="congcu__ngan"></span>
-    <button class="nut" data-lenh="Soát văn bản"${mo}${
+    <button class="nut${mo}" data-lenh="Soát văn bản"${
       nhac('Xem các chỗ dễ đọc sai và văn bản sau chuẩn hoá (Ctrl+K)', chuaCoChu)
       }>${ic('tich')}<span>Soát văn bản</span></button>
     <span class="congcu__o">
-      <button class="nut" id="nutThe"${mo}${
+      <button class="nut${mo}" id="nutThe"${
         nhac('Chèn thẻ cảm xúc vào đoạn đang chọn', chuaCoChu)
         }>${ic('cx')}<span>Thẻ cảm xúc</span>${ic('mui', 13)}</button>
       ${S.tags ? veMenuThe() : ''}
     </span>
     <span class="congcu__phai">
-      <button class="nut" id="nutTim"${mo}${
+      <button class="nut${mo}" id="nutTim"${
         nhac('Tìm một từ trong văn bản và thay bằng từ khác (Ctrl+H)', chuaCoChu)
         }>${ic('kinhlup')}<span>Tìm và thay thế</span></button>
       ${coVanBan ? `<span class="congcu__ngan"></span>
         <button class="nut nut--vien nut--cao${dangPhat ? ' dang-phat' : ''}" id="nutNghe"${
-          khoa ? ' disabled' : ''}${nhac(dangPhat ? 'Tạm dừng (Space)'
+          khoa ? ' la-khoa' : ''}${nhac(dangPhat ? 'Tạm dừng (Space)'
             : daTamDung ? 'Đọc tiếp từ đoạn ' + S.pos + ' (Space)'
             : 'Nghe liền mạch toàn bộ văn bản từ đầu (Space)', viKhoa)}>
           ${ic(dangPhat ? 'tamdung' : 'tamgiac', 13)}<span>${
             dangPhat ? 'Tạm dừng' : daTamDung ? 'Đọc tiếp' : 'Nghe toàn bộ'}</span></button>
-        <button class="nut nut--acc nut--cao" id="nutXuat"${khoa ? ' disabled' : ''}${
+        <button class="nut nut--acc nut--cao" id="nutXuat"${khoa ? ' la-khoa' : ''}${
           nhac('Mở hộp thoại xuất để chọn định dạng và nơi lưu (Ctrl+E)', viKhoa)}>
           ${ic('xuat')}<span>Xuất file âm thanh</span></button>` : ''}
     </span>
@@ -1545,6 +1543,7 @@ const LENH = {
           profile: i, view: 'san_sang', pos: 1, sel: 1 });
   },
   'Soát văn bản': () => moManSoat(),
+  'Chọn tất cả': () => { dat(dongHetMenu(S)); chonTatCa(); },
   'Đóng soát': () => dat({ ...dongHetMenu(S), man: 'chinh' }),
   'Thư viện giọng': () => moManGiong(),
   'Nhân bản giọng từ file…': () => nhanBanGiong(),
@@ -1779,6 +1778,17 @@ document.addEventListener('click', (e) => {
     return batDauPhat();
   }
   if ((n = t('[data-doan]')))   return dat(chonDoan(S, +n.dataset.doan));
+  /* CHỐT CHẶN cho năm nút mang lớp .la-khoa. Trước đây chúng dùng `disabled`,
+     mà `disabled` chặn luôn sự kiện chuột nên tooltip nói LÝ DO không bao giờ
+     hiện — người dùng thấy nút mờ đi mà không biết vì sao, đúng thứ KPI "dễ
+     dùng cho người không rành máy tính" cấm. Nay nút bấm được và tự nói lý do,
+     nên PHẢI có chốt ở đây: thiếu nó là bấm Nghe lúc máy chưa sẵn sàng, giao
+     diện chạy màn "đang đọc" mà loa im — bẫy CLAUDE.md ghi là đã vấp thật. */
+  if ((n = t('.nut.la-khoa'))) {
+    const vi = lyDoKhoa(S) || (doanDangXem(S, TAI_LIEU).length ? ''
+      : 'Chưa có văn bản — hãy Dán văn bản hoặc Mở tệp trước');
+    return moBao(vi || 'Chưa dùng được lúc này', 'Chưa dùng được');
+  }
   if (t('#nutXuat'))            return moHopXuat();
   if (t('#bDong'))              return dat({ ...S, toast: false });
   if (t('#bMoThuMuc'))          { if (coPython()) api('mo_thu_muc', hopXuat && hopXuat.thuMuc);
@@ -2055,6 +2065,22 @@ document.addEventListener('focusout', (e) => {
   if (nut) roiDoanDangGo(nut);
 });
 
+/* Bôi đen CẢ BÀI như Notepad. Để trình duyệt tự lo thì nó chỉ bôi trong một
+   đoạn, vì mỗi đoạn là một vùng gõ riêng.
+
+   Tách ra thành hàm vì có BA đường gọi: Ctrl+A lúc con trỏ trong bài, Ctrl+A lúc
+   con trỏ đứng ngoài (trước đây rơi xuống mặc định trình duyệt, bôi đen cả nhãn
+   menu lẫn thanh trạng thái), và mục "Chọn tất cả" trên thanh menu. */
+function chonTatCa() {
+  const cuon = $('#cuon');
+  const sel = window.getSelection && window.getSelection();
+  if (!cuon || !sel) return;
+  const r = document.createRange();
+  r.selectNodeContents(cuon);
+  sel.removeAllRanges();
+  sel.addRange(r);
+}
+
 /* Phím tắt vẫn phải ăn KỂ CẢ khi con trỏ đang nằm trong vùng chữ.
 
    Chỉ những phím không mang nghĩa riêng lúc gõ chữ mới được đi tiếp. Danh sách
@@ -2099,18 +2125,9 @@ document.addEventListener('keydown', (e) => {
       return;
     }
     if (dangGoChu) {
-      /* Ctrl+A phải bôi đen CẢ BÀI như Notepad. Để mặc thì nó chỉ bôi trong
-         một đoạn, vì mỗi đoạn là một vùng gõ riêng. */
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'a') {
         e.preventDefault();
-        const cuon = $('#cuon');
-        const sel = window.getSelection && window.getSelection();
-        if (cuon && sel) {
-          const r = document.createRange();
-          r.selectNodeContents(cuon);
-          sel.removeAllRanges();
-          sel.addRange(r);
-        }
+        chonTatCa();
         return;
       }
       /* Xoá khi vùng bôi đen trải nhiều đoạn: trình duyệt chỉ xoá được phần
@@ -2219,6 +2236,10 @@ document.addEventListener('keydown', (e) => {
   if (c && e.key === '/') { e.preventDefault(); return LENH['Danh sách phím tắt'](); }
   if (c && e.key === '.') { e.preventDefault(); return LENH['Dừng'](); }
   if (c && k === 'k')     { e.preventDefault(); return LENH['Soát văn bản'](); }
+  /* Ctrl+A khi con trỏ ĐỨNG NGOÀI vùng chữ. Thiếu nhánh này thì nó rơi xuống mặc
+     định của trình duyệt và bôi đen cả nhãn menu lẫn thanh trạng thái — trông
+     như chương trình vừa hỏng. */
+  if (c && k === 'a')     { e.preventDefault(); return chonTatCa(); }
   if (e.key === 'F1')     { e.preventDefault(); return LENH['Hướng dẫn nhanh'](); }
   if (e.altKey && ['1', '2', '3'].includes(e.key)) {
     e.preventDefault(); return dat(datThe(S, THE_CAM_XUC[+e.key - 1][0]));

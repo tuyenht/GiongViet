@@ -559,6 +559,30 @@ console.log('\n--- G5c. Phím tắt không được chết khi con trỏ trong �
   chay('dat(globalThis.__Scu)');
 }
 
+/* Nút bị khoá phải NÓI LÝ DO, và phải chặn thật. Trước đây chúng dùng thuộc tính
+   `disabled` — trình duyệt chặn luôn sự kiện chuột nên tooltip lý do không bao
+   giờ hiện ra, người dùng chỉ thấy nút mờ đi mà không biết vì sao. */
+console.log('\n--- G5d. Nút bị khoá: nói lý do, và vẫn chặn thật ---');
+{
+  chay("dat({ ...globalThis.__Scu, man: 'chinh', situation: 'mat_ket_noi' })");
+  ok(co('la-khoa'), 'nút bị khoá mang lớp .la-khoa thay vì thuộc tính disabled');
+  ok(!co('nutNghe" disabled') && !co('nutXuat" disabled'),
+     'KHÔNG còn disabled — nếu còn thì tooltip lý do không bao giờ hiện');
+
+  // Bấm vào nút đang khoá thì phải nói lý do, và tuyệt đối không chạy việc.
+  const xemTruoc = chay('S.view');
+  bam('.nut.la-khoa', {});
+  ok(chay('!!S.toast'), 'bấm nút đang khoá thì hiện hộp nói lý do',
+     String(chay('S.toast && S.toast.ten')));
+  ok(chay('S.view') === xemTruoc, 'và KHÔNG chạy việc — loa không được chạy khi máy chưa sẵn sàng');
+  ok(chay('S.toast && S.toast.ten') !== 'Chưa dùng được lúc này',
+     'lý do là câu cụ thể, không phải câu chống chế chung chung',
+     String(chay('S.toast && S.toast.ten')));
+
+  chay('dat({ ...S, toast: false })');
+  chay('dat(globalThis.__Scu)');
+}
+
 console.log('\n--- G6. Bàn phím với tới được hàng tệp ---');
 {
   chay("dat({ ...globalThis.__Scu, man: 'chinh' })");
@@ -605,7 +629,10 @@ for (const [ma, ten] of chay('TEN_TINH_HUONG')) {
 console.log('\n--- J. Tình huống khoá đúng nút ---');
 for (const ma of ['mat_ket_noi', 'het_luot', 'giong_dang_tai']) {
   chay(`dat({ ...S, situation: '${ma}' })`);
-  ok(co('id="nutNghe" disabled') || co('nutNghe" disabled'), `${ma} khoá nút Nghe`);
+  // Nut khoa nay mang lop .la-khoa chu khong con thuoc tinh disabled: disabled
+  // chan luon su kien chuot nen tooltip noi ly do khong bao gio hien ra.
+  ok(/id="nutNghe"[^>]*la-khoa|la-khoa[^>]*id="nutNghe"/.test(HTML)
+     || /class="[^"]*la-khoa[^"]*" id="nutNghe"/.test(HTML), `${ma} khoá nút Nghe`);
 }
 chay("dat({ ...S, situation: 'giong_dang_tai' })");
 ok(co('62%'), 'giọng đang tải → thẻ giọng hiện tiến trình 62%');
