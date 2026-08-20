@@ -521,6 +521,44 @@ console.log('\n--- G5b. Đóng tệp còn chữ chưa lưu thì phải HỎI ---
   chay('dat(globalThis.__Scu)');
 }
 
+/* Phím tắt phải ăn KỂ CẢ khi con trỏ đang trong một đoạn. Mọi đoạn đều
+   contenteditable, nên chỉ cần bấm chuột vào bài là rơi vào cảnh này — trước đây
+   một `return` vô điều kiện giết sạch phím tắt ở đó. */
+console.log('\n--- G5c. Phím tắt không được chết khi con trỏ trong đoạn ---');
+{
+  const PHIM = [
+    ['Ctrl+E xuất file', { key: 'e', ctrlKey: true }, 'S.exportOpen'],
+    ['Ctrl+H tìm và thay', { key: 'h', ctrlKey: true }, 'S.find'],
+    ['Ctrl+B thu gọn cột', { key: 'b', ctrlKey: true }, 'S.rail'],
+    ['Ctrl+= cỡ chữ lớn hơn', { key: '=', ctrlKey: true }, 'S.zoom'],
+    ['Alt+1 thẻ cảm xúc', { key: '1', altKey: true }, 'JSON.stringify(S.chips)'],
+  ];
+  const dungLai = () => chay("dat({ ...globalThis.__Scu, man: 'chinh', find: false,"
+                             + ' rail: false, exportOpen: false })');
+  for (const [nhan, ds, doBieuThuc] of PHIM) {
+    dungLai();
+    const truoc = chay(doBieuThuc);
+    goPhim(1, ds.key, Object.assign({ vt: 2, chu: 'abcdef' }, ds));
+    ok(String(chay(doBieuThuc)) !== String(truoc),
+       `${nhan} vẫn chạy khi con trỏ đang trong đoạn`);
+  }
+
+  /* Chặn lại đúng những phím có nghĩa riêng lúc gõ chữ. Space là bẫy CLAUDE.md
+     ghi đã vấp thật: nuốt nó là gõ văn bản không đánh được dấu cách. */
+  dungLai();
+  const xemTruoc = chay('S.view');
+  goPhim(1, ' ', { vt: 2, chu: 'abcdef' });
+  ok(chay('S.view') === xemTruoc, 'Space KHÔNG bị cướp — vẫn gõ được dấu cách');
+
+  dungLai();
+  const soDoanTruoc = chay('doanDangXem(S, TAI_LIEU).length');
+  goPhim(1, 'v', { vt: 2, chu: 'abcdef', ctrlKey: true });
+  ok(chay('doanDangXem(S, TAI_LIEU).length') === soDoanTruoc,
+     'Ctrl+V KHÔNG chạy lệnh Dán văn bản — trong ô chữ nó là dán chữ');
+
+  chay('dat(globalThis.__Scu)');
+}
+
 console.log('\n--- G6. Bàn phím với tới được hàng tệp ---');
 {
   chay("dat({ ...globalThis.__Scu, man: 'chinh' })");

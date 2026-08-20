@@ -2055,6 +2055,22 @@ document.addEventListener('focusout', (e) => {
   if (nut) roiDoanDangGo(nut);
 });
 
+/* Phím tắt vẫn phải ăn KỂ CẢ khi con trỏ đang nằm trong vùng chữ.
+
+   Chỉ những phím không mang nghĩa riêng lúc gõ chữ mới được đi tiếp. Danh sách
+   này khớp đúng các nhánh phím tắt toàn cục ở cuối bộ bắt keydown; thêm phím tắt
+   mới ở dưới mà quên khai ở đây là nó chết khi con trỏ trong đoạn. */
+const PHIM_CHU_CAI_TOAN_CUC = ['o', 'e', 'h', 'b', 'w', 'g', 'm', 'k'];
+const PHIM_DAU_TOAN_CUC = ['=', '+', '-', '/', '.'];
+
+function phimToanCucKhiDangGo(e) {
+  if (e.key === 'F1') return true;
+  if (e.altKey && ['1', '2', '3'].includes(e.key)) return true;
+  if (!(e.ctrlKey || e.metaKey)) return false;
+  if (PHIM_DAU_TOAN_CUC.includes(e.key)) return true;
+  return PHIM_CHU_CAI_TOAN_CUC.includes(e.key.toLowerCase());
+}
+
 document.addEventListener('keydown', (e) => {
   /* isContentEditable PHẢI có ở đây. Vùng chữ gõ thẳng không phải INPUT cũng
      không phải TEXTAREA, thiếu nó là phím tắt toàn cục nuốt mất phím Space -
@@ -2152,7 +2168,19 @@ document.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && document.activeElement.id === 'oTim') {
       e.preventDefault(); toiKetQua(e.shiftKey ? -1 : 1);
     }
-    return;
+    /* Trước đây chỗ này `return` VÔ ĐIỀU KIỆN, nên mọi phím tắt bên dưới chết
+       hẳn khi con trỏ đang trong một đoạn. Mà MỌI đoạn đều contenteditable, nên
+       chỉ cần bấm chuột vào bài một cái là mất sạch phím tắt — người dùng bấm
+       Ctrl+E để xuất, không có gì xảy ra, và không đoán nổi vì sao.
+
+       Đo được: Ctrl+E · Ctrl+H · Ctrl+B · Ctrl+= · Alt+1 đều CHẠY khi con trỏ
+       đứng ngoài và CHẾT khi con trỏ trong đoạn.
+
+       Nay cho đi tiếp đúng những phím KHÔNG có nghĩa riêng lúc đang gõ chữ.
+       Cố ý CHẶN LẠI: Space (gõ dấu cách — CLAUDE.md ghi đây là bẫy đã vấp thật),
+       Ctrl+V/C/X/Z/Y (dán, chép, cắt, hoàn tác — trình duyệt lo trong ô chữ),
+       Ctrl+A (đã có nhánh riêng bôi đen cả bài ở trên), Escape, Enter. */
+    if (!phimToanCucKhiDangGo(e)) return;
   }
   /* Enter trên hàng tệp đang được bàn phím chọn = mở tệp ấy. Space CỐ Ý không
      nhận: Space là phím Nghe/Dừng toàn cục, cướp nó ở đây là người dùng đứng
