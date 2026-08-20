@@ -72,7 +72,7 @@
    ngay đây là cấp dưới. Hàng đang xem đổi vạch sang màu nhấn. */
 
 .tepds { display: flex; flex-direction: column; gap: 1px; margin-top: 2px; }
-.tep { height: 30px; display: flex; align-items: center; gap: 8px;
+.tep { height: 30px; display: flex; align-items: center; gap: 7px;
        margin-left: 9px; padding: 0 6px 0 15px;
        border-left: 2px solid var(--stroke2); border-radius: 0 4px 4px 0;
        color: var(--txt2); transition: background .15s; }
@@ -88,18 +88,22 @@
 .tep.dang-xem .tep__icon { color: var(--acc); }
 .tep__ten { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis;
             white-space: nowrap; font-size: 13px; }
-.tep__dong { width: 18px; height: 18px; flex: none; border: 0; border-radius: 4px;
+.tep__dong { width: 18px; height: 18px; flex: none; border: 0; border-radius: 3px;
              background: transparent; color: var(--txt3); display: flex;
              align-items: center; justify-content: center; }
 .tep__dong:hover { background: var(--sel); color: var(--txt); }
 .tep--sua { padding-right: 4px; }
-.tep__o { flex: 1; min-width: 0; height: 22px; padding: 0 5px;
-          border: 1px solid var(--acc); border-radius: 4px;
+/* box-sizing: border-box để viền 1px không đẩy ô rộng hơn hàng — bản thiết kế
+   khai rõ nó, và thiếu nó thì ô nhập nhô ra khỏi hàng đúng 2px. */
+.tep__o { flex: 1; min-width: 0; box-sizing: border-box; height: 22px; padding: 0 5px;
+          border: 1px solid var(--acc); border-radius: 3px;
           background: var(--ctl); color: var(--txt);
-          font: 400 13px inherit; }
+          font: 400 13px inherit; outline: none; }
+/* Viền trái trong suốt để hàng này thẳng cột với các hàng tệp phía trên. */
 .tep__them { height: 28px; width: calc(100% - 9px); justify-content: flex-start;
-             gap: 8px; margin-left: 9px; padding: 0 6px 0 15px;
-             color: var(--txt3); font-size: 13px; }
+             gap: 7px; margin-left: 9px; padding: 0 6px 0 15px;
+             border-left: 2px solid transparent; border-radius: 0 4px 4px 0;
+             color: var(--txt3); font-size: 12.5px; }
 .tep__them:hover { background: var(--sub-h); color: var(--txt2); }
 /* Cột thu còn 44px thì không còn chỗ cho hàng tệp - ẩn cả cụm, y như .hoso__than. */
 .trai.thu-gon .tepds { display: none; }
