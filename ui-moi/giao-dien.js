@@ -294,7 +294,10 @@ function veCanhBao() {
    Tên việc và hành vi lấy từ bảng BN của bản mẫu (act / altAct). */
 const LENH_CANH_BAO = {
   ve_binh_thuong: () => dat({ ...S, situation: 'binh_thuong' }),
-  mo_chon_giong: () => dat({ ...S, situation: 'binh_thuong', roiGiong: true }),
+  // voiceOpen là khoá THẬT mà veCotPhai đọc để dựng dropdown giọng. Bản đầu viết
+  // nhầm thành `roiGiong` — không nơi nào đọc khoá đó, nên nút "Dùng giọng khác"
+  // vẫn là nút giả, mà phép canh chỉ soi `!!S.roiGiong` nên vẫn báo xanh.
+  mo_chon_giong: () => dat({ ...S, situation: 'binh_thuong', voiceOpen: true }),
   // Bản mẫu nhảy tới đúng chỗ sẽ bị cắt rồi trả màn về bình thường.
   xem_cho_cat: () => dat({ ...S, situation: 'binh_thuong', sel: 9, pos: 9 }),
   nghe_lai_doan_da_sua: () => {
@@ -1221,7 +1224,27 @@ function datTaiLieu(kq) {
   if (!kq) return;
   if (kq.loi) { moBao(kq.loi); return; }
 
-  const ten = kq.ten || 'Chưa đặt tên';
+  /* Tên tệp là KHOÁ của TAI_LIEU, nên hai bài cùng tên là bài sau ĐÈ bài trước.
+     Nặng nhất là đường dán: moi_dan_van_ban luôn trả tên cố định "Văn bản đã
+     dán", nên dán lần thứ hai xoá mất bài dán lần đầu — đo được: kho còn đúng
+     một khoá, mở lại hàng cũ thì ra bài mới.
+
+     Vá tối thiểu ở đây: nếu tên ấy đang thuộc về một HÀNG KHÁC thì đánh số cho
+     khác đi. Không đổi mô hình khoá (việc đó lớn hơn nhiều và phải trình riêng),
+     chỉ thôi không cho hai hàng giẫm lên nhau. Tệp mở lại từ đĩa cùng đường dẫn
+     thì vẫn dùng chung khoá như cũ — đó là mở lại chính nó, không phải va chạm. */
+  const tenGoc = kq.ten || 'Chưa đặt tên';
+  const dsHang = tabDangMo(S);
+  const viTri = S.activeByProfile[S.profile];
+  let ten = tenGoc;
+  if (TAI_LIEU[ten] && dsHang.some((x, k) => k !== viTri && x === ten)) {
+    const cungTep = kq.duongDan && S.duongDanTep[ten] === kq.duongDan;
+    if (!cungTep) {
+      let so = 2;
+      while (TAI_LIEU[`${tenGoc} ${so}`] || dsHang.includes(`${tenGoc} ${so}`)) so += 1;
+      ten = `${tenGoc} ${so}`;
+    }
+  }
   // Vừa nạp từ đĩa thì trong bộ nhớ đúng bằng trên đĩa — sạch cờ chưa lưu.
   chuaLuu.delete(ten);
   TAI_LIEU[ten] = {

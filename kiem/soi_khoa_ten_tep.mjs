@@ -125,19 +125,36 @@ const chuTab1 = chay('doanDangXem(S, TAI_LIEU)[0].chu');
 console.log(`  chữ tab 1 = ${JSON.stringify(chuTab1)}`);
 console.log(`  thẻ tab 1 = ${chay('JSON.stringify(theCuaDoan(S, 1))')}`);
 
+/* ĐỔI CHIỀU BA MỆNH ĐỀ (20/8).
+
+   Bài này vốn CHỨNG MINH lỗi: xanh = lỗi còn nguyên. Ba mệnh đề đầu nay đã được
+   vá — datTaiLieu() đánh số cho tên trùng khi nó đang thuộc về một hàng khác,
+   nên hai tệp cùng tên ở hai thư mục không giẫm lên nhau nữa. Giữ nguyên mệnh đề
+   cũ thì bài đỏ ở đúng chỗ sản phẩm vừa làm đúng, nên đảo chúng sang chiều CANH
+   (xanh = tốt) và ghi rõ ở đây.
+
+   Mệnh đề thứ tư vẫn giữ chiều chứng-minh-lỗi vì phần ấy chưa vá: thẻ cảm xúc
+   còn khoá theo tên, và việc dời nó thuộc lượt đổi mô hình khoá. */
 console.log('\n  --- kết ---');
-ok(chay('Object.keys(TAI_LIEU).length') === 1,
-   'hai tệp KHÁC NHAU chỉ còn MỘT mục trong TAI_LIEU',
+ok(chay('Object.keys(TAI_LIEU).length') === 2,
+   'hai tệp khác nhau giữ được HAI mục riêng trong TAI_LIEU',
    `số mục = ${chay('Object.keys(TAI_LIEU).length')}`);
-ok(chuTab1.includes('THANG TAM'),
-   'tab 1 (tháng Bảy) hiện nội dung của tháng Tám',
+ok(chuTab1.includes('THANG BAY'),
+   'tab 1 hiện ĐÚNG nội dung tháng Bảy của nó',
    JSON.stringify(chuTab1));
-ok(chay('Object.keys(S.duongDanTep).length') === 1
-   && chay('S.duongDanTep["congduc.txt"]') === P8,
-   'đường dẫn tháng Bảy bị đường dẫn tháng Tám ghi đè',
-   chay('JSON.stringify(S.duongDanTep)'));
+/* Phép này chỉ có nghĩa khi bài chạy qua kiem_khoa_ten_tep.py — bên ấy dựng
+   duongDanTep bằng ApiMoi thật. Chạy tay `node soi_khoa_ten_tep.mjs ui-moi` thì
+   kho ấy rỗng, nên bỏ qua thay vì báo đỏ giả. */
+if (chay('Object.keys(S.duongDanTep).length') === 0) {
+  console.log('  BỎ QUA  đường dẫn — chạy tay không có bước dựng của bài .py');
+} else {
+  ok(chay('Object.keys(S.duongDanTep).length') === 2,
+     'hai đường dẫn được nhớ riêng, không cái nào ghi đè cái nào',
+     chay('JSON.stringify(S.duongDanTep)'));
+}
+// CÒN LỖI: thẻ cảm xúc vẫn khoá theo tên nên hai tài liệu dùng chung một kho.
 ok(chay('theCuaDoan(S, 1)') === '[cười]' && chay('Object.keys(S.chips).length') === 1,
-   'thẻ cảm xúc dùng chung một khoá cho cả hai tài liệu',
+   'thẻ cảm xúc VẪN dùng chung một khoá cho cả hai tài liệu (chưa vá)',
    chay('JSON.stringify(S.chips)'));
 
 console.log(`\n  [JS] ${loi === 0 ? 'mọi phép đều ĐẠT' : loi + ' phép LỆCH'}`);

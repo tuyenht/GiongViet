@@ -31,7 +31,9 @@ function nutGia(id = '') {
 
 const ctx = {
   console,
-  setInterval: () => 0, clearInterval() {}, setTimeout: () => 0,
+  // clearTimeout phải có: henLuuHoSo() gọi nó, thiếu là ReferenceError ngay khi
+  // một đường ghi hồ sơ chạy tới.
+  setInterval: () => 0, clearInterval() {}, setTimeout: () => 0, clearTimeout() {},
   location: { search: '' },
   URLSearchParams,
   document: {
@@ -67,6 +69,15 @@ const ctx = {
     addEventListener: (t, f) => { batSuKien[t] = f; },
   },
   window: { addEventListener() {} },
+  /* PYTHON GIẢ. Thiếu nó thì coPython() luôn false, nên danVanBan() và moTep()
+     thoát ngay ở dòng đầu và datTaiLieu() — chỗ DUY NHẤT nạp văn bản vào
+     TAI_LIEU — chưa từng chạy trong bộ kiểm. Hậu quả đo được: bộ kiểm mù 6/8
+     phép đột biến, vì mọi mục phải tự tay nhét sẵn TAI_LIEU/chuaLuu, tức canh
+     TRẠNG THÁI chứ không canh ĐƯỜNG ĐI.
+
+     Các hàm ở đây trả đúng hình dạng Python thật trả (giaodien_moi/cau_noi_moi.py).
+     `pyTra` cho từng mục kiểm gài sẵn câu trả lời cho lượt gọi kế tiếp. */
+  pywebview: null,
   localStorage: { getItem: () => null, setItem() {} },
   module: undefined,
 };
@@ -124,6 +135,42 @@ function goPhim(soDoan, phim, { vt = 0, chu = 'abc', ...them } = {}) {
   batSuKien.keydown({ key: phim, ...them, preventDefault: () => { daChan = true; } });
   ctx.document.activeElement = { tagName: 'DIV' };
   return daChan;                       // có chặn hành vi mặc định hay không
+}
+
+/* Bật/tắt Python giả. Bật lên là danVanBan() · moTep() · luuVanBan() đi trọn
+   đường thật tới datTaiLieu(), thay vì thoát ngay ở dòng đầu.
+
+   `datTra` gài câu trả lời cho từng hàm; `pyDaGoi` giữ lại mọi lượt gọi để mục
+   kiểm soi được sản phẩm đã gửi gì sang Python. */
+let pyDaGoi = [];
+function batPython(datTra = {}) {
+  pyDaGoi = [];
+  const mac = {
+    moi_dan_van_ban: () => ({ ten: 'Văn bản đã dán', duongDan: '',
+                              doan: [{ kieu: 'p', chu: 'CHU VUA DAN' }] }),
+    moi_doc_ho_so: () => null,
+    moi_luu_ho_so: () => ({ ok: true }),
+    moi_dat_doan: () => ({ ok: true }),
+    moi_luu_van_ban: (ten) => ({ ten, duongDan: 'C:/GiongViet/' + ten }),
+  };
+  const bo = { ...mac, ...datTra };
+  ctx.pywebview = {
+    api: new Proxy({}, {
+      get: (_, ten) => (...ds) => {
+        pyDaGoi.push([String(ten), ...ds]);
+        const f = bo[ten];
+        return Promise.resolve(typeof f === 'function' ? f(...ds) : (f !== undefined ? f : null));
+      },
+      has: () => true,
+    }),
+  };
+  // cau-noi.js đọc window.pywebview, mà ctx chính là window trong vm này.
+  ctx.window.pywebview = ctx.pywebview;
+}
+function tatPython() {
+  ctx.pywebview = null;
+  ctx.window.pywebview = null;
+  pyDaGoi = [];
 }
 
 /* BẤM CHUỘT THẬT vào handler click, cùng lý lẽ với goPhim: canh hành vi chứ
@@ -665,6 +712,49 @@ console.log('\n--- G5f. Chữ đang gõ trong ô tên phải sống qua mỗi l�
   chay('dat(globalThis.__Scu)');
 }
 
+/* Đi TRỌN ĐƯỜNG THẬT của văn bản: bấm "Dán văn bản" -> danVanBan() -> Python ->
+   datTaiLieu(). Không có Python giả thì cả đường này chưa từng chạy trong bộ
+   kiểm, và mọi mục khác phải tự tay nhét sẵn TAI_LIEU — tức canh trạng thái chứ
+   không canh đường đi. */
+console.log('\n--- G5g. Đường vào của văn bản: dán hai lần, bài đầu phải còn ---');
+{
+  let lan = 0;
+  batPython({
+    moi_dan_van_ban: () => {
+      lan += 1;
+      return { ten: 'Văn bản đã dán', duongDan: '',
+               doan: [{ kieu: 'p', chu: lan === 1 ? 'BAI THU NHAT' : 'BAI THU HAI' }] };
+    },
+  });
+  chay("dat({ ...globalThis.__Scu, man: 'chinh',"
+       + " tabsByProfile: { ...S.tabsByProfile, [S.profile]: [''] },"
+       + ' activeByProfile: { ...S.activeByProfile, [S.profile]: 0 }, nhanTep: {} })');
+  chay('Object.keys(TAI_LIEU).forEach((k) => delete TAI_LIEU[k])');
+
+  await chay('danVanBan()');
+  ok(pyDaGoi.some((g) => g[0] === 'moi_dan_van_ban'),
+     'bấm Dán văn bản thì thật sự gọi sang Python');
+  ok(chay('doanDangXem(S, TAI_LIEU).length') === 1, 'bài thứ nhất vào được màn hình');
+
+  bam('#themTep');
+  await chay('danVanBan()');
+
+  /* Canh NỘI DUNG chứ đừng canh số hàng: số hàng vẫn đúng trong khi bài đã mất.
+     Hai bản dán đều mang tên cố định "Văn bản đã dán", mà tên là khoá của
+     TAI_LIEU — nên bản sau đè bản trước. */
+  ok(chay('Object.keys(TAI_LIEU).length') === 2,
+     'hai lần dán phải giữ được HAI bài riêng',
+     'số bài trong kho = ' + chay('Object.keys(TAI_LIEU).length'));
+  chay('dat(doiTab(S, 0))');
+  ok(/BAI THU NHAT/.test(String(chay('JSON.stringify(doanDangXem(S, TAI_LIEU))'))),
+     'mở lại hàng 1 phải ra ĐÚNG bài thứ nhất',
+     String(chay('doanDangXem(S, TAI_LIEU)[0] && doanDangXem(S, TAI_LIEU)[0].chu')));
+
+  tatPython();
+  chay('Object.keys(TAI_LIEU).forEach((k) => delete TAI_LIEU[k]);'
+       + ' Object.assign(TAI_LIEU, globalThis.__TLcu); dat(globalThis.__Scu)');
+}
+
 console.log('\n--- G6. Bàn phím với tới được hàng tệp ---');
 {
   chay("dat({ ...globalThis.__Scu, man: 'chinh' })");
@@ -748,9 +838,13 @@ console.log('\n--- J2. Dải cảnh báo: mọi nút đều làm thật ---');
   ok(chay("S.situation") === 'binh_thuong',
      'bấm "Thử lại" thì thoát được tình huống khoá', chay('S.situation'));
 
-  chay("dat({ ...S, situation: 'giong_dang_tai' })");
+  /* Canh HÀNH VI: sau khi bấm thì dropdown giọng phải DỰNG RA THẬT. Bản đầu chỉ
+     soi `!!S.roiGiong` — một khoá bịa, không nơi nào đọc — nên nút vẫn là nút
+     giả mà phép canh vẫn xanh. Mọi ok() chỉ đọc một khoá S đều mù kiểu ấy. */
+  chay("dat({ ...S, situation: 'giong_dang_tai', voiceOpen: false })");
+  ok(!co('roi--giong'), 'trước khi bấm: chưa có dropdown giọng');
   bam('[data-canhbao]', { canhbao: 'mo_chon_giong' });
-  ok(chay('!!S.roiGiong'), 'bấm "Dùng giọng khác" thì mở đúng ô chọn giọng');
+  ok(co('roi--giong'), 'bấm "Dùng giọng khác" thì dropdown giọng DỰNG RA THẬT');
 
   chay("dat({ ...S, situation: 'van_ban_qua_dai' })");
   bam('[data-canhbao]', { canhbao: 'xem_cho_cat' });
