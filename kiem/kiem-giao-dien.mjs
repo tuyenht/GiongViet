@@ -755,6 +755,47 @@ console.log('\n--- G5g. Đường vào của văn bản: dán hai lần, bài đ
        + ' Object.assign(TAI_LIEU, globalThis.__TLcu); dat(globalThis.__Scu)');
 }
 
+/* ve() dựng lại toàn bộ HTML nên MỌI khung cuộn bị kéo về đầu. Trước đây chỉ
+   #cuon được trả chỗ. Với người lớn tuổi thì cuộn xuống tìm một công tắc, bấm
+   vào, rồi bị hất về đầu và phải cuộn lại cho mỗi lần bấm là rất mệt. */
+console.log('\n--- G5h. Mọi khung cuộn phải giữ chỗ sau khi vẽ lại ---');
+{
+  const css = readFileSync(join(UI, '..', 'ui-moi', 'man-hinh-chinh.css'), 'utf8')
+    + readFileSync(join(UI, '..', 'ui-moi', 'app.css'), 'utf8')
+    + readFileSync(join(UI, '..', 'ui-moi', 'man-soat.css'), 'utf8')
+    + readFileSync(join(UI, '..', 'ui-moi', 'man-giong.css'), 'utf8');
+  const js = readFileSync(join(UI, '..', 'ui-moi', 'giao-dien.js'), 'utf8');
+
+  const m = /const KHUNG_CUON = \[([^\]]*)\]/.exec(js);
+  ok(!!m, 've() có bảng khung cuộn thay vì đếm từng cái một');
+  const daKhai = m ? (m[1].match(/'[^']+'/g) || []).map((s) => s.slice(1, -1)) : [];
+  ok(daKhai.length >= 8, 'bảng khai đủ các khung cuộn', String(daKhai.length));
+  ok(daKhai.includes('#cuon') && daKhai.includes('.trai__ds'),
+     'có cả vùng đọc lẫn cột trái — cột trái mới có thứ để cuộn từ khi có cây tệp');
+
+  /* Canh KHÔNG BỎ SÓT: mọi lớp CSS khai overflow cuộn được đều phải nằm trong
+     bảng. Thêm một khung mới mà quên khai là nó lặng lẽ mất chỗ cuộn. */
+  const lopCuon = new Set();
+  const re = /\.([a-z0-9_-]+(?:__[a-z0-9_-]+)?)[^{}]*\{[^}]*overflow(?:-y)?:\s*auto/gi;
+  let k;
+  while ((k = re.exec(css))) lopCuon.add('.' + k[1]);
+  /* .doc__cuon chinh la #cuon (cung mot phan tu: class="doc__cuon" id="cuon"),
+     nen da nam trong bang duoi ten id. Cac lop kia khong phai khung cuon that. */
+  const boQua = ['.doc', '.doc__cuon', '.hop', '.bao', '.roi'];
+  const soT = [...lopCuon].filter((c) => !daKhai.includes(c) && !boQua.includes(c));
+  ok(soT.length === 0, 'không lớp cuộn nào bị bỏ quên ngoài bảng',
+     soT.length ? soT.join(' · ') : 'không sót');
+
+  // Trả chỗ phải nằm SAU veLopNoi(): .tin nằm trong lớp nổi mà veLopNoi mới dựng.
+  /* Neo bằng regex chứ đừng ghép chuỗi có '\n': tệp nguồn dùng CRLF nên chuỗi
+     ghép tay không khớp, và phép canh đỏ vì lý do chẳng liên quan. */
+  const iTra = js.indexOf('cuonCu.forEach');
+  const iLop = js.lastIndexOf('veLopNoi();', iTra > 0 ? iTra : js.length);
+  ok(iTra > 0 && iLop > 0 && iTra > iLop,
+     'trả chỗ cuộn SAU khi dựng lớp nổi, không trước',
+     `veLopNoi ở ${iLop}, trả chỗ ở ${iTra}`);
+}
+
 console.log('\n--- G6. Bàn phím với tới được hàng tệp ---');
 {
   chay("dat({ ...globalThis.__Scu, man: 'chinh' })");

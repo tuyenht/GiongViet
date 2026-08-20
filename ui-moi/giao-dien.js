@@ -766,7 +766,16 @@ const veThanhTieuDe = (nhan, lenhLui) => `
     </div>`;
 
 function ve() {
-  const cuonCu = $('#cuon') ? $('#cuon').scrollTop : 0;
+  /* MỌI khung cuộn phải giữ chỗ, không riêng vùng đọc. ve() dựng lại toàn bộ
+     HTML nên khung nào cũng bị kéo về đầu; trước đây chỉ #cuon được trả lại.
+     Từ khi danh sách tệp vào cột trái thì .trai__ds mới có thứ để cuộn, và cột
+     phải, dropdown giọng, bảng soát, màn cài đặt, kho giọng đều đã có sẵn.
+
+     Hậu quả với người lớn tuổi: cuộn xuống tìm một công tắc, bấm vào, màn hình
+     nhảy phắt về đầu, phải cuộn lại từ đầu cho MỖI lần bấm. */
+  const KHUNG_CUON = ['#cuon', '.trai__ds', '.phai', '.roi--giong',
+                      '.soat__bang', '.caidat', '.giongkho__than', '.tin'];
+  const cuonCu = KHUNG_CUON.map((s) => [s, $(s) ? $(s).scrollTop : 0]);
   const ten = tenTepDangXem(S) || 'Chưa đặt tên';
   document.documentElement.dataset.theme = S.theme === 'toi' ? 'dark' : 'light';
   // Cỡ chữ chỉ áp cho VÙNG ĐỌC, không phóng cả giao diện: phóng hết thì nút và
@@ -788,7 +797,6 @@ function ve() {
       veGiua()}${veCotPhai()}</div>
     ${veThanhPhat()}${veTrangThai()}`;
 
-  if ($('#cuon')) $('#cuon').scrollTop = cuonCu;
   if ($('#oTim')) $('#oTim').focus();
   /* Trả tiêu điểm về ô tên tệp sau mỗi lần dựng lại HTML, kèm đúng vị trí con
      trỏ. Thiếu đoạn này thì người dùng đang gõ tên mà máy sang đoạn đọc mới là
@@ -804,6 +812,10 @@ function ve() {
   ganLaiCache();
   veLopNoi();
   veBangThu();
+  /* Trả chỗ cuộn SAU veLopNoi(): .tin nằm trong lớp nổi mà veLopNoi() mới dựng
+     ra, trả trước là trả vào một phần tử sắp bị thay. Trình duyệt tự kẹp về mức
+     lớn nhất khi nội dung ngắn đi, nên không phải tự tính. */
+  cuonCu.forEach(([s, v]) => { const o = $(s); if (o && v) o.scrollTop = v; });
 }
 
 /* Tám dải mỏng ở mép để kéo đổi cỡ cửa sổ.
