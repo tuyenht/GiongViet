@@ -312,6 +312,28 @@ const ICON_HO_SO = ['baiviet', 'danto', 'sach', 'danhsach'];
    phải thứ đáng nhớ qua lần chạy sau. Cùng chỗ với chuaLuu vì cùng bản chất. */
 let suaTenTep = null;
 
+/* Chữ người dùng đang gõ dở trong ô tên, và vị trí con trỏ trong đó.
+
+   Bắt buộc phải giữ, vì ve() dựng lại TOÀN BỘ HTML: mọi gói tin Python đẩy về
+   đều đi qua dat() rồi ve(), và lúc đang đọc thì mỗi mẩu đọc xong lại có gói.
+   Không giữ thì ô vẽ lại với tên CŨ — chữ vừa gõ bay sạch mà ô vẫn mở như
+   không có gì xảy ra. Đo được: đang đọc, nháy đúp đổi tên, gõ "Thư gửi con",
+   máy sang đoạn kế → value quay về "a.txt".
+
+   Bản mẫu không dính vì nó giữ chữ đang gõ trong state (fText) và tự lấy lại
+   tiêu điểm mỗi lần vẽ (nameRef). Đây là hai thứ bản port bỏ mất — vẫn đúng
+   bài học cũ: bê cả mô hình chứ đừng bê mỗi thao tác. */
+let tenDangGo = null;
+let viTriTenDangGo = 0;
+
+/* Thôi sửa tên. Gọi ở MỌI chỗ rời khỏi ô — sót một chỗ là chữ gõ dở của hàng
+   này nhảy sang hàng khác lúc mở ô lần sau. */
+function thoiSuaTen() {
+  suaTenTep = null;
+  tenDangGo = null;
+  viTriTenDangGo = 0;
+}
+
 /* Tên hiện trên hàng tệp — BA TẦNG, đúng như bản mẫu (nameAt):
      nhãn người dùng tự đặt  ->  tên tệp thật  ->  nhãn tự sinh.
 
@@ -354,7 +376,7 @@ function veCayTep(i) {
           return `<div class="tep tep--sua">
             <span class="tep__icon">${ic('tep', 13)}</span>
             <input class="tep__o" id="oTenTep" spellcheck="false"
-                   value="${esc(nhan)}" data-suatep="${j}">
+                   value="${esc(tenDangGo != null ? tenDangGo : nhan)}" data-suatep="${j}">
           </div>`;
         }
         /* tabindex + role: hàng tệp là <div> chứ không phải <button>, vì bên
@@ -765,6 +787,17 @@ function ve() {
 
   if ($('#cuon')) $('#cuon').scrollTop = cuonCu;
   if ($('#oTim')) $('#oTim').focus();
+  /* Trả tiêu điểm về ô tên tệp sau mỗi lần dựng lại HTML, kèm đúng vị trí con
+     trỏ. Thiếu đoạn này thì người dùng đang gõ tên mà máy sang đoạn đọc mới là
+     mất tiêu điểm — gõ tiếp thì chữ rơi vào hư không. Đặt SAU nhánh #oTim vì ô
+     tên mở ra sau và cụ thể hơn. */
+  if (suaTenTep) {
+    const oTen = $('#oTenTep');
+    if (oTen && oTen.focus) {
+      oTen.focus();
+      if (oTen.setSelectionRange) oTen.setSelectionRange(viTriTenDangGo, viTriTenDangGo);
+    }
+  }
   ganLaiCache();
   veLopNoi();
   veBangThu();
@@ -1648,9 +1681,13 @@ function hoiTruocKhiDongTep(ten, tiep) {
      Chỉ `chuaLuu.has(ten)` mới được quyền quyết định, vì đó mới là câu hỏi thật:
      tệp này có chữ chưa ghi ra không. */
   if (!chuaLuu.has(ten)) { tiep(); return; }
-  // Tên rỗng không hiện ra được cho người dùng đọc — gọi đúng nhãn họ đang thấy
-  // trên hàng tệp.
-  const nhan = ten || tenHienThi(tabDangMo(S), S.activeByProfile[S.profile]);
+  /* Nhãn phải tra theo ĐÚNG hàng đang đóng, không phải hàng đang xem. Trước đây
+     tra theo S.activeByProfile nên hộp thoại gọi tên một tệp THỨ BA: người dùng
+     bấm × trên bài vừa dán, máy hỏi về "thongbao.txt" đang mở ở hàng khác. Đọc
+     một cái tên lạ thì họ mất luôn khả năng phán đoán nên bấm gì. */
+  const ds = tabDangMo(S);
+  const j = ds.indexOf(ten);
+  const nhan = ten || tenHienThi(ds, j >= 0 ? j : S.activeByProfile[S.profile]);
   moHopHoi('Chưa lưu', [
     `Tệp “${nhan}” có chữ bạn vừa sửa mà chưa lưu.`,
     'Lưu thì phần mềm ghi ra một bản trong Tài liệu\\GiongViet — tệp gốc của bạn không bị đè.',
@@ -1663,7 +1700,8 @@ function hoiTruocKhiDongTep(ten, tiep) {
     /* Lưu HỎNG thì ĐỪNG đóng. Bỏ chốt này là gặp đúng cái nó sinh ra để chặn:
        người dùng bấm "Lưu rồi đóng", lưu thất bại, tệp vẫn đóng, bài mất sạch —
        mà lần này còn tệ hơn vì họ tưởng đã lưu rồi. */
-    if (ma === 'luu' && !(await luuVanBan())) return;
+    // Lưu ĐÚNG tệp đang đóng, không phải tệp đang xem.
+    if (ma === 'luu' && !(await luuVanBan(ten))) return;
     chuaLuu.delete(ten);
     tiep();
   });
@@ -1689,16 +1727,23 @@ function hoiTruocKhiThoat(tiep) {
    của chủ dự án 12/8. Văn bản ở bản này chỉ đổi được qua Tìm và thay thế,
    nhưng đúng vì thế mà Lưu càng cần: thay xong mà không ghi được ra đâu thì
    công thay thế mất trắng lúc đóng chương trình. */
-async function luuVanBan() {
-  const doan = doanDangXem(S, TAI_LIEU);
+/* Lưu MỘT tệp cụ thể, mặc định là tệp đang xem.
+
+   Phải nhận tên vì "Lưu rồi đóng" trong hộp Chưa lưu chạy trên tệp BỊ ĐÓNG, mà
+   tệp ấy thường không phải tệp đang xem. Trước đây hàm này luôn lấy
+   doanDangXem() + tenTepDangXem(), nên đo được: hỏi về B.txt, ghi ra A.txt, rồi
+   xoá cờ chưa-lưu của B — chữ của B mất sạch mà máy báo "Đã lưu". */
+async function luuVanBan(ten = tenTepDangXem(S)) {
+  const t = TAI_LIEU[ten];
+  const doan = (t && t.doan ? t.doan : []).filter((d) => d && d.kieu !== 'blank');
   dat(dongHetMenu(S));
   if (!doan.length) { moBao('Chưa có văn bản nào để lưu.'); return false; }
   if (!coPython()) { moBao('Cần chạy trong chương trình mới lưu được.'); return false; }
 
-  const kq = await api('moi_luu_van_ban', tenTepDangXem(S) || 'vanban.txt',
+  const kq = await api('moi_luu_van_ban', ten || 'vanban.txt',
                        doan.map((d) => d.chu).join('\n'));
   if (kq && kq.ten) {
-    chuaLuu.delete(tenTepDangXem(S));
+    chuaLuu.delete(ten);
     gioLuuCuoi = new Date().toTimeString().slice(0, 5);
     ve();                       // thanh trạng thái đổi từ "Chưa lưu" sang giờ lưu
   }
@@ -1727,18 +1772,18 @@ document.addEventListener('click', (e) => {
   /* Ba nhánh cây tệp hỏi TRƯỚC [data-hoso]. Hàng tệp nằm ngoài thẻ .hoso nên
      closest() không trúng nó, nhưng để trước thì thứ tự đọc khớp thứ tự nhìn
      thấy trên màn hình, và thêm hàng vào trong hồ sơ sau này cũng không gãy. */
-  if (t('#themTep'))            { suaTenTep = null; return chuyenSang(themTab(S)); }
+  if (t('#themTep'))            { thoiSuaTen(); return chuyenSang(themTab(S)); }
   if ((n = t('[data-dongtep]'))) { e.stopPropagation();
                                    const i = +n.dataset.dongtep;
-                                   suaTenTep = null;
+                                   thoiSuaTen();
                                    return hoiTruocKhiDongTep(tabDangMo(S)[i],
                                             () => chuyenSang(dongTab(S, i))); }
   if (t('.tep__o'))             return;          // đang gõ tên, đừng cướp cú bấm
   if ((n = t('[data-tep]')))    { const i = +n.dataset.tep;
-                                  if (suaTenTep) { suaTenTep = null; ve(); }
+                                  if (suaTenTep) { thoiSuaTen(); ve(); }
                                   if (i === S.activeByProfile[S.profile]) return;
                                   return chuyenSang(doiTab(S, i)); }
-  if ((n = t('[data-hoso]')))   { suaTenTep = null;
+  if ((n = t('[data-hoso]')))   { thoiSuaTen();
                                   return chuyenSang(doiHoSo(S, +n.dataset.hoso)); }
   /* Bấm vào chính chữ đang sửa được thì để yên cho con trỏ đứng đó - dat() ở
      dưới sẽ vẽ lại vùng đọc và ném con trỏ về đầu bài. */
@@ -1962,7 +2007,7 @@ document.addEventListener('click', (e) => {
    Trùng nhãn KHÔNG cần chặn nữa: hai hàng cùng nhãn vẫn là hai tệp riêng, vì
    nội dung tra theo tên tệp chứ không theo nhãn. */
 function doiTenTep(j, tenGo) {
-  suaTenTep = null;
+  thoiSuaTen();
   const rieng = ((S.nhanTep || {})[S.profile] || []).slice();
   while (rieng.length <= j) rieng.push(null);
   rieng[j] = String(tenGo || '').trim() || null;
@@ -2019,6 +2064,20 @@ document.addEventListener('dblclick', (e) => {
 });
 
 document.addEventListener('input', (e) => {
+  /* Gõ thẳng trong một đoạn văn bản. Gộp vào ĐÂY chứ không đăng ký listener
+     'input' thứ hai: trước đây có hai cái, và cái sau ghi đè cái trước trong bộ
+     kiểm nên nửa số nhánh không bao giờ được canh. */
+  const nutChu = _nutChu(e);
+  if (nutChu) { chuDangGo(nutChu); return; }
+  /* Ô tên tệp: chỉ ghi lại chữ đang gõ, KHÔNG vẽ lại. Vẽ lại theo từng phím là
+     ô nhảy con trỏ về đầu. Việc trả tiêu điểm để cuối ve() lo, cho những lần vẽ
+     lại đến từ nơi khác — gói tin Python chẳng hạn. */
+  if (e.target.id === 'oTenTep') {
+    tenDangGo = e.target.value;
+    viTriTenDangGo = e.target.selectionStart != null
+      ? e.target.selectionStart : String(e.target.value || '').length;
+    return;
+  }
   if (e.target.id === 'oTim') {
     S.chuTim = e.target.value;
     chayTim(S.chuTim);
@@ -2055,10 +2114,6 @@ const _nutChu = (e) => {
   const el = e.target && (e.target.nodeType === 1 ? e.target : e.target.parentElement);
   return el && el.closest ? el.closest('.doan__chu[contenteditable]') : null;
 };
-document.addEventListener('input', (e) => {
-  const nut = _nutChu(e);
-  if (nut) chuDangGo(nut);
-});
 document.addEventListener('focusout', (e) => {
   chotTenTepNeuDangGo(e);
   const nut = _nutChu(e);
@@ -2121,7 +2176,7 @@ document.addEventListener('keydown', (e) => {
         && document.activeElement.classList.contains('tep__o')) {
       const o = document.activeElement;
       if (e.key === 'Enter')  { e.preventDefault(); return doiTenTep(+o.dataset.suatep, o.value); }
-      if (e.key === 'Escape') { e.preventDefault(); suaTenTep = null; return ve(); }
+      if (e.key === 'Escape') { e.preventDefault(); thoiSuaTen(); return ve(); }
       return;
     }
     if (dangGoChu) {

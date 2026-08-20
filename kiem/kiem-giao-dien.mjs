@@ -583,6 +583,88 @@ console.log('\n--- G5d. Nút bị khoá: nói lý do, và vẫn chặn thật --
   chay('dat(globalThis.__Scu)');
 }
 
+/* "Lưu rồi đóng" phải lưu ĐÚNG tệp đang đóng. luuVanBan() trước đây không nhận
+   tham số nên luôn lấy tệp ĐANG XEM: đo được cảnh hỏi về B.txt, ghi ra A.txt,
+   rồi xoá cờ chưa-lưu của B — chữ của B mất sạch mà máy báo "Đã lưu". */
+console.log('\n--- G5e. Lưu rồi đóng: đúng tệp, đúng tên trong câu hỏi ---');
+{
+  chay('chuaLuu.clear()');
+  chay("dat({ ...globalThis.__Scu, hopTin: null, toast: false,"
+       + " tabsByProfile: { ...S.tabsByProfile, [S.profile]: ['A.txt', 'B.txt'] },"
+       + ' activeByProfile: { ...S.activeByProfile, [S.profile]: 0 } })');
+  chay("TAI_LIEU['A.txt'] = { doan: [{ kieu: 'p', chu: 'NOI DUNG CUA A' }],"
+       + " chuY: { tomTat: '', loai: [] } }");
+  chay("TAI_LIEU['B.txt'] = { doan: [{ kieu: 'p', chu: 'NOI DUNG CUA B' }],"
+       + " chuY: { tomTat: '', loai: [] } }");
+  chay("chuaLuu.add('B.txt')");
+
+  // Đang xem A.txt (sạch), đóng B.txt (bẩn).
+  bam('[data-dongtep]', { dongtep: '1' }, [['[data-tep]', { tep: '1' }]]);
+  ok(chay('!!S.hopTin'), 'có hỏi trước khi đóng tệp bẩn');
+  ok(/B\.txt/.test(String(chay('S.hopTin && JSON.stringify(S.hopTin.dong)'))),
+     'câu hỏi gọi ĐÚNG tên tệp đang đóng, không phải tệp đang xem',
+     String(chay('S.hopTin && S.hopTin.dong && S.hopTin.dong[0]')));
+
+  /* luuVanBan lấy đoạn từ tệp NÀO? Đo gián tiếp cho sạch, khỏi phải gán đè
+     coPython (là const trong vm, gán lại không được): cho tệp ĐANG XEM rỗng và
+     tệp cần lưu có chữ. Lấy đúng tệp thì nó đi tiếp tới nhánh "cần chạy trong
+     chương trình"; lấy nhầm tệp đang xem thì nó dừng ở "chưa có văn bản". */
+  chay("dat({ ...S, hopTin: null, toast: false,"
+       + " tabsByProfile: { ...S.tabsByProfile, [S.profile]: ['rong.txt', 'B.txt'] },"
+       + ' activeByProfile: { ...S.activeByProfile, [S.profile]: 0 } })');
+  chay("TAI_LIEU['rong.txt'] = { doan: [], chuY: { tomTat: '', loai: [] } }");
+  chay("luuVanBan('B.txt')");
+  const bao = String(chay('S.toast && S.toast.ten'));
+  ok(!/Chưa có văn bản nào để lưu/.test(bao),
+     'luuVanBan lấy đoạn từ ĐÚNG tệp được yêu cầu, không phải tệp đang xem', bao);
+
+  chay('chuaLuu.clear()');
+  chay('dat({ ...S, hopTin: null, toast: false })');
+  chay('dat(globalThis.__Scu)');
+}
+
+/* ve() dựng lại TOÀN BỘ HTML, mà mọi gói tin Python đẩy về đều đi qua dat() rồi
+   ve(). Lúc đang đọc thì cứ mỗi mẩu đọc xong lại có gói. Nếu chữ đang gõ trong ô
+   tên không được giữ ở đâu cả thì nó bay sạch mỗi lần ấy, mà ô vẫn mở như không
+   có gì xảy ra — người dùng gõ lại, lại mất, không một lời báo. */
+console.log('\n--- G5f. Chữ đang gõ trong ô tên phải sống qua mỗi lần vẽ lại ---');
+{
+  chay("dat({ ...globalThis.__Scu, man: 'chinh' })");
+  batSuKien.dblclick({
+    target: { closest: (s) => (s === '[data-tep]' ? { dataset: { tep: '0' } } : null) },
+    preventDefault() {},
+  });
+  ok(chay('!!suaTenTep'), 'ô tên đang mở');
+
+  // Người dùng gõ dở.
+  batSuKien.input({ target: { id: 'oTenTep', value: 'Thư gửi con', selectionStart: 11 } });
+  ok(chay('tenDangGo') === 'Thư gửi con', 'chữ đang gõ được giữ lại',
+     String(chay('tenDangGo')));
+
+  // Một lần vẽ lại đến từ nơi khác — y như gói tin Python lúc đang đọc.
+  chay('dat({ ...S, zoom: 120 })');
+  ok(chay('!!suaTenTep'), 'ô tên vẫn còn mở sau khi vẽ lại');
+  ok(co('Thư gửi con'), 'và chữ vừa gõ KHÔNG bị xoá về tên cũ');
+
+  // Chốt lại thì nhãn phải là chữ vừa gõ, không phải tên cũ.
+  chay("doiTenTep(0, 'Thư gửi con')");
+  ok(co('Thư gửi con'), 'chốt xong nhãn đúng chữ người dùng gõ');
+  ok(chay('tenDangGo') === null, 'chốt xong thì dọn sạch chữ gõ dở');
+
+  // Mở ô ở hàng khác: không được thấy chữ thừa của hàng trước.
+  chay("dat({ ...S, tabsByProfile: { ...S.tabsByProfile, [S.profile]: ['x.txt', 'y.txt'] },"
+       + ' activeByProfile: { ...S.activeByProfile, [S.profile]: 0 }, nhanTep: {} })');
+  batSuKien.dblclick({
+    target: { closest: (s) => (s === '[data-tep]' ? { dataset: { tep: '0' } } : null) },
+    preventDefault() {},
+  });
+  batSuKien.input({ target: { id: 'oTenTep', value: 'CHU THUA', selectionStart: 8 } });
+  bam('[data-hoso]', { hoso: '0' });
+  ok(chay('tenDangGo') === null, 'bấm ra chỗ khác thì chữ gõ dở không đọng lại');
+
+  chay('dat(globalThis.__Scu)');
+}
+
 console.log('\n--- G6. Bàn phím với tới được hàng tệp ---');
 {
   chay("dat({ ...globalThis.__Scu, man: 'chinh' })");
