@@ -509,6 +509,47 @@ for (const ma of ['mat_ket_noi', 'het_luot', 'giong_dang_tai']) {
 chay("dat({ ...S, situation: 'giong_dang_tai' })");
 ok(co('62%'), 'giọng đang tải → thẻ giọng hiện tiến trình 62%');
 
+/* Nút trên dải cảnh báo phải LÀM THẬT. Trước đây cả sáu chỉ là chữ: không
+   data-lenh, không id, không nhánh nào trong bộ bắt click. Nặng nhất là "Thử
+   lại" của mat_ket_noi — tình huống ấy khoá cả Nghe lẫn Xuất, mà nút duy nhất
+   để thoát ra lại chết, nên người dùng chỉ còn nước tắt chương trình. */
+console.log('\n--- J2. Dải cảnh báo: mọi nút đều làm thật ---');
+{
+  const dais = chay('Object.keys(DAI_CANH_BAO).filter((k) => DAI_CANH_BAO[k])');
+  ok(dais.length >= 5, 'có đủ các dải cảnh báo', String(dais.length));
+
+  // Không dải nào được phép bày một nút không gắn việc.
+  const treo = chay('Object.keys(DAI_CANH_BAO).filter((k) => DAI_CANH_BAO[k])'
+                    + '.flatMap((k) => (DAI_CANH_BAO[k].nut || [])'
+                    + '.filter((n) => !n.lam).map((n) => k + ":" + n.nhan))');
+  ok(treo.length === 0, 'KHÔNG có nút nào thiếu việc — không bày nút giả',
+     treo.length ? treo.join(' · ') : 'không có');
+
+  // Mọi mã việc khai trong bảng phải có hàm thật đứng sau.
+  const thieu = chay('Object.keys(DAI_CANH_BAO).filter((k) => DAI_CANH_BAO[k])'
+                     + '.flatMap((k) => (DAI_CANH_BAO[k].nut || []).map((n) => n.lam))'
+                     + '.filter((m) => m && !LENH_CANH_BAO[m])');
+  ok(thieu.length === 0, 'mọi mã việc đều có hàm thật', thieu.join(' · ') || 'không có');
+
+  // Bấm THẬT nút thoát của tình huống khoá cả Nghe lẫn Xuất.
+  chay("dat({ ...S, situation: 'mat_ket_noi' })");
+  ok(chay("S.situation") === 'mat_ket_noi', 'đang ở tình huống mất kết nối');
+  bam('[data-canhbao]', { canhbao: 've_binh_thuong' });
+  ok(chay("S.situation") === 'binh_thuong',
+     'bấm "Thử lại" thì thoát được tình huống khoá', chay('S.situation'));
+
+  chay("dat({ ...S, situation: 'giong_dang_tai' })");
+  bam('[data-canhbao]', { canhbao: 'mo_chon_giong' });
+  ok(chay('!!S.roiGiong'), 'bấm "Dùng giọng khác" thì mở đúng ô chọn giọng');
+
+  chay("dat({ ...S, situation: 'van_ban_qua_dai' })");
+  bam('[data-canhbao]', { canhbao: 'xem_cho_cat' });
+  ok(chay('S.sel') === 9 && chay("S.situation") === 'binh_thuong',
+     'bấm "Xem chỗ cắt" thì nhảy tới chỗ bị cắt', `sel=${chay('S.sel')}`);
+
+  chay('dat(globalThis.__Scu)');
+}
+
 console.log('\n--- K. Đang tạo âm thanh ---');
 chay("dat({ ...S, situation: 'dang_tao' })");
 ok(co('Đang tạo âm thanh cho đoạn'), 'thanh phát dạng chờ');

@@ -261,9 +261,28 @@ function veCanhBao() {
       <div class="dai__noi">${esc(d.noi)}</div>
     </span>
     <span class="dai__nut">${d.nut.map((n) =>
-      `<button class="nut ${n.acc ? 'nut--acc' : 'nut--vien'}">${esc(n.nhan)}</button>`).join('')}</span>
+      `<button class="nut ${n.acc ? 'nut--acc' : 'nut--vien'}"
+               data-canhbao="${esc(n.lam || '')}">${esc(n.nhan)}</button>`).join('')}</span>
   </div>`;
 }
+
+/* Việc thật sau mỗi nút trên dải cảnh báo. Trước đây sáu nút này chỉ là chữ:
+   không data-lenh, không id, không nhánh nào trong bộ bắt click — bấm vào không
+   có gì xảy ra. Nặng nhất là "Thử lại" của mat_ket_noi: tình huống ấy nằm trong
+   KHOA_NGHE_VA_XUAT nên Nghe và Xuất đều bị khoá, mà nút duy nhất để thoát ra
+   lại chết, người dùng chỉ còn nước tắt chương trình.
+
+   Tên việc và hành vi lấy từ bảng BN của bản mẫu (act / altAct). */
+const LENH_CANH_BAO = {
+  ve_binh_thuong: () => dat({ ...S, situation: 'binh_thuong' }),
+  mo_chon_giong: () => dat({ ...S, situation: 'binh_thuong', roiGiong: true }),
+  // Bản mẫu nhảy tới đúng chỗ sẽ bị cắt rồi trả màn về bình thường.
+  xem_cho_cat: () => dat({ ...S, situation: 'binh_thuong', sel: 9, pos: 9 }),
+  nghe_lai_doan_da_sua: () => {
+    dat({ ...S, situation: 'binh_thuong', sel: 4, pos: 4 });
+    batDauPhat();
+  },
+};
 
 // ---------------------------------------------------------------- cột trái
 
@@ -1660,6 +1679,8 @@ document.addEventListener('click', (e) => {
   const t = (s) => e.target.closest(s);
   let n;
 
+  if ((n = t('[data-canhbao]'))) { const f = LENH_CANH_BAO[n.dataset.canhbao];
+                                   return f ? f() : undefined; }
   if ((n = t('[data-menu]')))   return dat(moMenu(S, +n.dataset.menu));
   if ((n = t('[data-lenh]')))   { const f = LENH[n.dataset.lenh];
                                   return f ? f() : dat(dongHetMenu(S)); }
