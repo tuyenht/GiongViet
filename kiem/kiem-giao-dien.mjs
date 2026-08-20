@@ -390,41 +390,73 @@ console.log('\n--- G4. Cột thu gọn 44px thì cụm tệp tự ẩn ---');
      'CSS ẩn cụm tệp khi thu gọn — không thì cột 44px vỡ');
 }
 
-/* Đổi tên tệp là phép NGUY HIỂM NHẤT của cây tệp, vì tên tệp không phải nhãn -
-   nó là KHOÁ của năm kho. Dời thiếu một kho là bài vẫn nằm trong bộ nhớ dưới
-   khoá cũ mà màn hình báo trống, hoặc thẻ cảm xúc của bài này nhảy sang bài kia. */
-console.log('\n--- G5. Nháy đúp đổi tên phải dời CẢ NĂM kho ---');
+/* Đổi tên là phép NGUY HIỂM NHẤT của cây tệp, vì trong sản phẩm này TÊN TỆP
+   CHÍNH LÀ KHOÁ của TAI_LIEU · duongDanTep · loaiTep · chips · chuaLuu.
+
+   Bản đầu của lượt 6 đổi tên bằng cách DỜI khoá cả năm kho, và đo được ba đường
+   mất bài: xoá trắng ô xoá luôn nội dung; đặt tên cho tệp chưa đặt tên làm bài
+   kẹt dưới khoá rỗng; đặt trùng tên tệp của hồ sơ khác thì nuốt bài hồ sơ ấy.
+   Nay theo đúng bản mẫu: nhãn để BẢNG RIÊNG (S.nhanTep), mảng tệp và năm kho
+   không bị đụng tới. Ba mục dưới canh đúng ba đường ấy. */
+console.log('\n--- G5. Đổi tên chỉ ghi NHÃN, không được đụng khoá nào ---');
 {
   chay("dat({ ...globalThis.__Scu, man: 'chinh' })");
   const cu = chay('tabDangMo(S)[0]');
-  chay(`dat({ ...S, duongDanTep: { ...S.duongDanTep, ['${cu}']: 'C:\\\\thu\\\\a.txt' },`
-       + ` loaiTep: { ...S.loaiTep, ['${cu}']: 'congduc' } })`);
-  chay(`TAI_LIEU['${cu}'] = TAI_LIEU['${cu}'] || { doan: [], chuY: {} }`);
+  chay(`dat({ ...S, duongDanTep: { ...S.duongDanTep, ['${cu}']: 'C:/thu/a.txt' },`
+       + ` loaiTep: { ...S.loaiTep, ['${cu}']: 'congduc' },`
+       + ` chips: { ...S.chips, ['${cu}']: { 1: '[vui]' } } })`);
+  chay(`TAI_LIEU['${cu}'] = { doan: [{ kieu: 'p', chu: 'BAI CUA NGUOI DUNG' }],`
+       + " chuY: { tomTat: '', loai: [] } }");
+  chay(`chuaLuu.add('${cu}')`);
 
   batSuKien.dblclick({
     target: { closest: (s) => (s === '[data-tep]' ? { dataset: { tep: '0' } } : null) },
     preventDefault() {},
   });
-  ok(co('tep__o') && co('id="oTenTep"'), 'nháy đúp mở ô gõ lại tên',
-     `suaTenTep = ${chay('String(suaTenTep)')}`);
+  ok(co('tep__o') && co('id="oTenTep"'), 'nháy đúp mở ô gõ lại tên');
 
-  chay("doiTenTep(0, 'ten-hoan-toan-moi.txt')");
-  const m = 'ten-hoan-toan-moi.txt';
-  ok(chay('tabDangMo(S)[0]') === m, 'mảng tệp mang tên mới', chay('tabDangMo(S)[0]'));
-  ok(chay(`!!TAI_LIEU['${m}'] && !TAI_LIEU['${cu}']`), 'kho nội dung dời sang tên mới');
-  ok(chay(`S.duongDanTep['${m}'] === 'C:\\\\thu\\\\a.txt' && !S.duongDanTep['${cu}']`),
-     'kho đường dẫn dời theo — Ctrl+S vẫn ghi đúng chỗ cũ');
-  ok(chay(`S.loaiTep['${m}'] === 'congduc' && !S.loaiTep['${cu}']`),
-     'kho loại tệp dời theo — không đọc nhầm danh sách thành văn xuôi');
-  ok(chay(`!S.chips['${cu}']`), 'kho thẻ cảm xúc không còn kẹt ở tên cũ');
+  chay("doiTenTep(0, 'Thư gửi con')");
+  ok(co('Thư gửi con'), 'nhãn mới hiện trên hàng tệp');
+  ok(chay(`tabDangMo(S)[0] === '${cu}'`), 'mảng tệp KHÔNG đổi — tên tệp vẫn là khoá');
+  ok(chay(`!!TAI_LIEU['${cu}']`), 'kho nội dung còn nguyên chỗ cũ');
+  ok(chay(`S.duongDanTep['${cu}'] === 'C:/thu/a.txt'`), 'đường dẫn còn nguyên');
+  ok(chay(`!!S.chips['${cu}']`), 'thẻ cảm xúc còn nguyên');
+  ok(chay(`chuaLuu.has('${cu}')`), 'cờ chưa-lưu còn nguyên');
 
-  // Trùng tên thì TỪ CHỐI. Hai tệp cùng tên dùng chung nội dung và thẻ - đúng
-  // cái lỗi mà cả bộ kiểm khoá-tên-tệp sinh ra để canh.
-  chay("dat({ ...S, tabsByProfile: { ...S.tabsByProfile,"
-       + " [S.profile]: ['a.txt', 'b.txt'] } })");
-  chay("doiTenTep(1, 'a.txt')");
-  ok(chay("tabDangMo(S)[1]") === 'b.txt', 'đổi thành tên đã có thì TỪ CHỐI, giữ tên cũ',
-     chay('tabDangMo(S)[1]'));
+  // Ca 1 — xoá trắng ô. Bản cũ xoá luôn bài. Nay phải quay về tên tệp thật.
+  chay('doiTenTep(0, "")');
+  ok(chay('doanDangXem(S, TAI_LIEU).length') === 1,
+     'XOÁ TRẮNG ô tên KHÔNG được làm mất bài', String(chay('doanDangXem(S, TAI_LIEU).length')));
+  ok(chay(`chuaLuu.has('${cu}')`), 'xoá trắng cũng không được tắt cảnh báo chưa lưu');
+  ok(co(cu), 'xoá trắng thì quay về tên tệp thật');
+
+  // Ca 2 — tệp CHƯA ĐẶT TÊN (khoá rỗng). Bản cũ bỏ qua cả khối vì cu falsy.
+  chay("dat({ ...S, tabsByProfile: { ...S.tabsByProfile, [S.profile]: [''] },"
+       + ' activeByProfile: { ...S.activeByProfile, [S.profile]: 0 }, nhanTep: {} })');
+  chay("TAI_LIEU[''] = { doan: [{ kieu: 'p', chu: 'CHU VUA DAN' }], chuY: { tomTat: '', loai: [] } }");
+  chay("doiTenTep(0, 'thu-moi.txt')");
+  ok(chay('doanDangXem(S, TAI_LIEU).length') === 1,
+     'đặt tên cho tệp CHƯA ĐẶT TÊN không được làm bài biến mất',
+     String(chay('doanDangXem(S, TAI_LIEU).length')));
+
+  // Ca 3 — đặt trùng tên tệp của HỒ SƠ KHÁC. Bản cũ nuốt bài của hồ sơ ấy.
+  chay("dat({ ...S, profile: 0, nhanTep: {},"
+       + " tabsByProfile: { ...S.tabsByProfile, 0: ['cua-hs-0.txt'], 1: ['chung.txt'] },"
+       + ' activeByProfile: { ...S.activeByProfile, 0: 0, 1: 0 } })');
+  chay("TAI_LIEU['chung.txt'] = { doan: [{ kieu: 'p', chu: 'BAI HO SO 1' }], chuY: { tomTat: '', loai: [] } }");
+  chay("TAI_LIEU['cua-hs-0.txt'] = { doan: [{ kieu: 'p', chu: 'BAI HO SO 0' }], chuY: { tomTat: '', loai: [] } }");
+  chay("doiTenTep(0, 'chung.txt')");
+  ok(chay("TAI_LIEU['chung.txt'].doan[0].chu") === 'BAI HO SO 1',
+     'đặt trùng tên tệp của hồ sơ KHÁC không được nuốt bài của hồ sơ ấy',
+     chay("TAI_LIEU['chung.txt'].doan[0].chu"));
+
+  // Đóng một hàng thì nhãn phải cắt theo vị trí, không thì nhãn đeo nhầm tệp.
+  chay("dat({ ...S, tabsByProfile: { ...S.tabsByProfile, [S.profile]: ['a.txt', 'b.txt'] },"
+       + ' activeByProfile: { ...S.activeByProfile, [S.profile]: 0 }, nhanTep: {} })');
+  chay("doiTenTep(1, 'NHAN CUA B')");
+  chay('dat(dongTab(S, 0))');
+  ok(co('NHAN CUA B') && chay("tabDangMo(S)[0]") === 'b.txt',
+     'đóng hàng trên thì nhãn vẫn đi đúng tệp của nó');
 }
 console.log('\n--- G6. Bàn phím với tới được hàng tệp ---');
 {

@@ -256,10 +256,21 @@ function dongTab(S, i) {
   ds.splice(i, 1);
   if (!ds.length) ds.push('');
   const dang = Math.min(S.activeByProfile[S.profile], ds.length - 1);
+  /* Bảng nhãn đánh theo VỊ TRÍ, nên đóng một hàng thì phải cắt nhãn ở đúng vị
+     trí ấy (spliceName của bản mẫu). Không cắt thì nhãn của hàng dưới tụt lên
+     đeo nhầm tệp — người dùng thấy tên mình đặt cho bài này nhảy sang bài khác. */
+  const nhan = { ...(S.nhanTep || {}) };
+  const cua = nhan[S.profile];
+  if (cua && cua.length) {
+    const n = cua.slice();
+    n.splice(i, 1);
+    nhan[S.profile] = n;
+  }
   return {
     ...dongHetMenu(S),
     tabsByProfile: { ...S.tabsByProfile, [S.profile]: ds },
     activeByProfile: { ...S.activeByProfile, [S.profile]: Math.max(0, dang) },
+    nhanTep: nhan,
     view: 'san_sang', pos: 1, sel: 1,
   };
 }

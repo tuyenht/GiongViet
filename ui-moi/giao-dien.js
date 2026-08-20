@@ -274,10 +274,22 @@ const ICON_HO_SO = ['baiviet', 'danto', 'sach', 'danhsach'];
    phải thứ đáng nhớ qua lần chạy sau. Cùng chỗ với chuaLuu vì cùng bản chất. */
 let suaTenTep = null;
 
-/* Tên hiện trên hàng tệp. Tệp chưa đặt tên mang khoá rỗng, và ĐÁNH SỐ THEO VỊ
-   TRÍ đúng như bản mẫu (blankLabel): đóng một ô rỗng ở giữa thì các ô rỗng sau
-   tự tụt số. Giữ y vậy để hai bên không lệch nhau. */
-function nhanTep(ds, j) {
+/* Tên hiện trên hàng tệp — BA TẦNG, đúng như bản mẫu (nameAt):
+     nhãn người dùng tự đặt  ->  tên tệp thật  ->  nhãn tự sinh.
+
+   Vì sao phải có bảng nhãn riêng thay vì sửa thẳng tên tệp: trong sản phẩm này
+   TÊN TỆP CHÍNH LÀ KHOÁ của TAI_LIEU, S.duongDanTep, S.loaiTep, S.chips và
+   chuaLuu. Sửa tên tức là mổ vào khoá của năm kho, và đã đo được ba đường mất
+   bài vì thế: xoá trắng ô là xoá luôn nội dung, đặt tên cho tệp chưa đặt tên là
+   bài kẹt dưới khoá rỗng, đặt trùng tên tệp của hồ sơ khác là nuốt bài của hồ sơ
+   ấy. Bản mẫu không dính vì nó tách hẳn: mảng tệp giữ ID, nhãn để bảng riêng,
+   nội dung khoá theo ID. Đây là cách bê đúng mô hình ấy sang.
+
+   Nhãn ĐÁNH SỐ THEO VỊ TRÍ (blankLabel của bản mẫu): đóng một ô rỗng ở giữa thì
+   các ô rỗng sau tự tụt số. Giữ y vậy để hai bên không lệch nhau. */
+function tenHienThi(ds, j) {
+  const rieng = (S.nhanTep || {})[S.profile];
+  if (rieng && rieng[j]) return rieng[j];
   if (ds[j]) return ds[j];
   let n = 0;
   for (let k = 0; k <= j; k++) if (!ds[k]) n++;
@@ -298,7 +310,7 @@ function veCayTep(i) {
   return `
     <div class="tepds">
       ${ds.map((ten, j) => {
-        const nhan = nhanTep(ds, j);
+        const nhan = tenHienThi(ds, j);
         const on = j === dangXem;
         if (suaTenTep === `${i}:${j}`) {
           return `<div class="tep tep--sua">
@@ -330,7 +342,12 @@ function veCotTrai() {
   <div class="trai${S.rail ? ' thu-gon' : ''}">
     <div class="trai__dau">
       <button class="nut nut--icon" id="thuGon" title="${
-        S.rail ? 'Mở rộng danh sách hồ sơ (Ctrl+B)' : 'Thu gọn danh sách hồ sơ (Ctrl+B)'}">
+        /* Nói rõ là thu CẢ danh sách tệp. Từ khi danh sách tệp chuyển vào cột
+           trái, thu gọn là mất luôn lối đổi/thêm/đóng tệp — hứa "danh sách hồ
+           sơ" rồi lấy đi cả tệp thì người dùng không nối được nhân quả, cứ
+           tưởng chương trình vừa hỏng. */
+        S.rail ? 'Mở lại danh sách hồ sơ và tệp (Ctrl+B)'
+               : 'Thu gọn danh sách hồ sơ và tệp (Ctrl+B)'}">
         ${ic('bagach')}</button>
       <span class="trai__ten">Hồ sơ đọc</span>
     </div>
@@ -1857,53 +1874,27 @@ document.addEventListener('click', (e) => {
   }
 });
 
-/* Đổi tên một tệp trong hồ sơ đang dùng.
+/* Đổi NHÃN của một hàng tệp — chép đúng setNameAt của bản mẫu.
 
-   Tên tệp KHÔNG chỉ là nhãn - nó là KHOÁ của năm kho: TAI_LIEU (nội dung),
-   S.duongDanTep, S.loaiTep, S.chips (thẻ cảm xúc) và chuaLuu. Đổi nhãn mà quên
-   dời năm kho ấy là bài biến mất khỏi màn hình trong khi vẫn nằm nguyên trong
-   bộ nhớ dưới khoá cũ. Nên hàm này dời cả năm, không sửa mỗi mảng tab.
+   Chỉ ghi vào bảng nhãn, TUYỆT ĐỐI không đụng mảng tệp và không dời khoá nào.
+   Tên tệp vẫn là khoá của TAI_LIEU · S.duongDanTep · S.loaiTep · S.chips ·
+   chuaLuu, nên hễ mổ vào nó là mất bài — đã đo được ba đường: xoá trắng ô xoá
+   luôn nội dung, đặt tên cho tệp chưa đặt tên làm bài kẹt dưới khoá rỗng, đặt
+   trùng tên tệp của hồ sơ khác thì nuốt bài của hồ sơ ấy. Bảng nhãn riêng làm
+   cả ba đường ấy biến mất cùng lúc, vì không còn lệnh delete nào.
 
-   Không đụng tệp trên đĩa: S.duongDanTep đi theo tên mới, nên Ctrl+S vẫn ghi
-   đúng chỗ cũ và tệp gốc của người dùng giữ nguyên tên. */
+   Để trống thì trả về null, tức quay lại tên tệp thật hoặc nhãn tự sinh — đúng
+   `String(name || '').trim() || null` của bản mẫu, và ngược với ô tên HỒ SƠ
+   (bỏ trống thì giữ tên cũ). Hai chỗ cố ý khác nhau.
+
+   Trùng nhãn KHÔNG cần chặn nữa: hai hàng cùng nhãn vẫn là hai tệp riêng, vì
+   nội dung tra theo tên tệp chứ không theo nhãn. */
 function doiTenTep(j, tenGo) {
-  const ds = tabDangMo(S).slice();
-  const cu = ds[j];
-  const moi = String(tenGo || '').trim();
-
   suaTenTep = null;
-  // Xoá trắng ô = thôi không đặt tên nữa, quay về nhãn tự sinh. Giống bản mẫu,
-  // và ngược với ô tên HỒ SƠ (bỏ trống thì giữ tên cũ) - hai chỗ cố ý khác nhau.
-  if (moi === nhanTep(ds, j)) { ve(); return; }
-  if (moi && ds.some((x, k) => k !== j && x === moi)) {
-    moBao(`Hồ sơ này đã có tệp tên “${moi}”. Hai tệp trùng tên sẽ dùng chung `
-          + 'nội dung và thẻ cảm xúc, nên xin đặt tên khác.', 'Trùng tên tệp');
-    ve();
-    return;
-  }
-
-  const doiKhoa = (kho) => {
-    if (!cu || !kho || !(cu in kho)) return kho;
-    const ra = { ...kho };
-    if (moi) ra[moi] = ra[cu];
-    delete ra[cu];
-    return ra;
-  };
-  if (cu && TAI_LIEU[cu]) {
-    if (moi) TAI_LIEU[moi] = TAI_LIEU[cu];
-    delete TAI_LIEU[cu];
-  }
-  if (cu && chuaLuu.has(cu)) { chuaLuu.delete(cu); if (moi) chuaLuu.add(moi); }
-  const dd = doiKhoa(S.duongDanTep);
-  const lt = doiKhoa(S.loaiTep);
-  const ch = doiKhoa(S.chips);
-
-  ds[j] = moi;
-  dat({ ...S, tabsByProfile: { ...S.tabsByProfile, [S.profile]: ds },
-        duongDanTep: dd, loaiTep: lt, chips: ch });
-  // Vân tay mở đầu bằng tên tệp, nên đổi tên là vân tay đổi theo. Gửi lại để
-  // bên Python đọc đúng bài này chứ không phải bài mang tên cũ.
-  guiDoanSangPython();
+  const rieng = ((S.nhanTep || {})[S.profile] || []).slice();
+  while (rieng.length <= j) rieng.push(null);
+  rieng[j] = String(tenGo || '').trim() || null;
+  dat({ ...S, nhanTep: { ...(S.nhanTep || {}), [S.profile]: rieng } });
 }
 
 function moODoiTenTep(e) {
