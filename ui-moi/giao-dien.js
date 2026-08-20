@@ -1232,6 +1232,18 @@ function dungPhat() {
 // ---------------------------------------------------------------- nạp văn bản
 
 /* Đặt nội dung mới vào tab đang xem. Dùng chung cho dán, mở tệp, kéo thả. */
+/* Tên chưa ai dùng, GIỮ NGUYÊN ĐUÔI TỆP. Đánh số thô sau cả tên là hỏng đuôi:
+   "baocao.txt 2" ghi ra đĩa đúng như thế, Windows không còn mở được bằng chương
+   trình nào. Phải thành "baocao 2.txt". */
+function tenKhongTrung(goc, dsCo) {
+  const i = goc.lastIndexOf('.');
+  const than = i > 0 ? goc.slice(0, i) : goc;
+  const duoi = i > 0 ? goc.slice(i) : '';
+  let so = 2;
+  while (dsCo.includes(`${than} ${so}${duoi}`) || TAI_LIEU[`${than} ${so}${duoi}`]) so += 1;
+  return `${than} ${so}${duoi}`;
+}
+
 function datTaiLieu(kq) {
   if (!kq) return;
   if (kq.loi) { moBao(kq.loi); return; }
@@ -1246,16 +1258,29 @@ function datTaiLieu(kq) {
      chỉ thôi không cho hai hàng giẫm lên nhau. Tệp mở lại từ đĩa cùng đường dẫn
      thì vẫn dùng chung khoá như cũ — đó là mở lại chính nó, không phải va chạm. */
   const tenGoc = kq.ten || 'Chưa đặt tên';
-  const dsHang = tabDangMo(S);
   const viTri = S.activeByProfile[S.profile];
+  const hangMinh = (S.tabsByProfile[S.profile] || [])[viTri];
+  /* Soi MỌI hàng của MỌI hồ sơ, vì TAI_LIEU · duongDanTep · loaiTep · chips đều
+     là kho CHUNG cho cả bốn hồ sơ. Bản đầu chỉ soi tabDangMo(S) — hàng của hồ sơ
+     đang mở — nên dán ở hồ sơ này rồi dán ở hồ sơ kia vẫn nuốt bài của nhau.
+
+     Và KHÔNG được hỏi TAI_LIEU[ten] nữa: tài liệu nạp LƯỜI từng hàng một
+     (moLaiTepDangXem chỉ mở tệp đang xem), nên vừa khởi động là kho gần như
+     rỗng, phép canh đoản mạch và đường dẫn hàng cũ bị ghi đè — rồi henLuuHoSo()
+     chép thẳng xuống hoso-v2.json, mất luôn qua lần chạy sau. Sự thật cần soi là
+     DANH SÁCH HÀNG, thứ sống qua các lần chạy, không phải kho đã nạp. */
+  const moiHang = Object.values(S.tabsByProfile || {}).flat();
+  const soCho = moiHang.filter((x) => x === tenGoc).length;
+  const daCoChoKhac = soCho > (hangMinh === tenGoc ? 1 : 0);
+
   let ten = tenGoc;
-  if (TAI_LIEU[ten] && dsHang.some((x, k) => k !== viTri && x === ten)) {
-    const cungTep = kq.duongDan && S.duongDanTep[ten] === kq.duongDan;
-    if (!cungTep) {
-      let so = 2;
-      while (TAI_LIEU[`${tenGoc} ${so}`] || dsHang.includes(`${tenGoc} ${so}`)) so += 1;
-      ten = `${tenGoc} ${so}`;
-    }
+  if (daCoChoKhac) {
+    /* Mở LẠI đúng tệp ấy thì dùng chung khoá — nhưng chỉ khi bản trong bộ nhớ
+       CHƯA bị sửa. Nếu đang có chữ chưa lưu thì dùng chung khoá là xoá chữ ấy
+       VÀ xoá luôn cờ cảnh báo, nên lúc thoát cũng không ai hỏi. Đo được: chữ
+       mất, cờ mất, không một dòng báo. */
+    const cungTep = kq.duongDan && S.duongDanTep[tenGoc] === kq.duongDan;
+    if (!cungTep || chuaLuu.has(tenGoc)) ten = tenKhongTrung(tenGoc, moiHang);
   }
   // Vừa nạp từ đĩa thì trong bộ nhớ đúng bằng trên đĩa — sạch cờ chưa lưu.
   chuaLuu.delete(ten);

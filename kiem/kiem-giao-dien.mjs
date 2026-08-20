@@ -152,17 +152,25 @@ function batPython(datTra = {}) {
     moi_luu_ho_so: () => ({ ok: true }),
     moi_dat_doan: () => ({ ok: true }),
     moi_luu_van_ban: (ten) => ({ ten, duongDan: 'C:/GiongViet/' + ten }),
+    // Mấy hàm sản phẩm gọi trong lúc đổi trạng thái. Khai sẵn cho khỏi ồn, và
+    // để tên lạ vẫn bị bắt — đó mới là điều cần giữ.
+    moi_dung: () => ({ ok: true }),
+    doi_giong: () => ({ ok: true }),
+    moi_dat_chinh_am: () => ({ ok: true }),
   };
   const bo = { ...mac, ...datTra };
+  /* KHÔNG dùng Proxy trả hàm cho MỌI tên. Làm thế thì gọi nhầm tên hàm Python —
+     một họ lỗi có thật — vẫn chạy êm và trả null, rồi datTaiLieu(null) lặng lẽ
+     return. Đã vấp ngay trong lúc viết bài kiểm này: gài moi_doc_tep trong khi
+     moTep() gọi moi_mo_tep, và hai phép canh xanh giả.
+
+     Nay chỉ những tên được khai mới có hàm; tên lạ ném lỗi ngay tại chỗ. */
   ctx.pywebview = {
-    api: new Proxy({}, {
-      get: (_, ten) => (...ds) => {
-        pyDaGoi.push([String(ten), ...ds]);
-        const f = bo[ten];
-        return Promise.resolve(typeof f === 'function' ? f(...ds) : (f !== undefined ? f : null));
-      },
-      has: () => true,
-    }),
+    api: Object.fromEntries(Object.keys(bo).map((ten) => [ten, (...ds) => {
+      pyDaGoi.push([ten, ...ds]);
+      const f = bo[ten];
+      return Promise.resolve(typeof f === 'function' ? f(...ds) : (f !== undefined ? f : null));
+    }])),
   };
   // cau-noi.js đọc window.pywebview, mà ctx chính là window trong vm này.
   ctx.window.pywebview = ctx.pywebview;
@@ -750,7 +758,64 @@ console.log('\n--- G5g. Đường vào của văn bản: dán hai lần, bài đ
      'mở lại hàng 1 phải ra ĐÚNG bài thứ nhất',
      String(chay('doanDangXem(S, TAI_LIEU)[0] && doanDangXem(S, TAI_LIEU)[0].chu')));
 
+  /* Ca 2 — dán ở HAI HỒ SƠ khác nhau. TAI_LIEU là kho CHUNG cho cả bốn hồ sơ,
+     nên phép canh chỉ soi hàng của hồ sơ đang mở là hở: bản đầu xanh giả ở đây. */
+  chay('Object.keys(TAI_LIEU).forEach((k) => delete TAI_LIEU[k])');
+  chay("dat({ ...S, profile: 0, nhanTep: {},"
+       + " tabsByProfile: { ...S.tabsByProfile, 0: [''], 1: [''] },"
+       + ' activeByProfile: { ...S.activeByProfile, 0: 0, 1: 0 } })');
+  lan = 0;
+  await chay('danVanBan()');
+  chay('dat(doiHoSo(S, 1))');
+  await chay('danVanBan()');
+  ok(chay('Object.keys(TAI_LIEU).length') === 2,
+     'dán ở HAI hồ sơ vẫn phải giữ hai bài riêng',
+     'số bài = ' + chay('Object.keys(TAI_LIEU).length'));
+  chay('dat(doiHoSo(S, 0))');
+  ok(/BAI THU NHAT/.test(String(chay('JSON.stringify(doanDangXem(S, TAI_LIEU))'))),
+     'quay về hồ sơ trước vẫn ra ĐÚNG bài của nó',
+     String(chay('doanDangXem(S, TAI_LIEU)[0] && doanDangXem(S, TAI_LIEU)[0].chu')));
+
+  /* Ca 3 — vừa khởi động, kho CHƯA nạp (tài liệu nạp lười). Bản đầu hỏi
+     TAI_LIEU[ten] nên phép canh tự tắt, và đường dẫn hàng cũ bị ghi đè rồi chép
+     xuống hoso-v2.json — mất qua cả lần chạy sau. */
+  chay('Object.keys(TAI_LIEU).forEach((k) => delete TAI_LIEU[k])');
+  chay("dat({ ...S, profile: 0, nhanTep: {},"
+       + " tabsByProfile: { ...S.tabsByProfile, 0: ['baocao.txt', 'baocao 2.txt'] },"
+       + ' activeByProfile: { ...S.activeByProfile, 0: 1 },'
+       + " duongDanTep: { 'baocao.txt': 'C:/thang7/baocao.txt',"
+       + " 'baocao 2.txt': 'D:/thang8/baocao.txt' } })");
+  bam('#themTep');
+  batPython({ moi_mo_tep: () => ({ ten: 'baocao.txt', duongDan: 'D:/thang8/baocao.txt',
+                                   doan: [{ kieu: 'p', chu: 'THANG TAM' }] }) });
+  await chay('moTep()');
+  ok(chay("S.duongDanTep['baocao.txt']") === 'C:/thang7/baocao.txt',
+     'kho chưa nạp cũng KHÔNG được để đường dẫn hàng cũ bị ghi đè',
+     String(chay("S.duongDanTep['baocao.txt']")));
+
+  /* Ca 4 — mở LẠI đúng tệp đang có chữ chưa lưu. Dùng chung khoá là xoá chữ ấy
+     và xoá luôn cờ cảnh báo, nên lúc thoát cũng không ai hỏi. */
+  chay('Object.keys(TAI_LIEU).forEach((k) => delete TAI_LIEU[k]); chuaLuu.clear()');
+  chay("dat({ ...S, profile: 0, nhanTep: {},"
+       + " tabsByProfile: { ...S.tabsByProfile, 0: ['baocao.txt'] },"
+       + ' activeByProfile: { ...S.activeByProfile, 0: 0 },'
+       + " duongDanTep: { 'baocao.txt': 'D:/thang8/baocao.txt' } })");
+  chay("TAI_LIEU['baocao.txt'] = { doan: [{ kieu: 'p', chu: 'CHU NGUOI DUNG VUA SUA' }],"
+       + " chuY: { tomTat: '', loai: [] } }");
+  chay("chuaLuu.add('baocao.txt')");
+  bam('#themTep');
+  await chay('moTep()');
+  ok(chay("chuaLuu.has('baocao.txt')"),
+     'mở lại tệp đang sửa dở KHÔNG được xoá cờ chưa-lưu của nó');
+  ok(/CHU NGUOI DUNG VUA SUA/.test(String(chay("JSON.stringify(TAI_LIEU['baocao.txt'])"))),
+     'và KHÔNG được xoá chữ người dùng vừa sửa');
+
+  // Tên đánh số phải giữ đuôi tệp, không thì ghi ra đĩa là một tệp không mở được.
+  ok(chay('tabDangMo(S).some((x) => /baocao 2\\.txt/.test(x))'),
+     'tên đánh số giữ nguyên đuôi .txt', JSON.stringify(chay('tabDangMo(S)')));
+
   tatPython();
+  chay('chuaLuu.clear()');
   chay('Object.keys(TAI_LIEU).forEach((k) => delete TAI_LIEU[k]);'
        + ' Object.assign(TAI_LIEU, globalThis.__TLcu); dat(globalThis.__Scu)');
 }
