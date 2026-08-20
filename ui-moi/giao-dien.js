@@ -1640,9 +1640,20 @@ function moHopHoi(ten, dong, nut, xong) {
    Ctrl+S có lưu thật, nhưng không có gì tự lưu và trước đây không đường đóng
    nào hỏi một câu — gõ cả buổi rồi bấm dấu × là mất trắng. */
 function hoiTruocKhiDongTep(ten, tiep) {
-  if (!ten || !chuaLuu.has(ten)) { tiep(); return; }
+  /* KHÔNG được bỏ qua khi tên rỗng. Tệp chưa đặt tên chính là bản VỪA DÁN —
+     mà bản dán không có tệp nào trên đĩa, nên đóng đi là mất hẳn, không đường
+     nào lấy lại. Trước đây nhánh `!ten` cho nó trôi thẳng qua hộp hỏi: dán bài,
+     sửa vài chữ, bấm × là mất trắng không một câu hỏi. Đo được bằng
+     kiem-giao-dien.mjs mục N2.
+
+     Chỉ `chuaLuu.has(ten)` mới được quyền quyết định, vì đó mới là câu hỏi thật:
+     tệp này có chữ chưa ghi ra không. */
+  if (!chuaLuu.has(ten)) { tiep(); return; }
+  // Tên rỗng không hiện ra được cho người dùng đọc — gọi đúng nhãn họ đang thấy
+  // trên hàng tệp.
+  const nhan = ten || tenHienThi(tabDangMo(S), S.activeByProfile[S.profile]);
   moHopHoi('Chưa lưu', [
-    `Tệp “${ten}” có chữ bạn vừa sửa mà chưa lưu.`,
+    `Tệp “${nhan}” có chữ bạn vừa sửa mà chưa lưu.`,
     'Lưu thì phần mềm ghi ra một bản trong Tài liệu\\GiongViet — tệp gốc của bạn không bị đè.',
   ], [
     { ma: 'luu', nhan: 'Lưu rồi đóng', chinh: true },

@@ -489,6 +489,38 @@ console.log('\n--- G5. Đổi tên chỉ ghi NHÃN, không được đụng kho�
   ok(co('NHAN CUA B') && chay("tabDangMo(S)[0]") === 'b.txt',
      'đóng hàng trên thì nhãn vẫn đi đúng tệp của nó');
 }
+/* Hộp "Chưa lưu" là lưới an toàn CUỐI CÙNG chống mất bài, mà trước đây không
+   một bài kiểm nào chạm tới nó. Ca nặng nhất là tệp CHƯA ĐẶT TÊN: đó chính là
+   bản vừa DÁN, không có tệp nào trên đĩa nên đóng đi là mất hẳn. */
+console.log('\n--- G5b. Đóng tệp còn chữ chưa lưu thì phải HỎI ---');
+{
+  const dung = (tep, khoa) => {
+    chay('chuaLuu.clear()');
+    chay('dat({ ...S, hopTin: null, tabsByProfile: { ...S.tabsByProfile, [S.profile]: '
+         + JSON.stringify(tep) + ' }, activeByProfile: { ...S.activeByProfile, [S.profile]: 0 } })');
+    tep.forEach((t) => chay('TAI_LIEU[' + JSON.stringify(t)
+      + '] = { doan: [{ kieu: "p", chu: "BAI" }], chuY: { tomTat: "", loai: [] } }'));
+    chay('chuaLuu.add(' + JSON.stringify(khoa) + ')');
+  };
+
+  dung(['co-ten.txt', 'kia.txt'], 'co-ten.txt');
+  bam('[data-dongtep]', { dongtep: '0' }, [['[data-tep]', { tep: '0' }]]);
+  ok(chay('!!S.hopTin'), 'tệp CÓ TÊN còn chữ chưa lưu thì hỏi trước khi đóng');
+  ok(chay('tabDangMo(S).length') === 2, 'và chưa đóng gì cả trong lúc chờ trả lời');
+
+  // Tệp chưa đặt tên = bản vừa dán. Trước đây nhánh `!ten` cho nó trôi thẳng qua.
+  dung(['', 'kia.txt'], '');
+  bam('[data-dongtep]', { dongtep: '0' }, [['[data-tep]', { tep: '0' }]]);
+  ok(chay('!!S.hopTin'),
+     'tệp CHƯA ĐẶT TÊN — bản vừa dán — cũng phải hỏi, vì nó không có bản nào trên đĩa');
+  ok(chay('tabDangMo(S).length') === 2, 'và cũng chưa đóng gì cả');
+  ok(!/“”/.test(HTML), 'hộp hỏi gọi đúng nhãn người dùng đang thấy, không phải tên rỗng');
+
+  chay('dat({ ...S, hopTin: null })');
+  chay('chuaLuu.clear()');
+  chay('dat(globalThis.__Scu)');
+}
+
 console.log('\n--- G6. Bàn phím với tới được hàng tệp ---');
 {
   chay("dat({ ...globalThis.__Scu, man: 'chinh' })");
