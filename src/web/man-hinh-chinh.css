@@ -1,0 +1,805 @@
+/* Giọng Việt — bố cục màn hình chính.
+   Đi kèm app.css (token + control). Mọi kích thước lấy từ README mục
+   "Màn hình 1 — Màn hình chính".
+
+   Xếp dọc: tiêu đề 32 → menu 30 → công cụ 44 → (tìm) → (cảnh báo)
+   Danh sách tệp nằm trong cột trái, lồng dưới hồ sơ của nó — không còn dải tab.
+   → ba cột (co giãn) → (thanh phát 46) → trạng thái 28. */
+
+.man-chinh { height: 100vh; display: flex; flex-direction: column; background: var(--bg); }
+
+/* ============================================================ thanh tiêu đề 32 */
+
+.tieude { height: 32px; flex: none; display: flex; align-items: center; }
+.tieude__dau { display: flex; align-items: center; gap: 8px; padding-left: 12px; }
+.dau-hieu { width: 16px; height: 16px; border-radius: 3px; background: var(--acc);
+            display: flex; align-items: center; justify-content: center; color: var(--acc-txt); }
+.tieude__ten { font-size: 12.5px; color: var(--txt2); }
+.tieude__keo { flex: 1; height: 100%; }
+
+/* CẢ dải logo + tên tệp cũng phải kéo được cửa sổ — lớp pywebview-drag-region
+   gắn trong giao-dien.js. Trước đây chỉ khoảng trống ở giữa mới kéo được, nên
+   bấm đúng vào chữ tiêu đề thì không có gì xảy ra; chủ dự án thử và báo
+   "click khu vực tiêu đề chưa thấy được". Mọi cửa sổ Windows đều kéo được
+   trên cả dải tiêu đề.
+
+   KHÔNG dùng -webkit-app-region: đó là của Electron, WebView2 qua pywebview
+   không hiểu thuộc tính ấy. */
+.tieude__dau { cursor: default; user-select: none; }
+.cuaso { width: 46px; height: 32px; border: 0; background: transparent; color: var(--txt);
+         display: flex; align-items: center; justify-content: center; transition: background .15s; }
+.cuaso:hover { background: var(--sub-h); }
+.cuaso--dong:hover { background: var(--dong); color: #fff; }
+
+/* ============================================================ thanh menu 30 */
+
+.menu { height: 30px; flex: none; display: flex; align-items: center; padding: 0 6px;
+        position: relative; }
+.menu__muc { height: 22px; padding: 0 10px; border: 0; border-radius: 4px;
+             background: transparent; font-size: 13.5px; transition: background .15s; }
+.menu__muc:hover, .menu__muc.dang-mo { background: var(--sub-h); }
+/* Ô bọc mỗi nhãn menu: chỉ để bảng con neo vào ĐÚNG nhãn của nó. Cao bằng cả
+   thanh (align-self:stretch) nên top:100% rơi đúng mép dưới thanh menu. */
+.menu__o { position: relative; display: flex; align-items: center; align-self: stretch; }
+.menu__roi { position: absolute; top: 100%; left: 0; z-index: 60; }
+
+/* ============================================================ thanh công cụ 44 */
+
+.congcu { height: 44px; flex: none; display: flex; align-items: center; gap: 2px;
+          padding: 0 8px; }
+.congcu__ngan { width: 1px; height: 20px; margin: 0 6px; background: var(--divider); flex: none; }
+/* Ô bọc nút Thẻ cảm xúc, để bảng thẻ neo vào chính nút ấy. */
+.congcu__o { position: relative; display: flex; align-items: center; }
+.congcu__roi { position: absolute; top: 100%; left: 0; margin-top: 4px;
+               z-index: 60; width: 260px; }
+.congcu__phai { margin-left: auto; display: flex; align-items: center; gap: 6px; }
+
+/* Nút Nghe toàn bộ lúc đang đọc: nền accent nhạt + viền accent, nhìn là biết
+   nó đang chạy chứ không phải nút chờ bấm. Chủ dự án yêu cầu — đặc tả gốc để
+   nút này bất động, nhưng bấm một nút mà không thấy gì đổi thì người không
+   rành máy tính tưởng máy không nhận. */
+.nut--vien.dang-phat {
+  background: var(--acc-soft);
+  border-color: var(--acc);
+  color: var(--acc);
+  font-weight: 600;
+}
+.nut--vien.dang-phat:hover:not(:disabled) { background: var(--acc-soft); }
+
+/* Nút bị khoá: khi mô hình chưa sẵn sàng, nút Xuất và Nghe tự mờ đi, không sáng màu.
+   Khi sẵn sàng thì tự động sáng màu nhấn (accent) bình thường. */
+.nut.la-khoa {
+  color: var(--dis) !important;
+  cursor: not-allowed;
+}
+.nut--acc.la-khoa {
+  background: transparent !important;
+  border-color: var(--stroke2) !important;
+  color: var(--dis) !important;
+  cursor: not-allowed;
+}
+.nut--acc.la-khoa:hover {
+  background: transparent !important;
+  border-color: var(--stroke2) !important;
+}
+.nut--vien.la-khoa {
+  border-color: var(--stroke) !important;
+  background: transparent !important;
+  color: var(--dis) !important;
+  cursor: not-allowed;
+}
+
+/* ====================================== cây tệp trong cột trái (thay dải tab)
+
+   Vạch trái 2px là thứ nối hàng tệp về hàng hồ sơ của nó; thụt 9px để mắt thấy
+   ngay đây là cấp dưới. Hàng đang xem đổi vạch sang màu nhấn. */
+
+.tepds { display: flex; flex-direction: column; gap: 1px; margin-top: 2px; }
+.tep { height: 30px; display: flex; align-items: center; gap: 7px;
+       margin-left: 9px; padding: 0 6px 0 15px;
+       border-left: 2px solid var(--stroke2); border-radius: 0 4px 4px 0;
+       color: var(--txt2); transition: background .15s; }
+/* Hover CHỪA hàng đang xem. Bản mẫu không chừa, mà --sub-h lại nhạt hơn
+   --ctl-h, nên rê chuột vào tệp đang mở làm nó nhạt đi - trông như vừa bị bỏ
+   chọn. Với người lớn tuổi đó là tín hiệu sai, nên ở đây cố ý lệch bản mẫu. */
+.tep:hover:not(.dang-xem) { background: var(--sub-h); }
+.tep.dang-xem { background: var(--ctl-h); border-left-color: var(--acc);
+                color: var(--txt); font-weight: 600; }
+/* Bàn phím tới được mà không thấy mình đang đứng ở đâu thì cũng như không tới. */
+.tep:focus-visible { outline: 2px solid var(--acc); outline-offset: -2px; }
+.tep__icon { flex: none; color: var(--txt3); display: flex; }
+.tep.dang-xem .tep__icon { color: var(--acc); }
+.tep__ten { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis;
+            white-space: nowrap; font-size: 13px; }
+.tep__dong { width: 18px; height: 18px; flex: none; border: 0; border-radius: 3px;
+             background: transparent; color: var(--txt3); display: flex;
+             align-items: center; justify-content: center; }
+.tep__dong:hover { background: var(--sel); color: var(--txt); }
+.tep--sua { padding-right: 4px; }
+/* box-sizing: border-box để viền 1px không đẩy ô rộng hơn hàng — bản thiết kế
+   khai rõ nó, và thiếu nó thì ô nhập nhô ra khỏi hàng đúng 2px. */
+.tep__o { flex: 1; min-width: 0; box-sizing: border-box; height: 22px; padding: 0 5px;
+          border: 1px solid var(--acc); border-radius: 3px;
+          background: var(--ctl); color: var(--txt);
+          font: 400 13px inherit; outline: none; }
+/* Viền trái trong suốt để hàng này thẳng cột với các hàng tệp phía trên. */
+.tep__them { height: 28px; width: calc(100% - 9px); justify-content: flex-start;
+             gap: 7px; margin-left: 9px; padding: 0 6px 0 15px;
+             border-left: 2px solid transparent; border-radius: 0 4px 4px 0;
+             color: var(--txt3); font-size: 12.5px; }
+.tep__them:hover { background: var(--sub-h); color: var(--txt2); }
+/* Cột thu còn 44px thì không còn chỗ cho hàng tệp - ẩn cả cụm, y như .hoso__than. */
+.trai.thu-gon .tepds { display: none; }
+
+/* ============================================================ thanh tìm và thay thế */
+
+.tim { flex: none; height: 46px; margin: 0 8px 6px; padding: 0 12px;
+       display: flex; align-items: center; gap: 10px;
+       border: 1px solid var(--stroke2); border-radius: 6px; background: var(--layer); }
+.tim__nhan { font-size: 13px; color: var(--txt2); flex: none; }
+.tim__o { width: 180px; flex: none; }
+.tim__dem { font-size: 12.5px; color: var(--txt3); flex: none;
+            font-variant-numeric: tabular-nums; }
+.tim__ngan { width: 1px; height: 22px; background: var(--divider); flex: none; }
+.tim__dong { margin-left: auto; }
+
+/* ============================================================ vùng ba cột */
+
+.thanchinh { flex: 1; min-height: 0; display: flex; gap: 8px; padding: 2px 8px 8px; }
+/* Thân của màn đứng riêng: chiếm trọn phần dưới thanh tiêu đề. */
+.manphu { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+/* Mũi tên lùi ở đầu thanh tiêu đề. Không kéo cửa sổ được khi bấm lên nó, nên
+   đặt ngoài vùng pywebview-drag-region về mặt sự kiện bằng -webkit-app-region. */
+.tieude__lui { width: 30px; height: 24px; margin-right: 4px; flex: none;
+               -webkit-app-region: no-drag; }
+
+/* --- cột trái 240 --- */
+
+.trai { width: 240px; flex: none; display: flex; flex-direction: column; }
+.trai.thu-gon { width: 44px; }
+.trai__dau { height: 40px; display: flex; align-items: center; gap: 4px; }
+.trai__ten { font-size: 14px; font-weight: 600; }
+.trai__ds { flex: 1; min-height: 0; overflow: auto; }
+
+.hoso { position: relative; width: 100%; min-height: 52px; display: flex; align-items: center;
+        gap: 10px; padding: 7px 10px 7px 12px; margin-bottom: 2px;
+        border: 1px solid transparent; border-radius: 4px; background: transparent;
+        text-align: left; transition: background .15s; }
+.hoso:hover { background: var(--sub-h); }
+.hoso.dang-dung { background: var(--layer); border-color: var(--stroke); }
+.hoso.dang-dung::before { content: ''; position: absolute; left: 2px; top: 50%;
+                          margin-top: -9px; width: 3px; height: 18px; border-radius: 2px;
+                          background: var(--acc); }
+.hoso__icon { flex: none; color: var(--txt2); display: flex; }
+.hoso.dang-dung .hoso__icon { color: var(--acc); }
+.hoso__than { flex: 1; min-width: 0; }
+.hoso__ten { font-size: 13.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hoso.dang-dung .hoso__ten { font-weight: 600; }
+.hoso__giong { font-size: 12px; color: var(--txt3); overflow: hidden;
+               text-overflow: ellipsis; white-space: nowrap; }
+
+.hoso-nhom-nhan {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--txt3);
+  letter-spacing: 0.5px;
+  padding: 10px 8px 4px 6px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.trai.thu-gon .hoso-nhom-nhan { display: none; }
+
+.hoso__badge {
+  font-size: 9.5px;
+  font-weight: 600;
+  padding: 1.5px 5px;
+  border-radius: 3px;
+  line-height: 1;
+}
+.hoso__badge--he-thong {
+  background: rgba(0, 103, 192, 0.08);
+  color: var(--acc);
+}
+.hoso__badge--tuy-chinh {
+  background: var(--chip-bg);
+  color: var(--txt2);
+  border: 1px solid var(--chip-bd);
+}
+
+.trai__chan { flex: none; border-top: 1px solid var(--divider); padding-top: 6px; margin-top: 6px; }
+.trai__lienket { width: 100%; height: 36px; justify-content: flex-start; }
+
+/* dải icon khi thu gọn */
+.trai.thu-gon .hoso { width: 36px; min-height: 36px; padding: 0; justify-content: center;
+                      margin: 0 auto 4px; }
+.trai.thu-gon .hoso.dang-dung { background: var(--acc-soft); border-color: transparent; }
+.trai.thu-gon .hoso.dang-dung::before { display: none; }
+.trai.thu-gon .hoso.dang-dung .hoso__icon { color: var(--acc); }
+.trai.thu-gon .hoso__than,
+.trai.thu-gon .trai__ten,
+.trai.thu-gon .nhan-chu { display: none; }
+.trai.thu-gon .trai__lienket { width: 36px; padding: 0; justify-content: center; margin: 0 auto; }
+
+/* --- vùng đọc --- */
+
+.doc { position: relative; flex: 1; min-width: 0; display: flex; flex-direction: column;
+       background: var(--layer); border: 1px solid var(--stroke); border-radius: 8px;
+       overflow: hidden; }
+.doc__dau { height: 38px; flex: none; display: flex; align-items: center;
+            padding: 0 16px; border-bottom: 1px solid var(--divider); }
+.doc__thongke { font-size: 12.5px; color: var(--txt2); font-variant-numeric: tabular-nums; }
+.doc__goiy { margin-left: auto; font-size: 12.5px; color: var(--txt3); }
+/* Cuộn THẬT. Đệm đáy 72px để thanh đảo nổi không che mất dòng cuối cùng khi cuộn hết bài */
+.doc__cuon { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden;
+             padding: 8px 10px 72px 8px;
+             scrollbar-width: thin; scrollbar-color: transparent transparent;
+             transition: scrollbar-color .15s; }
+.doc__cuon:hover { scrollbar-color: var(--rail, #868686) transparent; }
+.doc__cuon::-webkit-scrollbar { width: 8px; }
+.doc__cuon::-webkit-scrollbar-thumb { background: transparent; border-radius: 4px; }
+.doc__cuon:hover::-webkit-scrollbar-thumb { background: var(--rail, #868686); }
+
+/* Mỗi đoạn là một hàng BO GÓC, nền phủ trọn máng số - chữ - nút ▶ chứ không
+   tràn ra sát viền thẻ. Số đo lấy từ bản mẫu cập nhật 14/8: bo 6px, đệm 7×8. */
+.doan { position: relative; width: 100%; display: flex; align-items: flex-start;
+        padding: 7px 8px; border: 0; border-radius: 6px;
+        background: transparent; text-align: left;
+        transition: background .15s; }
+.doan:hover { background: var(--sub-h); }
+/* Vạch dọc 3px nằm TRONG khối bo góc, dùng inset shadow chứ không border-left:
+   border đẩy nội dung sang phải 3px, làm chữ nhích mỗi lần đổi đoạn chọn. */
+.doan.dang-chon { background: var(--sel); box-shadow: inset 3px 0 0 var(--acc); }
+.doan.dang-doc { background: var(--hl); box-shadow: inset 3px 0 0 var(--acc); }
+.doan.doc-xong .doan__chu, .doan.doc-xong .doan__so { color: var(--dis); }
+
+/* Máng số trở lại đúng vai bản mẫu: CHỈ là số thứ tự, không phải nút. Việc
+   nghe riêng đoạn đã chuyển hẳn sang nút ▶ nổi bên phải mỗi dòng. */
+/* Máng số CHỈ để đánh dấu vị trí - không còn là nút, và bản mẫu cập nhật đã
+   bỏ hẳn tam giác báo đoạn đang đọc ở đây (việc đó nay là của nút ▶ lề phải).
+   30px thay cho 54px vì không phải chừa chỗ cho mũi tên nữa. */
+.doan__so { width: 30px; flex: none; padding-right: 12px; text-align: right;
+            white-space: nowrap;
+            font-size: 12.5px; line-height: var(--dong-doan); color: var(--txt3);
+            font-variant-numeric: tabular-nums; border: 0; background: transparent;
+            cursor: default; }
+.doan.dang-doc .doan__so { color: var(--acc); font-weight: 700; }
+
+/* Nút nghe riêng đoạn: hiện khi đưa chuột vào dòng, nằm sát mép phải, canh
+   giữa theo chiều cao của cả đoạn nên đoạn dài mấy dòng vẫn tìm thấy ngay.
+
+   Neo absolute vào .doan (đã position:relative) chứ KHÔNG fixed: nút nằm gọn
+   trong lòng đoạn nên cuộn theo đoạn là đúng, không dính cảnh bị .doc__cuon
+   cắt cụt như mấy thứ bung ra ngoài vùng cuộn.
+
+   Dáng PHẲNG theo đúng nút nghe thử giọng ở cột phải (.roi__nghe): bo 5px,
+   không viền, không bóng đổ. Bản đầu làm tròn 50% có viền có bóng, nhìn ra
+   ngay là "rời rạc" - nó mang ngôn ngữ của một app khác dán vào giữa một giao
+   diện phẳng.
+
+   TUYỆT ĐỐI KHÔNG cho nút nền đặc. Nền dòng lúc rê chuột là --sub-h (xám rất
+   nhạt) chứ không phải --layer (trắng), nên nút nền trắng hiện lên thành một
+   ô trắng lộ liễu giữa dòng - đã thử và hỏng đúng như vậy.
+
+   Cũng không cần nền để che chữ: .doan__than chặn ở max-width 700px, cộng
+   máng số 54px là chữ hết chậm nhất ở 754px, trong khi nút bám mép phải vùng
+   đọc. Hai bên cách nhau vài trăm pixel, không hề đè nhau.
+
+   Nền lúc rê vào nút thì dùng --acc-soft: nó là rgba trong suốt nên chồng lên
+   nền dòng nào cũng hoà, không đục ra một mảng khác màu. */
+.doan__play { position: absolute; right: 10px; top: 50%; z-index: 2;
+              transform: translateY(-50%);
+              width: 26px; height: 26px; display: inline-flex;
+              align-items: center; justify-content: center;
+              border: 1px solid transparent; border-radius: 4px;
+              background: transparent; color: var(--acc);
+              font-size: 12px; cursor: pointer; opacity: 0;
+              transition: opacity .12s, background .12s, border-color .12s; }
+/* Đoạn đang đọc hoặc đang tạo âm thanh: nút hiện sẵn, có viền và nền accent. */
+.doan.dang-doc .doan__play, .doan.dang-tao .doan__play {
+  opacity: 1; border-color: var(--acc); background: var(--acc-soft); }
+/* Ký hiệu do CSS vẽ theo lớp .dang-doc, KHÔNG viết vào HTML. Vòng nhịp đọc
+   gạt lớp ấy mỗi 250ms mà không dựng lại DOM, nên ký hiệu nằm trong HTML thì
+   đoạn sang lượt đọc vẫn trơ ra hình tam giác - phải bấm chỗ khác mới đổi. */
+/* Ký hiệu theo CHUẨN trình phát, bản mẫu chưa nói tới nên lấy lệ thường: đang
+   phát thì nút là TẠM DỪNG, tạm dừng rồi thì trở lại thành phát. Vòng nhịp đọc
+   gạt lớp mỗi 250ms nên ký hiệu phải do CSS vẽ, viết vào HTML là nó trơ ra. */
+.doan__play::after { content: '▶'; }
+.doan.dang-doc .doan__play::after { content: '❚❚'; letter-spacing: -1px; font-size: 9px; }
+.doan.tam-dung .doan__play::after { content: '▶'; letter-spacing: 0; font-size: 12px; }
+.doan:hover .doan__play { opacity: 1; }
+/* Đi bằng bàn phím cũng phải thấy nút, không thì chỉ ai dùng chuột mới nghe được. */
+.doan__play:focus-visible { opacity: 1; outline: 2px solid var(--acc); outline-offset: 1px; }
+.doan__play:hover { background: var(--acc-soft); }
+
+/* KHOÁ - lúc giọng đang tải, mất kết nối hoặc hết lượt. Mờ đi, con trỏ báo
+   không dùng được.
+
+   Vẫn cho bấm, và bấm thì hiện lời nói rõ vì sao: một nút xám ngắt bấm không
+   ăn gì là thứ làm người lớn tuổi loay hoay lâu nhất, còn tệ hơn không có nút. */
+.doan__play.la-khoa { color: var(--dis); cursor: not-allowed; }
+.doan__play.la-khoa:hover { background: transparent; }
+
+/* GÕ THẲNG VÀO CHỮ. Không viền, không nền, không đổi cỡ chữ: nhìn y như lúc
+   chỉ đọc, chỉ khác con trỏ nháy - đó mới là cảm giác "gõ như Notepad".
+   Viền hộp quanh từng đoạn làm cả trang thành một mớ khung. */
+.doan__chu[contenteditable] { outline: none; cursor: text; white-space: pre-wrap; }
+.doan__chu[contenteditable]:focus { background: var(--hl); border-radius: 4px; }
+/* Chữ chạy hết bề ngang ô, KHÔNG chặn ở 700px nữa - cửa sổ rộng mà chữ dồn
+   vào giữa để trống nửa màn hình thì phí, chữ lại ngắn dòng hơn mức cần.
+
+   Chừa 86px bên phải làm chỗ cho HAI nút ▶ và ✎ (mỗi nút 28, nút ngoài cách
+   mép 10, còn lại để thở). Đây là thứ THAY nền đặc dưới nút: trước kia dựa vào
+   trần 700px để chữ không chạm nút, bỏ trần thì phải chừa chỗ, không thì nút
+   lại đè lên chữ. */
+/* Chừa 46px cho MỘT nút ▶ (26 + cách mép 10 + thở). Bản trước chừa 86 vì có
+   thêm nút sửa; nay gõ thẳng vào chữ nên nút ấy không còn. */
+.doan__than { flex: 1; min-width: 0; padding-right: 46px; }
+/* Đang sửa thì ô nhập chiếm hết bề ngang, không phải né nút nào. */
+.doan--sua .doan__than { padding-right: 12px; }
+/* ==================================================== viền kéo đổi cỡ cửa sổ
+
+   Cửa sổ frameless nên phải tự vẽ mép. Dải 6px ở cạnh, 12px ở góc — đủ rộng
+   để tay người lớn tuổi bắt trúng, đủ hẹp để không nuốt mất cú bấm vào nút
+   nằm sát mép. Trong suốt hoàn toàn, chỉ đổi hình con trỏ. */
+.vien { position: fixed; z-index: 200; }
+.vien--tren   { top: 0; left: 8px; right: 8px; height: 6px; cursor: ns-resize; }
+.vien--duoi   { bottom: 0; left: 8px; right: 8px; height: 6px; cursor: ns-resize; }
+.vien--trai   { left: 0; top: 8px; bottom: 8px; width: 6px; cursor: ew-resize; }
+.vien--phai   { right: 0; top: 8px; bottom: 8px; width: 6px; cursor: ew-resize; }
+.vien--trentrai  { top: 0; left: 0; width: 12px; height: 12px; cursor: nwse-resize; }
+.vien--duoiphai  { bottom: 0; right: 0; width: 12px; height: 12px; cursor: nwse-resize; }
+.vien--trenphai  { top: 0; right: 0; width: 12px; height: 12px; cursor: nesw-resize; }
+.vien--duoitrai  { bottom: 0; left: 0; width: 12px; height: 12px; cursor: nesw-resize; }
+
+/* --zoom-doc do màn Cài đặt đặt (1 = 100%). Chỉ nhân vào cỡ chữ VÙNG ĐỌC:
+   phóng cả giao diện thì nút và menu to ra theo, tràn khỏi cửa sổ, và người
+   lớn tuổi mất luôn chỗ bấm. */
+.doan__chu { font-size: calc(var(--co-doan) * var(--zoom-doc, 1));
+             line-height: var(--dong-doan); color: var(--txt2);
+             text-wrap: pretty; overflow-wrap: break-word; }
+.doan.dang-doc .doan__chu { color: var(--txt); font-weight: 600; }
+.doan--tieude .doan__chu { font-size: calc(20px * var(--zoom-doc, 1));
+                           font-weight: 700; color: var(--txt); }
+.doan--trong { min-height: 24px; padding: 0; }
+.doan--trong .doan__than { height: 24px; }
+/* Tô từng chữ chạy theo tiếng đọc.
+
+   Đặc tả mới chỉ quy định tô cả đoạn, nhưng chủ dự án giữ lại tính năng này
+   của bản cũ: người nghe bám được đúng chỗ máy đang đọc, nhất là người lớn
+   tuổi đọc theo bằng mắt.
+
+   Cố ý KHÔNG đổi độ đậm theo từng chữ: chữ đậm rộng hơn chữ thường nên cả
+   đoạn sẽ nhích qua nhích lại theo từng tiếng, nhìn rất mỏi mắt. */
+.tu.da-doc { color: var(--dis); }
+.tu.dang-doc {
+  color: var(--acc);
+  background: var(--acc-soft);
+  border-radius: 3px;
+  box-shadow: 0 0 0 2px var(--acc-soft);
+}
+
+.tu-dich { display: inline-block; transition: color .08s, background .08s; margin: 0 1.5px; border-radius: 3px; }
+.tu-dich.da-doc { color: var(--dis); opacity: 0.85; }
+.tu-dich.dang-doc {
+  color: var(--acc);
+  background: var(--acc-soft);
+  box-shadow: 0 0 0 2px var(--acc-soft);
+  font-weight: 600;
+}
+
+/* Thẻ nằm NGOÀI vùng gõ, cách chữ 9px, và bấm vào là gỡ - nên phải xưng là
+   bấm được: con trỏ bàn tay, rê vào thì viền và chữ chuyển sang err. */
+.doan__the { display: inline-flex; align-items: center; height: 22px; padding: 0 8px;
+             margin-right: 9px; border: 1px solid var(--chip-bd); border-radius: 4px;
+             background: var(--chip-bg); color: var(--chip-fg); cursor: pointer;
+             font-size: 12.5px; font-weight: 600; white-space: nowrap; vertical-align: 2px;
+             transition: border-color .12s, color .12s; }
+.doan__the:hover { border-color: var(--err); color: var(--err); }
+
+/* trạng thái rỗng */
+.rong { flex: 1; display: flex; align-items: center; justify-content: center; padding: 24px; }
+.rong__khung { width: 500px; max-width: 100%; padding: 44px 32px; text-align: center;
+               border: 1.5px dashed var(--stroke2); border-radius: 8px; background: var(--layer2); }
+.rong__icon { color: var(--txt3); opacity: .75; margin-bottom: 14px; }
+.rong__ten { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
+.rong__phu { font-size: 14px; line-height: 1.6; color: var(--txt2); margin-bottom: 20px; }
+.rong__phu b { color: var(--txt); }
+.rong__nut { display: flex; gap: 8px; justify-content: center; }
+
+/* --- cột phải 300 --- */
+
+.phai { width: 300px; flex: none; display: flex; flex-direction: column; gap: 8px;
+        overflow: auto; }
+.the__phan { padding: 12px 14px; }
+.the__nhan { font-size: 12px; font-weight: 600; letter-spacing: .04em;
+             text-transform: uppercase; color: var(--txt3); }
+.giong-hang { display: flex; gap: 8px; margin-top: 6px; }
+.giong-hang .chon { flex: 1; min-width: 0; }
+.giong-hang .nut { width: 36px; height: 36px; flex: none; justify-content: center;
+                   border: 1px solid var(--stroke2); background: var(--ctl); }
+.mau-dang-phat { display: flex; align-items: center; gap: 7px; margin-top: 8px;
+                 font-size: 12.5px; color: var(--acc); }
+
+.chinh__dau { width: 100%; display: flex; align-items: center; gap: 6px; padding: 0;
+              border: 0; background: transparent; }
+.chinh__mui { margin-left: auto; color: var(--txt3); transition: transform .15s; }
+.chinh__mui.mo { transform: rotate(180deg); }
+.chinh__tom { margin-top: 4px; font-size: 12.5px; color: var(--txt2); }
+.chinh__truot { margin-top: 12px; }
+.chinh__hang { display: flex; justify-content: space-between; margin-bottom: 2px; }
+.chinh__ten { font-size: 13px; color: var(--txt2); }
+.chinh__gt { font-size: 12.5px; color: var(--txt3); font-variant-numeric: tabular-nums; }
+
+.chuy__cau { margin-top: 6px; font-size: 13px; color: var(--txt2); line-height: 1.5; }
+.chuy__dong { width: 100%; height: 31px; display: flex; align-items: center; gap: 9px;
+              padding: 0 4px; border: 0; border-radius: 4px; background: transparent;
+              text-align: left; transition: background .15s; }
+.chuy__dong:hover { background: var(--sub-h); }
+.chuy__ten { flex: 1; min-width: 0; font-size: 13px; overflow: hidden;
+             text-overflow: ellipsis; white-space: nowrap; }
+.chuy__dem { flex: none; min-width: 22px; height: 18px; padding: 0 6px; border-radius: 4px;
+             background: var(--chip-bg); color: var(--txt2); font-size: 11.5px;
+             font-weight: 600; display: flex; align-items: center; justify-content: center; }
+.chuy__dem.nang { background: var(--err-bg); color: var(--err); }
+.chuy__chan { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
+.lienket { border: 0; background: transparent; color: var(--acc); font-size: 13px;
+           padding: 0; margin-left: auto; }
+
+/* ============================================================ THANH ĐẢO NỔI CỘT GIỮA (FLOATING CAPSULE PLAYER) */
+
+.phat {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 32px);
+  max-width: 760px;
+  height: 48px;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 14px;
+  border-radius: 26px;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), 0 2px 6px rgba(0, 0, 0, 0.04);
+  animation: phatNoiLen 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.2s ease;
+}
+
+[data-theme="dark"] .phat {
+  background: rgba(38, 38, 38, 0.92);
+  border-color: rgba(255, 255, 255, 0.14);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+@keyframes phatNoiLen {
+  from { opacity: 0; transform: translate(-50%, 14px) scale(0.98); }
+  to { opacity: 1; transform: translate(-50%, 0) scale(1); }
+}
+
+.phat__nut {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: 1px solid var(--stroke);
+  background: var(--sub-h);
+  color: var(--txt);
+  transition: transform 0.15s ease, background 0.15s ease;
+  padding: 0;
+}
+.phat__nut:hover {
+  transform: scale(1.06);
+  background: var(--hl);
+}
+.phat__nut:active {
+  transform: scale(0.95);
+}
+.phat__nut--acc {
+  background: var(--acc);
+  border-color: var(--acc);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(0, 103, 192, 0.3);
+}
+.phat__nut--acc:hover {
+  background: var(--acc-h);
+  border-color: var(--acc-h);
+}
+
+.phat__dong {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--txt);
+  flex: none;
+  letter-spacing: -0.01em;
+}
+
+.phat__gio {
+  font-size: 11.5px;
+  color: var(--txt2);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  flex: none;
+  background: var(--sub-h);
+  padding: 2px 7px;
+  border-radius: 10px;
+  border: 1px solid var(--stroke2);
+}
+
+.phat__tien {
+  flex: 1;
+  min-width: 60px;
+  max-width: 180px;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--stroke2);
+  overflow: hidden;
+  position: relative;
+}
+.phat__tien i {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--acc), #0099ff);
+  border-radius: 3px;
+  transition: width 0.1s linear;
+}
+
+.phat__ghi {
+  font-size: 12px;
+  color: var(--txt3);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.phat__huy {
+  margin-left: auto;
+  flex: none;
+  border-radius: 12px;
+  font-size: 12px;
+  padding: 3px 10px;
+}
+
+/* ============================================================ thanh trạng thái 28 */
+
+.trangthai { height: 28px; flex: none; display: flex; align-items: center; gap: 10px;
+             padding: 0 12px; background: var(--layer2);
+             border-top: 1px solid var(--divider); font-size: 12px; color: var(--txt2); }
+.trangthai__so { font-variant-numeric: tabular-nums; }
+.trangthai__phai { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+.trangthai__ngan { width: 1px; height: 14px; background: var(--divider); }
+
+/* ============================================================ ô chọn giọng */
+
+/* Rộng hơn dropdown thường vì tên giọng dài, và cao có hạn vì máy thật có 14
+   giọng — dài quá thì tràn khỏi cửa sổ, người dùng không thấy giọng cuối. */
+.roi--giong {
+  width: 320px;
+  max-height: 420px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.roi__muc--hai { height: auto; min-height: 46px; padding: 7px 10px; }
+.roi__than { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.roi__muc--hai .roi__ten { font-size: 14px; }
+.roi__phu {
+  font-size: 12.5px; color: var(--txt3);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+/* Nút nghe thử: mờ đi cho khỏi tranh chú ý với tên giọng, rê chuột mới rõ. */
+.roi__nghe {
+  flex: none; width: 26px; height: 26px; border-radius: 4px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--txt3); opacity: .55; transition: opacity .15s, background .15s;
+}
+.roi__muc--hai:hover .roi__nghe { opacity: 1; }
+.roi__nghe:hover { background: var(--sel); color: var(--acc); }
+
+/* Nút loa cạnh ô chọn giọng, lúc đang đọc thử. */
+.nut--dang {
+  color: var(--acc);
+  border-color: var(--acc);
+  animation: nghe-tho 1.4s ease-in-out infinite;
+}
+
+/* Đang đọc thử giọng này. Máy tổng hợp mất mấy giây trước khi ra tiếng, nên
+   nút phải nói rõ là nó đã nhận lệnh — không thì người dùng bấm thêm mấy lần
+   nữa vì tưởng chưa ăn. Nhịp thở chậm 1,4s: đủ thấy là đang chạy, không nhấp
+   nháy gắt vào mắt người lớn tuổi. */
+.roi__nghe--dang {
+  opacity: 1;
+  color: var(--acc);
+  background: var(--sel);
+  animation: nghe-tho 1.4s ease-in-out infinite;
+}
+@keyframes nghe-tho {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: .45; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .roi__nghe--dang { animation: none; }
+}
+
+/* ============================================================ hộp thoại xuất */
+
+.xuat__hang { display: flex; gap: 12px; align-items: flex-end; }
+.xuat__oten { display: flex; gap: 8px; align-items: center; }
+.xuat__duong {
+  flex: 1; min-width: 0; display: flex; align-items: center;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  color: var(--txt2);
+}
+
+/* Ô chọn tròn — ba lựa chọn tách tệp. */
+.tron {
+  width: 100%; display: flex; align-items: center; gap: 10px;
+  height: 34px; padding: 0 8px; margin-bottom: 2px;
+  border: 0; border-radius: 4px; background: transparent; text-align: left;
+  transition: background .15s;
+}
+.tron:hover { background: var(--sub-h); }
+.tron__vong {
+  width: 18px; height: 18px; flex: none; border-radius: 50%;
+  border: 1px solid var(--stroke2); background: var(--ctl);
+  display: flex; align-items: center; justify-content: center;
+}
+.tron.da-chon .tron__vong { border-color: var(--acc); border-width: 5px; background: var(--acc-txt); }
+.tron__nhan { font-size: 14px; }
+.tron__goiy { margin-left: auto; font-size: 12.5px; color: var(--txt3); }
+
+/* ============================================================ bảng thử (không phải sản phẩm) */
+
+.bangthu { position: fixed; right: 12px; bottom: 40px; z-index: 70; width: 250px;
+           padding: 12px; border: 1px solid var(--stroke2); border-radius: 8px;
+           background: var(--layer); box-shadow: var(--shadow); }
+.bangthu h4 { margin: 0 0 8px; font-size: 12px; text-transform: uppercase;
+              letter-spacing: .04em; color: var(--txt3); }
+.bangthu select, .bangthu button { width: 100%; margin-bottom: 6px; }
+
+/* ============================================================ KHUNG PHỤ ĐỀ NỔI SONG NGỮ */
+.phude-songngu {
+  position: fixed;
+  bottom: 74px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 460px);
+  max-width: 820px;
+  min-width: 380px;
+  z-index: 85;
+  background: var(--layer);
+  border: 1px solid var(--stroke2);
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.16);
+  backdrop-filter: blur(16px);
+  animation: phuDeHien .22s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+  transition: all .2s ease;
+}
+
+@keyframes phuDeHien {
+  from { opacity: 0; transform: translate(-50%, 12px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+
+.phude-songngu__dau {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 12px;
+  background: var(--layer2);
+  border-bottom: 1px solid var(--divider);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--txt2);
+}
+
+.phude-songngu__nhan {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.phude-songngu__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #107c41;
+  box-shadow: 0 0 6px #107c41;
+  animation: nhapNhay 1.4s infinite ease-in-out;
+}
+
+@keyframes nhapNhay {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+.phude-songngu__nut-nhom {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.phude-songngu__nut {
+  background: transparent;
+  border: none;
+  font-size: 11.5px;
+  color: var(--txt3);
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: background .12s, color .12s;
+}
+
+.phude-songngu__nut:hover {
+  background: var(--hover);
+  color: var(--txt);
+}
+
+.phude-songngu__nut--dong:hover {
+  background: var(--err-soft);
+  color: var(--err);
+}
+
+.phude-songngu__than {
+  padding: 10px 14px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.phude-songngu__goc {
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--txt3);
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.phude-songngu__dich {
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.5;
+  color: var(--acc);
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.phude-songngu__tag {
+  flex: none;
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--card-bg);
+  color: var(--txt3);
+  border: 1px solid var(--stroke);
+}
+
+.phude-songngu__tag--dich {
+  background: var(--acc-soft);
+  color: var(--acc);
+  border-color: rgba(0, 103, 192, 0.25);
+}
+
+.phude-songngu__chu-dich {
+  color: var(--txt);
+  font-weight: 600;
+}

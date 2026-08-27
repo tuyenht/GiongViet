@@ -42,6 +42,13 @@ def vung_lam_viec():
 
 VUNG_LAM_VIEC = vung_lam_viec()
 
+# Tối ưu hoá bộ nhớ Chromium WebView2: Giới hạn V8 JS heap 128MB, tắt cache shader đĩa dư thừa
+if "WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS" not in os.environ:
+    os.environ["WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS"] = (
+        "--disable-gpu-shader-disk-cache --disable-component-update "
+        "--js-flags=--max-old-space-size=128 --renderer-process-limit=1"
+    )
+
 import webview  # noqa: E402 — phải nằm sau vung_lam_viec()
 
 
@@ -55,36 +62,32 @@ BASE_DIR = thu_muc_goc()
 if str(BASE_DIR) not in sys.path:
     sys.path.insert(0, str(BASE_DIR))
 
+import src  # noqa: F401 — Kích hoạt hệ sinh thái src và module mapping
+
 
 def thu_muc_giao_dien() -> Path:
-    ung_vien = [BASE_DIR / "ui-moi"]
+    ung_vien = [
+        BASE_DIR / "src" / "web",
+        BASE_DIR / "ui-moi",
+    ]
     meipass = getattr(sys, "_MEIPASS", "")
     if meipass:
+        ung_vien.insert(0, Path(meipass) / "web")
         ung_vien.insert(0, Path(meipass) / "ui-moi")
     for d in ung_vien:
         if (d / "index.html").exists():
             return d
-    return ung_vien[-1]
+    return ung_vien[0]
 
 
 def bao_dam_ffmpeg():
-    """Chạy lần đầu sau khi tải kho về thì chưa có ffmpeg — tự tải luôn.
-
-    ffmpeg không nằm trong kho git (nặng ~200 MB, có tệp vượt giới hạn 100 MB
-    của GitHub), nên máy mới tinh là thiếu. Thiếu nó thì không phát được tiếng
-    nào, mà bắt người dùng đích - người lớn tuổi - đi tìm bản build ffmpeg trên
-    mạng rồi tự chép vào đúng thư mục là chuyện không thể.
-
-    Bản đóng gói đã có ffmpeg nối sẵn qua junction nên hàm này không làm gì;
-    nó chỉ tốn đúng hai lần kiểm tệp có tồn tại.
-
-    KIỂM CẢ ffmpeg.exe chứ không chỉ ffplay.exe: ffplay lo phát tiếng, còn
-    ffmpeg lo xuất MP3, WAV 24 bit và ba thanh chỉnh Tốc độ/Cao độ/Âm lượng.
-    Có cái này thiếu cái kia là hỏng đúng một nửa chương trình.
-    """
-    bin_dir = BASE_DIR / "ffmpeg" / "bin"
-    if (bin_dir / "ffplay.exe").exists() and (bin_dir / "ffmpeg.exe").exists():
-        return
+    for ung_vien in [
+        BASE_DIR / "bin" / "ffmpeg" / "bin",
+        BASE_DIR / "ffmpeg" / "bin",
+    ]:
+        if (ung_vien / "ffplay.exe").exists() and (ung_vien / "ffmpeg.exe").exists():
+            return
+    bin_dir = BASE_DIR / "bin" / "ffmpeg" / "bin"
 
     import DocCongDuc as engine
     from giaodien import nhat_ky

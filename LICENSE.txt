@@ -1,0 +1,63 @@
+================================================================================
+THỎA THUẬN BẢN QUYỀN & THÔNG CÁO GIẤY PHÉP PHẦN MỀM GIỌNG VIỆT
+SOFTWARE LICENSE & THIRD-PARTY NOTICES
+================================================================================
+
+Phần mềm: GIỌNG VIỆT
+Phiên bản: 5.0+
+Bản quyền © 2026. Mọi quyền được bảo lưu (All Rights Reserved).
+
+I. BẢN QUYỀN TÁC GIẢ & SỞ HỮU TRÍ TUỆ CHÍNH
+--------------------------------------------------------------------------------
+Toàn bộ mã nguồn ứng dụng, kiến trúc hệ thống, giao diện người dùng (UI/UX),
+thuật toán xử lý và chuẩn hóa văn bản, bộ điều phối ngắt nghỉ âm thanh,
+tính năng soát lỗi văn bản, và nhãn hiệu "Giọng Việt" thuộc quyền sở hữu trí tuệ
+độc quyền của Tác giả phát triển phần mềm Giọng Việt.
+
+Nghiêm cấm mọi hành vi sao chép trái phép, dịch ngược mã nguồn (reverse engineering),
+hoặc tái phân phối lại phần mềm nhằm mục đích thương mại khi chưa có sự đồng ý
+bằng văn bản từ tác giả.
+
+
+II. THÔNG CÁO VỀ CÁC THÀNH PHẦN MÃ NGUỒN MỞ BÊN THỨ BA
+--------------------------------------------------------------------------------
+Để phục vụ việc tổng hợp âm thanh và vận hành trên máy tính, phần mềm có tham khảo,
+tích hợp và sử dụng một số thành phần mã nguồn mở theo các giấy phép tương ứng dưới đây:
+
+1. VieNeu-TTS (Mô hình và thành phần hỗ trợ giọng đọc)
+   - Bản quyền: © 2026 Phạm Nguyễn Ngọc Bảo (pnnbao97)
+   - Kho mã nguồn: https://github.com/pnnbao97/VieNeu-TTS
+   - Giấy phép: Apache License, Version 2.0
+   
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at:
+       http://www.apache.org/licenses/LICENSE-2.0
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+
+2. ONNX Runtime (Bộ suy luận mô hình học sâu)
+   - Bản quyền: © Microsoft Corporation
+   - Trang chủ: https://onnxruntime.ai
+   - Giấy phép: MIT License
+   
+   Copyright (c) Microsoft Corporation. All rights reserved.
+   Permission is hereby granted, free of charge, to any person obtaining a copy
+   of this software and associated documentation files, under the MIT License.
+
+3. FFmpeg & FFplay (Công cụ phát âm thanh độc lập)
+   - Bản quyền: © FFmpeg developers
+   - Trang chủ: https://ffmpeg.org
+   - Giấy phép: GNU Lesser General Public License (LGPL) version 2.1 or later
+   - Ghi chú: Phần mềm thực thi FFmpeg/FFplay dưới dạng tệp nhị phân độc lập.
+
+4. PyWebView (Khung hiển thị giao diện Desktop)
+   - Bản quyền: © Roman Sirokov and contributors
+   - Kho mã nguồn: https://github.com/r0x0r/pywebview
+   - Giấy phép: BSD 3-Clause License
+   
+   Copyright (c) Roman Sirokov and contributors. All rights reserved.
+   Redistribution and use in source and binary forms are permitted under the BSD 3-Clause License.
+
+================================================================================

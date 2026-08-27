@@ -2,33 +2,46 @@
 # congduc.txt là danh sách công đức: tên và số tiền của người thật ở chùa.
 # Kho có private thì đây vẫn không phải chỗ của chúng.
 congduc.txt
+data/congduc.txt
 cauhinh.ini
 noidung.ini
 tudien.ini
 hoso.json
 hoso-v2.json
 giaodien.json
+giongviet.db
+data/giongviet.db
+data/*.db
+data/*.db-journal
+*.db-journal
 giong_rieng/
+data/giong_rieng/
 *-loi.log
+*.log
 
 # ─── MÔ HÌNH VÀ CÔNG CỤ NẶNG ────────────────────────────────────────────────
 # Tổng ~1,4 GB, và có tệp vượt 100 MB nên GitHub chặn cứng:
 #   torch_cpu.dll 305 MB · llvmlite.dll 120 MB · mô hình VieNeu 104 MB
 # Người mới clone về chạy CaiDat.bat để tải, xem README.
 vieneu_models/
+models/
 ffmpeg/
+bin/
 
 # ─── KẾT QUẢ ĐÓNG GÓI ───────────────────────────────────────────────────────
 GiongViet/
+GiongViet_cu/
 _dist_moi/
 _build_moi/
 _spec_moi/
 _internal/
 *.exe
 
-# ─── LƯU TRỮ BẢN CŨ ─────────────────────────────────────────────────────────
+# ─── LƯU TRỮ BẢN CŨ & SAO LƯU ──────────────────────────────────────────────
 # Giữ trên đĩa để lỡ cần đối chiếu, không thuộc mã nguồn đang dùng.
 _luutru/
+_archive/
+sao-luu-cu/
 
 # ─── BẢN XUẤT THIẾT KẾ, TRÙNG VỚI design_handoff_giongdoc/ ĐÃ COMMIT ────────
 # Giữ trên đĩa cũng được, chỉ đừng để chúng lấp đầy `git status` mỗi lần nhìn.

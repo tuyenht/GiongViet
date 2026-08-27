@@ -1,0 +1,324 @@
+/* Giọng Việt — Màn hình 6: Văn bản ghép (Live Data / Template Engine)
+   Khớp 100% bản thiết kế chuẩn WinUI 3 / Fluent Design Tokens. */
+
+.vanbanghep {
+  flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column;
+  background: var(--bg); overflow: hidden; color: var(--txt); box-sizing: border-box;
+}
+
+/* THANH TIÊU ĐỀ PHỤ TRÊN CÙNG */
+.vanbanghep__thanh-tieu-de {
+  height: 34px; flex: none; display: flex; align-items: center; justify-content: space-between;
+  padding: 0 14px; background: var(--bg); border-bottom: 1px solid var(--divider);
+}
+
+/* KHUNG 3 CỘT THÂN CHÍNH */
+.vanbanghep__than-chinh {
+  flex: 1; min-height: 0; min-width: 0; width: 100%; display: flex;
+  padding: 6px 8px 8px; box-sizing: border-box; overflow: hidden;
+  gap: 8px;
+}
+
+/* CỘT TRÁI (210px) */
+.vanbanghep__trai {
+  width: 210px; flex: 0 0 210px; display: flex; flex-direction: column;
+  box-sizing: border-box; min-height: 0; min-width: 0;
+}
+
+.vanbanghep__chonmau {
+  position: relative; display: flex; align-items: center; gap: 6px;
+  min-height: 40px; padding: 0 4px 0 0; margin-bottom: 4px;
+}
+
+.vanbanghep__nutquaylai {
+  width: 32px; height: 32px; flex: none; display: flex; align-items: center; justify-content: center;
+  border-radius: 4px; color: var(--txt2); cursor: pointer; border: 1px solid var(--stroke2); background: var(--ctl);
+  transition: all .15s ease;
+}
+.vanbanghep__nutquaylai:hover { background: var(--sub-h); border-color: var(--stroke); color: var(--txt); }
+
+.vanbanghep__nutmau {
+  flex: 1; min-width: 0; box-sizing: border-box;
+  display: flex; align-items: center; gap: 6px; height: 32px;
+  padding: 0 8px 0 10px; border: 1px solid var(--stroke2);
+  background: var(--ctl); border-radius: 4px; cursor: pointer;
+  color: var(--txt); font-weight: 600; font-size: 13.5px;
+}
+.vanbanghep__nutmau:hover { background: var(--ctl-h); }
+
+.vanbanghep__menumau {
+  position: absolute; left: 0; top: 38px; z-index: 50;
+  width: 260px; background: var(--layer); border: 1px solid var(--stroke2);
+  border-radius: 8px; box-shadow: var(--shadow); padding: 5px;
+  display: flex; flex-direction: column; gap: 2px;
+}
+
+.vanbanghep__nav {
+  display: flex; flex-direction: column; gap: 2px;
+}
+
+.vanbanghep__nav-muc {
+  position: relative; display: flex; align-items: center; gap: 9px;
+  min-height: 38px; padding: 6px 10px 6px 13px; border-radius: 5px;
+  cursor: pointer; background: transparent; border: 1px solid transparent;
+  transition: background .15s ease;
+}
+.vanbanghep__nav-muc:hover { background: var(--sub-h); }
+.vanbanghep__nav-muc.chon {
+  background: var(--layer); border-color: var(--stroke); box-shadow: 0 1px 3px rgba(0,0,0,.06);
+}
+.vanbanghep__nav-muc.chon .vanbanghep__nav-vach {
+  position: absolute; left: 2px; top: 50%; margin-top: -9px;
+  width: 3px; height: 18px; border-radius: 2px; background: var(--acc);
+}
+
+.vanbanghep__dot {
+  width: 7px; height: 7px; flex: none; border-radius: 4px;
+  background: var(--ok); border: 1px solid var(--ok);
+}
+.vanbanghep__dot.tat { background: transparent; border-color: var(--stroke2); }
+.vanbanghep__dot.canhbao { background: var(--warn); border-color: var(--warn); }
+
+.vanbanghep__chan-trai {
+  margin-top: auto; padding: 10px 4px 2px; border-top: 1px solid var(--divider);
+  font-size: 12px; color: var(--txt3); line-height: 1.5;
+}
+
+.vanbanghep__nut-reset {
+  display: flex; align-items: center; gap: 7px; height: 28px; padding: 0 4px;
+  margin-top: 6px; border-radius: 4px; font-size: 12.5px; color: var(--txt3);
+  cursor: pointer; transition: all .15s ease; width: fit-content;
+}
+.vanbanghep__nut-reset:hover {
+  background: var(--sub-h); color: var(--txt);
+}
+
+/* CỘT GIỮA - TRÌNH BIÊN TẬP MỤC */
+.vanbanghep__giua {
+  flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column;
+  background: var(--layer); border: 1px solid var(--stroke);
+  border-radius: 8px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.04);
+}
+
+.vanbanghep__dau {
+  height: 48px; flex: none; display: flex; align-items: center;
+  gap: 12px; padding: 0 18px; border-bottom: 1px solid var(--divider);
+  background: var(--layer);
+}
+
+.vanbanghep__than {
+  flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden;
+  padding: 16px 18px; scrollbar-width: thin; scrollbar-color: transparent transparent;
+  transition: scrollbar-color .2s ease;
+}
+.vanbanghep__giua:hover .vanbanghep__than,
+.vanbanghep__than:hover {
+  scrollbar-color: var(--stroke2) transparent;
+}
+.vanbanghep__than::-webkit-scrollbar {
+  width: 4px;
+}
+.vanbanghep__than::-webkit-scrollbar-track {
+  background: transparent;
+}
+.vanbanghep__than::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 4px;
+  transition: background .2s ease;
+}
+.vanbanghep__giua:hover .vanbanghep__than::-webkit-scrollbar-thumb,
+.vanbanghep__than:hover::-webkit-scrollbar-thumb {
+  background: var(--stroke2);
+}
+
+/* THẺ CHỌN NGUỒN VỚI RADIO BUTTON CHUẨN WINUI 3 */
+.vanbanghep__the {
+  display: flex; align-items: flex-start; gap: 11px; padding: 12px 14px;
+  border-radius: 6px; background: var(--layer2); border: 1px solid var(--stroke);
+  cursor: pointer; margin-bottom: 8px; transition: all .15s ease;
+}
+.vanbanghep__the:hover { background: var(--sub-h); border-color: var(--stroke2); }
+.vanbanghep__the.chon {
+  background: var(--acc-soft); border-color: var(--acc);
+}
+
+.vanbanghep__radio-vong {
+  width: 18px; height: 18px; flex: none; margin-top: 2px; border-radius: 9px;
+  border: 1.5px solid var(--stroke2); display: flex; align-items: center; justify-content: center;
+  box-sizing: border-box; background: var(--ctl);
+}
+.vanbanghep__the.chon .vanbanghep__radio-vong {
+  border-color: var(--acc);
+}
+.vanbanghep__radio-cham {
+  width: 8px; height: 8px; border-radius: 4px; background: transparent;
+}
+.vanbanghep__the.chon .vanbanghep__radio-cham {
+  background: var(--acc);
+}
+
+.vanbanghep__badge {
+  font-size: 11.5px; font-weight: 600; padding: 3px 8px; border-radius: 4px;
+  background: var(--chip-bg); border: 1px solid var(--chip-bd); color: var(--chip-fg);
+  white-space: nowrap; flex: none;
+}
+.vanbanghep__badge.dung {
+  background: var(--acc); border-color: var(--acc); color: var(--acc-txt);
+}
+.vanbanghep__badge.soft {
+  background: var(--acc-soft); border-color: var(--acc); color: var(--acc);
+}
+
+.vanbanghep__o-nhap-acc {
+  border: 1px solid var(--stroke2); border-bottom: 2px solid var(--acc) !important;
+  border-radius: 4px; background: var(--ctl); outline: none;
+}
+
+.vanbanghep__select-wrap {
+  position: relative; display: flex; align-items: center;
+}
+.vanbanghep__select-wrap select {
+  width: 100%; box-sizing: border-box; height: 34px; padding: 0 28px 0 10px;
+  border: 1px solid var(--stroke2); border-radius: 4px; background: var(--ctl);
+  font: 400 13.5px inherit; color: var(--txt); outline: none;
+  appearance: none; -webkit-appearance: none; cursor: pointer;
+}
+.vanbanghep__select-wrap select:focus {
+  border-color: var(--acc); border-bottom: 2px solid var(--acc);
+}
+.vanbanghep__select-icon {
+  position: absolute; right: 9px; pointer-events: none; display: flex; color: var(--txt2);
+}
+
+.vanbanghep__chip-bien {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 5px 12px; border-radius: 15px; font-size: 13px; font-weight: 600;
+  cursor: pointer; background: var(--layer2); border: 1px solid var(--stroke2);
+  color: var(--txt); margin: 3px 6px 3px 0; font-family: Consolas, monospace;
+  transition: all .15s ease;
+}
+.vanbanghep__chip-bien:hover {
+  background: var(--acc-soft); border-color: var(--acc); color: var(--acc); transform: translateY(-1px);
+}
+.vanbanghep__chip-bien.dung {
+  background: var(--acc-soft); border-color: var(--acc); color: var(--acc);
+}
+
+/* CỘT PHẢI - BẢN GHÉP HOÀN CHỈNH (290px) */
+.vanbanghep__phai {
+  width: 290px; flex: 0 0 290px; display: flex; flex-direction: column;
+  box-sizing: border-box; min-height: 0; min-width: 0;
+}
+
+.vanbanghep__hop-preview {
+  flex: 1; min-height: 0; display: flex; flex-direction: column;
+  background: var(--layer); border: 1px solid var(--stroke);
+  border-radius: 8px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.04);
+}
+
+.vanbanghep__preview-dau {
+  height: 48px; flex: none; display: flex; align-items: center; gap: 10px;
+  padding: 0 14px; border-bottom: 1px solid var(--divider); background: var(--layer);
+}
+
+.vanbanghep__preview-than {
+  flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden;
+  padding: 12px; scrollbar-width: thin; scrollbar-color: transparent transparent;
+  display: flex; flex-direction: column; gap: 10px;
+  transition: scrollbar-color .2s ease;
+}
+.vanbanghep__hop-preview:hover .vanbanghep__preview-than,
+.vanbanghep__preview-than:hover {
+  scrollbar-color: var(--stroke2) transparent;
+}
+.vanbanghep__preview-than::-webkit-scrollbar {
+  width: 4px;
+}
+.vanbanghep__preview-than::-webkit-scrollbar-track {
+  background: transparent;
+}
+.vanbanghep__preview-than::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 4px;
+  transition: background .2s ease;
+}
+.vanbanghep__hop-preview:hover .vanbanghep__preview-than::-webkit-scrollbar-thumb,
+.vanbanghep__preview-than:hover::-webkit-scrollbar-thumb {
+  background: var(--stroke2);
+}
+.vanbanghep__preview-than::-webkit-scrollbar-thumb:hover {
+  background: var(--txt3);
+}
+
+.vanbanghep__khoi {
+  flex: none;
+  border: 1px solid var(--stroke2); border-left: 3.5px solid var(--rail);
+  border-radius: 6px; background: var(--layer2); overflow: hidden;
+  display: flex; flex-direction: column;
+}
+.vanbanghep__khoi.dong {
+  border-color: rgba(0,103,192,.22); border-left-color: var(--acc); background: var(--acc-soft);
+}
+.vanbanghep__khoi-dau {
+  flex: none; display: flex; align-items: center; gap: 8px; padding: 6px 10px;
+  border-bottom: 1px solid var(--stroke);
+}
+.vanbanghep__khoi-ten {
+  font-size: 11.5px; letter-spacing: .04em; text-transform: uppercase;
+  font-weight: 700; color: var(--txt2);
+}
+.vanbanghep__khoi.dong .vanbanghep__khoi-ten {
+  color: var(--acc);
+}
+.vanbanghep__khoi-chu {
+  padding: 9px 11px 11px; font-size: 13.5px; line-height: 1.6;
+  color: var(--txt); white-space: normal; word-break: break-word;
+  max-height: 160px; overflow-y: auto; overflow-x: hidden;
+  scrollbar-width: thin; scrollbar-color: transparent transparent;
+  transition: scrollbar-color .2s ease;
+}
+.vanbanghep__khoi:not(.dong) .vanbanghep__khoi-chu {
+  white-space: pre-wrap;
+}
+.vanbanghep__khoi:hover .vanbanghep__khoi-chu,
+.vanbanghep__khoi-chu:hover {
+  scrollbar-color: var(--stroke2) transparent;
+}
+.vanbanghep__khoi-chu::-webkit-scrollbar {
+  width: 4px;
+}
+.vanbanghep__khoi-chu::-webkit-scrollbar-track {
+  background: transparent;
+}
+.vanbanghep__khoi-chu::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 4px;
+  transition: background .2s ease;
+}
+.vanbanghep__khoi:hover .vanbanghep__khoi-chu::-webkit-scrollbar-thumb,
+.vanbanghep__khoi-chu:hover::-webkit-scrollbar-thumb {
+  background: var(--stroke2);
+}
+.vanbanghep__khoi-chu::-webkit-scrollbar-thumb:hover {
+  background: var(--txt3);
+}
+
+.vanbanghep__preview-chan {
+  flex: none; padding: 10px 14px; border-top: 1px solid var(--divider);
+  background: var(--layer2); font-size: 12px; line-height: 1.5; color: var(--txt3);
+}
+
+/* THANH THAO TÁC DƯỚI CÙNG (46px) - PHÂN VÙNG CỘT CHUẨN XÁC */
+.vanbanghep__duoi {
+  height: 46px; flex: none; display: flex; align-items: center;
+  padding: 0 12px 0 8px; border-top: 1px solid var(--divider);
+  background: var(--bg); box-sizing: border-box;
+}
+
+.vanbanghep__duoi-trai {
+  width: 240px; flex: none; box-sizing: border-box; padding-right: 8px;
+}
+
+.vanbanghep__duoi-phai {
+  flex: 1; min-width: 0; display: flex; align-items: center; gap: 14px;
+}

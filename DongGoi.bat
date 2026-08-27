@@ -29,34 +29,36 @@ if not exist "%ROOT%GiongViet.py" (
     echo [LOI] Khong tim thay GiongViet.py.
     goto :fail
 )
-if not exist "%ROOT%ui-moi\index.html" (
-    echo [LOI] Khong tim thay ui-moi\index.html - giao dien moi khong the thieu.
-    goto :fail
+if not exist "%ROOT%src\web\index.html" (
+    if not exist "%ROOT%ui-moi\index.html" (
+        echo [LOI] Khong tim thay giao dien web.
+        goto :fail
+    )
 )
 rem ffmpeg va mo hinh VieNeu KHONG nam trong kho git - chung nang ~530 MB va
 rem co tep vuot gioi han 100 MB cua GitHub. Nguoi clone kho ve chay thang
 rem file nay thi phai tu tai duoc, khong duoc dung lai bat nguoi ta di tim.
 rem Engine da co san hai nhanh dong lenh cho dung viec nay.
-if not exist "%ROOT%ffmpeg\bin\ffplay.exe" (
+set "CO_FFMPEG="
+if exist "%ROOT%bin\ffmpeg\bin\ffplay.exe" (
+    if exist "%ROOT%bin\ffmpeg\bin\ffmpeg.exe" set "CO_FFMPEG=1"
+)
+if exist "%ROOT%ffmpeg\bin\ffplay.exe" (
+    if exist "%ROOT%ffmpeg\bin\ffmpeg.exe" set "CO_FFMPEG=1"
+)
+
+if not defined CO_FFMPEG (
     echo [!] Chua co ffmpeg - dang tu dong tai ve...
     py "%ROOT%DocCongDuc.py" --tai-ffmpeg
-    if not exist "%ROOT%ffmpeg\bin\ffplay.exe" (
-        echo [LOI] Tai ffmpeg khong thanh cong. Chay CaiDat.bat roi thu lai.
-        goto :fail
-    )
 )
-if not exist "%ROOT%ffmpeg\bin\ffmpeg.exe" (
-    echo [LOI] Co ffplay.exe nhung thieu ffmpeg.exe - MP3 va WAV 24 bit se hong.
-    echo       Xoa thu muc ffmpeg roi chay lai de tai day du.
-    goto :fail
-)
-if not exist "%ROOT%vieneu_models" (
+
+set "CO_MODELS="
+if exist "%ROOT%models\vieneu" set "CO_MODELS=1"
+if exist "%ROOT%vieneu_models" set "CO_MODELS=1"
+
+if not defined CO_MODELS (
     echo [!] Chua co mo hinh VieNeu - dang tu dong tai ve ^(vai tram MB^)...
     py "%ROOT%DocCongDuc.py" --tai-vieneu
-    if not exist "%ROOT%vieneu_models" (
-        echo [LOI] Tai mo hinh khong thanh cong. Chay CaiDat.bat roi thu lai.
-        goto :fail
-    )
 )
 
 echo [1/5] Don thu muc build cu...
@@ -82,9 +84,24 @@ rem hidden-import giaodien_moi.*: GiongViet.py import ApiMoi ben trong ham
 rem main(), PyInstaller co the tu tim thay hoac khong. Liet ke ra cho chac -
 rem cung dung cach ban cu lam voi giaodien.*.
 py -m PyInstaller --noconfirm --onedir --windowed --name GiongViet ^
-    --add-data "%ROOT%ui-moi;ui-moi" ^
+    --add-data "%ROOT%src\web;web" ^
+    --add-data "%ROOT%src\web;ui-moi" ^
     --collect-data vieneu ^
     --collect-data sea_g2p ^
+    --hidden-import src.paths ^
+    --hidden-import src.core.cau_noi --hidden-import src.core.bo_doc ^
+    --hidden-import src.core.ds_giong --hidden-import src.core.du_lieu ^
+    --hidden-import src.core.he_thong --hidden-import src.core.mo_hinh ^
+    --hidden-import src.core.nghe_thu --hidden-import src.core.nhat_ky ^
+    --hidden-import src.core.thu_vien_giong --hidden-import src.core.xuat_file ^
+    --hidden-import src.core.ho_so --hidden-import src.core.soat ^
+    --hidden-import src.core.tu_dien --hidden-import src.core.cai_dat ^
+    --hidden-import src.core.bo_dieu_phoi_ngu_canh --hidden-import src.core.bo_chuyen_ngu_khoa_hoc ^
+    --hidden-import src.app.cau_noi_moi --hidden-import src.app.khoa_du_lieu ^
+    --hidden-import src.app.ho_so_v2 --hidden-import src.app.luu_tep ^
+    --hidden-import src.app.so_dien_thoai --hidden-import src.app.sdt_mau ^
+    --hidden-import src.app.sdt_nhip --hidden-import src.app.am_thanh_loc ^
+    --hidden-import src.app.soat_moi --hidden-import src.app.xuat_moi ^
     --hidden-import giaodien.cau_noi --hidden-import giaodien.bo_doc ^
     --hidden-import giaodien.ds_giong --hidden-import giaodien.du_lieu ^
     --hidden-import giaodien.he_thong --hidden-import giaodien.mo_hinh ^
@@ -92,6 +109,7 @@ py -m PyInstaller --noconfirm --onedir --windowed --name GiongViet ^
     --hidden-import giaodien.thu_vien_giong --hidden-import giaodien.xuat_file ^
     --hidden-import giaodien.ho_so --hidden-import giaodien.soat ^
     --hidden-import giaodien.tu_dien --hidden-import giaodien.cai_dat ^
+    --hidden-import giaodien.bo_dieu_phoi_ngu_canh --hidden-import giaodien.bo_chuyen_ngu_khoa_hoc ^
     --hidden-import giaodien_moi.cau_noi_moi --hidden-import giaodien_moi.khoa_du_lieu ^
     --hidden-import giaodien_moi.ho_so_v2 --hidden-import giaodien_moi.luu_tep ^
     --hidden-import giaodien_moi.so_dien_thoai --hidden-import giaodien_moi.sdt_mau ^
@@ -109,9 +127,11 @@ if not exist "%ROOT%_dist_moi\GiongViet\GiongViet.exe" (
     echo [LOI] PyInstaller khong tao duoc EXE.
     goto :fail
 )
-if not exist "%B%\ui-moi\index.html" (
-    echo [LOI] Thieu ui-moi\index.html - cua so se mo ra trang trong.
-    goto :fail
+if not exist "%B%\web\index.html" (
+    if not exist "%B%\ui-moi\index.html" (
+        echo [LOI] Thieu index.html giao dien - cua so se mo ra trang trong.
+        goto :fail
+    )
 )
 if not exist "%B%\sea_g2p\sea_g2p.bin" (
     echo [LOI] Thieu sea_g2p.bin - bam doc se bao "os error 2".
@@ -121,7 +141,7 @@ if not exist "%B%\vieneu\assets\voices_v3_turbo.json" (
     echo [LOI] Thieu voices_v3_turbo.json - danh sach giong se RONG.
     goto :fail
 )
-echo   OK: ui-moi\index.html
+echo   OK: web\index.html
 echo   OK: sea_g2p\sea_g2p.bin
 echo   OK: vieneu\assets\voices_v3_turbo.json
 
@@ -136,8 +156,8 @@ rem mot hanh vi cua he dieu hanh khi cai gia la phai tai lai tu dau.
 set "CU=%DICH%_cu"
 if exist "%CU%" rmdir /s /q "%CU%"
 if exist "%DICH%" (
-    for %%L in (ffmpeg vieneu_models giong_rieng) do (
-        if exist "%DICH%\%%L" rmdir "%DICH%\%%L" 2>nul
+    for %%L in (ffmpeg vieneu_models giong_rieng bin models data) do (
+        if exist "%DICH%\%%L" rmdir /s /q "%DICH%\%%L" 2>nul
     )
     move "%DICH%" "%CU%" >nul
     if errorlevel 1 (
@@ -156,25 +176,49 @@ rmdir /s /q "%ROOT%_dist_moi" 2>nul
 
 rem Noi (junction) thay vi chep: mo hinh VieNeu vai GB, chep ra la ton cho va
 rem lech ban. Junction khong can quyen admin.
-if not exist "%DICH%\ffmpeg"        mklink /J "%DICH%\ffmpeg" "%ROOT%ffmpeg" >nul
-if not exist "%DICH%\vieneu_models" mklink /J "%DICH%\vieneu_models" "%ROOT%vieneu_models" >nul
-if not exist "%DICH%\giong_rieng"   if exist "%ROOT%giong_rieng" mklink /J "%DICH%\giong_rieng" "%ROOT%giong_rieng" >nul
-
-rem CHEP (khong noi) cac tep cau hinh: ban moi chi DOC chung - moi duong GHI da
-rem bi giaodien_moi\khoa_du_lieu.py bit lai. Chep ra ban sao de du co so hong
-rem thi ban that o goc van nguyen.
-for %%F in (cauhinh.ini hoso.json congduc.txt noidung.ini tudien.ini giaodien.json) do (
-    if exist "%ROOT%%%F" if not exist "%DICH%\%%F" copy /Y "%ROOT%%%F" "%DICH%\%%F" >nul
+if not exist "%DICH%\bin\ffmpeg" (
+    if not exist "%DICH%\bin" mkdir "%DICH%\bin"
+    if exist "%ROOT%bin\ffmpeg" (
+        mklink /J "%DICH%\bin\ffmpeg" "%ROOT%bin\ffmpeg" >nul
+    ) else if exist "%ROOT%ffmpeg" (
+        mklink /J "%DICH%\bin\ffmpeg" "%ROOT%ffmpeg" >nul
+    )
 )
 
-rem Cuu du lieu do CHINH CHUONG TRINH ghi ra ben ban cu. hoso-v2.json la vi du
-rem ro nhat: no khong co o thu muc goc nen vong chep ben tren khong dung toi,
-rem ma no giu ho so - giong - ba thanh chinh - the cam xuc cua nguoi dung. Xoa
-rem ban cu ma khong cuu la nguoi dung mo len thay moi thu ve mac dinh.
-rem Chi chep thu %DICH% CHUA co, de ban moi luon uu tien.
+if not exist "%DICH%\models\vieneu" (
+    if not exist "%DICH%\models" mkdir "%DICH%\models"
+    if exist "%ROOT%models\vieneu" (
+        mklink /J "%DICH%\models\vieneu" "%ROOT%models\vieneu" >nul
+    ) else if exist "%ROOT%vieneu_models" (
+        mklink /J "%DICH%\models\vieneu" "%ROOT%vieneu_models" >nul
+    )
+)
+
+if not exist "%DICH%\data\giong_rieng" (
+    if not exist "%DICH%\data" mkdir "%DICH%\data"
+    if exist "%ROOT%data\giong_rieng" (
+        mklink /J "%DICH%\data\giong_rieng" "%ROOT%data\giong_rieng" >nul
+    ) else if exist "%ROOT%giong_rieng" (
+        mklink /J "%DICH%\data\giong_rieng" "%ROOT%giong_rieng" >nul
+    )
+)
+
+rem CHEP co so du lieu SQLite vao duy nhat thu muc data\:
+if not exist "%DICH%\data" mkdir "%DICH%\data"
+if exist "%ROOT%data\giongviet.db" (
+    if not exist "%DICH%\data\giongviet.db" copy /Y "%ROOT%data\giongviet.db" "%DICH%\data\giongviet.db" >nul
+) else if exist "%ROOT%giongviet.db" (
+    if not exist "%DICH%\data\giongviet.db" copy /Y "%ROOT%giongviet.db" "%DICH%\data\giongviet.db" >nul
+)
+
+if exist "%ROOT%LICENSE.txt" copy /Y "%ROOT%LICENSE.txt" "%DICH%\LICENSE.txt" >nul
+
+rem Cuu co so du lieu SQLite ban cu neu co
 if exist "%CU%" (
-    for %%F in ("%CU%\*.json" "%CU%\*.ini" "%CU%\*.txt") do (
-        if not exist "%DICH%\%%~nxF" copy /Y "%%F" "%DICH%\%%~nxF" >nul
+    if exist "%CU%\data\giongviet.db" (
+        if not exist "%DICH%\data\giongviet.db" copy /Y "%CU%\data\giongviet.db" "%DICH%\data\giongviet.db" >nul
+    ) else if exist "%CU%\giongviet.db" (
+        if not exist "%DICH%\data\giongviet.db" copy /Y "%CU%\giongviet.db" "%DICH%\data\giongviet.db" >nul
     )
 )
 

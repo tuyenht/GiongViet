@@ -17,6 +17,7 @@ card đồ hoạ), không cần Internet sau khi cài đặt và tải mô hình
 import collections
 import concurrent.futures
 import configparser
+import hashlib
 import io
 import json
 import os
@@ -56,7 +57,10 @@ BASE_DIR = app_dir()
 # Cấu hình nay nằm gọn trong giongviet.db thay vì rải bảy tệp cạnh .exe.
 # Kho giữ NGUYÊN nội dung dạng chuỗi nên configparser và json vẫn đọc y như
 # cũ - xem kho_cau_hinh.py. Gọi dat_goc ngay đây, trước mọi lần đọc cấu hình.
-import kho_cau_hinh  # noqa: E402
+try:
+    import kho_cau_hinh
+except ImportError:
+    from src.core import kho_cau_hinh
 
 kho_cau_hinh.dat_goc(BASE_DIR)
 
@@ -103,18 +107,35 @@ def ghi_tep_cau_hinh(path, noi_dung: str) -> None:
 CONFIG_FILE = BASE_DIR / "cauhinh.ini"
 NOIDUNG_FILE = BASE_DIR / "noidung.ini"
 TUDIEN_FILE = BASE_DIR / "tudien.ini"
-GIONG_RIENG_DIR = BASE_DIR / "giong_rieng"
+
+
+def _tim_thu_muc_giong_rieng() -> Path:
+    d = BASE_DIR / "data" / "giong_rieng"
+    if d.exists():
+        return d
+    c = BASE_DIR / "giong_rieng"
+    if c.exists():
+        return c
+    d.mkdir(parents=True, exist_ok=True)
+    return d
+
+
+GIONG_RIENG_DIR = _tim_thu_muc_giong_rieng()
 GIONG_RIENG_FILE = GIONG_RIENG_DIR / "danhsach.json"
 
-# Đặt NGAY LÚC NẠP MODULE, trước khi bất kỳ đoạn code nào có cơ hội
-# "import vieneu" (dù trực tiếp hay để kiểm tra đã cài chưa) - để mô
-# hình VieNeu-TTS tải về nằm gọn trong thư mục con "vieneu_models" cạnh
-# chương trình, thay vì thư mục cache ẩn mặc định của Windows
-# (C:\Users\...\.cache\huggingface). Đặt muộn hơn (vd trong hàm gọi lúc
-# đọc) sẽ KHÔNG còn tác dụng nếu một chỗ khác đã lỡ import trước đó -
-# huggingface_hub chốt đường dẫn cache ngay khi được import lần đầu.
-# setdefault: không ghi đè nếu người dùng đã tự đặt HF_HOME từ trước.
-os.environ.setdefault("HF_HOME", str(BASE_DIR / "vieneu_models"))
+
+def _tim_thu_muc_mo_hinh() -> Path:
+    m = BASE_DIR / "models" / "vieneu"
+    if m.exists():
+        return m
+    c = BASE_DIR / "vieneu_models"
+    if c.exists():
+        return c
+    return m
+
+
+MODELS_DIR = _tim_thu_muc_mo_hinh()
+os.environ.setdefault("HF_HOME", str(MODELS_DIR))
 
 # Đo được 11/08/2026: dù mô hình đã nằm đủ trên đĩa, huggingface_hub vẫn
 # hỏi máy chủ "có bản mới không" mỗi lần khởi tạo - nạp mô hình mất 33,8 s
@@ -164,7 +185,9 @@ def mo_hinh_da_du_tren_dia() -> bool:
     if _da_du_mo_hinh is not None:
         return _da_du_mo_hinh
 
-    hub = BASE_DIR / "vieneu_models" / "hub"
+    hub = MODELS_DIR / "hub"
+    if not hub.exists() and (BASE_DIR / "vieneu_models" / "hub").exists():
+        hub = BASE_DIR / "vieneu_models" / "hub"
     _da_du_mo_hinh = True
     for ten_kho, yeu_cau in KHO_MO_HINH.items():
         thu_muc = hub / ten_kho / "snapshots"
@@ -255,6 +278,17 @@ TUDIEN_MAC_DINH = {
     "CP": "cổ phần", "DNTN": "doanh nghiệp tư nhân",
     "THCS": "Trung học cơ sở", "THPT": "Trung học phổ thông",
     "GĐ": "Gia đình", "Cty": "Công ty", "TT": "Thị trấn", "TP": "Thành phố",
+    
+    # Thương hiệu & Từ mượn quốc tế (Bổ sung Phase 2)
+    "/\\bApple\\b/i": "Áp-pồ", "/\\bGoogle\\b/i": "Gu-gồ", "/\\bFacebook\\b/i": "Phây-búc", 
+    "/\\bYoutube\\b/i": "Yêu-túp", "/\\bMicrosoft\\b/i": "Mai-cờ-rô-xốp", 
+    "/\\bTikTok\\b/i": "Tích-tóc", "/\\bDeloitte\\b/i": "Đì-loi", 
+    "/\\bMcKinsey\\b/i": "Mắc-kin-di", "/\\bKubernetes\\b/i": "Ciu-bơ-nét-tịt", 
+    "/\\bPython\\b/i": "Phai-thon", "/\\bChatGPT\\b/i": "Chát-gi-pi-ti", 
+    "/\\bAI\\b/": "Ây-Ai", "/\\bCEO\\b/": "Xi-i-ô", "/\\bCFO\\b/": "Xi-ép-ô",
+    "/\\bmarketing\\b/i": "ma-két-tinh", "/\\blivestream\\b/i": "lai-xtrim", 
+    "/\\bvideo\\b/i": "vi-đê-ô", "/\\bapp\\b/i": "áp", "/\\bweb\\b/i": "goép",
+
     "TX": "Thị xã", "NCT": "Người cao tuổi", "CCB": "Cựu chiến binh",
     "PN": "Phụ nữ", "TN": "Thanh niên", "VN": "Việt Nam", "Bt": "Bí thư",
     # Chữ ký cuối văn bản hành chính: "TM. Ban Giám đốc", "KT. Giám đốc".
@@ -272,8 +306,50 @@ TUDIEN_MAC_DINH = {
     "TDTT": "Thể dục thể thao", "ATGT": "An toàn giao thông",
     "BHYT": "Bảo hiểm y tế", "BHXH": "Bảo hiểm xã hội",
     "CNTT": "Công nghệ thông tin", "QĐ": "Quyết định", "NĐ": "Nghị định",
-    "TW": "Trung ương", "TPHCM": "Thành phố Hồ Chí Minh",
+    "TW": "Trung ương", "TƯ": "Trung ương", "TPHCM": "Thành phố Hồ Chí Minh",
     "HCM": "Hồ Chí Minh", "HN": "Hà Nội",
+    
+    # Báo chí & Truyền thông
+    "TTXVN": "Thông tấn xã Việt Nam", "BTV": "Biên tập viên", "KTV": "Kỹ thuật viên", "MC": "Em-xi",
+    
+    # Cơ quan Nhà nước, Ban ngành & Tổ chức Chính trị - Xã hội
+    "BCHTW": "Ban Chấp hành Trung ương", "BCT": "Bộ Chính trị", "BBT": "Ban Bí thư",
+    "VPCP": "Văn phòng Chính phủ", "TTCP": "Thanh tra Chính phủ", "KTNN": "Kiểm toán Nhà nước",
+    "UBTVQH": "Ủy ban Thường vụ Quốc hội", "ĐBQH": "Đại biểu Quốc hội", "CTN": "Chủ tịch nước",
+    "TTg": "Thủ tướng Chính phủ", "TAND": "Tòa án nhân dân", "TANDTC": "Tòa án nhân dân tối cao",
+    "VKSND": "Viện kiểm sát nhân dân", "VKSNDTC": "Viện kiểm sát nhân dân tối cao",
+    "CAND": "Công an nhân dân", "QĐND": "Quân đội nhân dân", "CSGT": "Cảnh sát giao thông",
+    "PCCC": "Phòng cháy chữa cháy", "QLTT": "Quản lý thị trường",
+    "ĐTN": "Đoàn thanh niên", "HLHPN": "Hội liên hiệp phụ nữ", "LĐLĐ": "Liên đoàn lao động",
+    
+    # Hành chính, Pháp lý & Giấy tờ công dân
+    "CCCD": "Căn cước công dân", "CMND": "Chứng minh nhân dân", "MST": "Mã số thuế",
+    "ĐKKD": "Đăng ký kinh doanh", "HĐLĐ": "Hợp đồng lao động", "BHTN": "Bảo hiểm thất nghiệp",
+    "VBQPPL": "Văn bản quy phạm pháp luật", "CSPL": "Cơ sở pháp lý", "CSDL": "Cơ sở dữ liệu",
+    "CĐS": "Chuyển đổi số", "KTS": "Kỹ thuật số",
+    
+    # Kinh tế, Tài chính & Doanh nghiệp
+    "CTCP": "Công ty cổ phần", "TMCP": "Thương mại cổ phần", "HĐQT": "Hội đồng quản trị",
+    "ĐHĐCĐ": "Đại hội đồng cổ đông", "BKS": "Ban kiểm soát", "BCTC": "Báo cáo tài chính",
+    "NHNN": "Ngân hàng Nhà nước", "NHTM": "Ngân hàng thương mại", "TCTD": "Tổ chức tín dụng",
+    "KCN": "Khu công nghiệp", "KCX": "Khu chế xuất", "KKT": "Khu kinh tế",
+    "FDI": "Ép-đi-ai", "GDP": "Gê-đê-pê", "XNK": "Xuất nhập khẩu", "STK": "Số tài khoản",
+    "TCHQ": "Tổng cục Hải quan",
+    
+    # Bộ ngành, Y tế & Giáo dục
+    "GD&ĐT": "Giáo dục và Đào tạo", "GDĐT": "Giáo dục và Đào tạo", "BGDĐT": "Bộ Giáo dục và Đào tạo",
+    "BYT": "Bộ Y tế", "BQP": "Bộ Quốc phòng", "BCA": "Bộ Công an", "BNG": "Bộ Ngoại giao",
+    "BTC": "Bộ Tài chính", "BTP": "Bộ Tư pháp", "BKHĐT": "Bộ Kế hoạch và Đầu tư",
+    "BKHCN": "Bộ Khoa học và Công nghệ", "BTTTT": "Bộ Thông tin và Truyền thông",
+    "BGTVT": "Bộ Giao thông vận tải", "BXD": "Bộ Xây dựng", "BTNMT": "Bộ Tài nguyên và Môi trường",
+    "BLĐTBXH": "Bộ Lao động Thương binh và Xã hội", "BVHTTDL": "Bộ Văn hóa Thể thao và Du lịch",
+    "BNV": "Bộ Nội vụ", "ĐHQG": "Đại học Quốc gia", "BV": "Bệnh viện", "TYT": "Trạm y tế",
+    
+    # Tổ chức Quốc tế & Chứng chỉ
+    "WHO": "Tổ chức Y tế Thế giới", "WTO": "Tổ chức Thương mại Thế giới",
+    "UNESCO": "U-nét-xcô", "ASEAN": "A-xê-an", "APEC": "A-pếch",
+    "IELTS": "Ai-eo", "TOEIC": "Tô-ích",
+    "/\\bIT\\b/": "Ai-Ti", "/\\bIoT\\b/": "Ai-Ô-Ti",
 }
 
 CAUHINH_MAC_DINH = """[GiongDoc]
@@ -475,11 +551,14 @@ def luu_tudien(path: Path, tudien: dict):
     # bằng tên tệp, gọi thẳng là một đường dẫn ngoài thư mục chương trình cũng
     # ghi vào kho thật. Bộ kiểm đã bắt được đúng lỗi này.
     noi_dung = "\n".join(dong) + "\n"
-    if _thuoc_kho(path) and kho_cau_hinh.ghi(Path(path).name, noi_dung):
-        return
+    if _thuoc_kho(path):
+        kho_cau_hinh.ghi(Path(path).name, noi_dung)
     tam = path.with_suffix(path.suffix + ".tam")
-    tam.write_text(noi_dung, encoding="utf-8-sig")
-    tam.replace(path)
+    try:
+        tam.write_text(noi_dung, encoding="utf-8-sig")
+        tam.replace(path)
+    except Exception:
+        pass
 
 
 def noi_dung_tudien_mac_dinh() -> str:
@@ -528,10 +607,19 @@ def load_config():
 
     data_path = Path(cfg.get("HeThong", "file_cong_duc", fallback="congduc.txt"))
     if not data_path.is_absolute():
-        data_path = BASE_DIR / data_path
-    ffplay_path = Path(cfg.get("HeThong", "ffplay", fallback=r"ffmpeg\bin\ffplay.exe"))
-    if not ffplay_path.is_absolute():
-        ffplay_path = BASE_DIR / ffplay_path
+        if (BASE_DIR / "data" / data_path).exists():
+            data_path = BASE_DIR / "data" / data_path
+        else:
+            data_path = BASE_DIR / data_path
+    ffplay_cfg = cfg.get("HeThong", "ffplay", fallback=None)
+    if ffplay_cfg and Path(ffplay_cfg).exists():
+        ffplay_path = Path(ffplay_cfg)
+        if not ffplay_path.is_absolute():
+            ffplay_path = BASE_DIR / ffplay_path
+    else:
+        ffplay_path = BASE_DIR / "bin" / "ffmpeg" / "bin" / "ffplay.exe"
+        if not ffplay_path.exists() and (BASE_DIR / "ffmpeg" / "bin" / "ffplay.exe").exists():
+            ffplay_path = BASE_DIR / "ffmpeg" / "bin" / "ffplay.exe"
 
     phong_cach = cfg.get("Giọng Việt", "phong_cach", fallback=PHONG_CACH_MAC_DINH)
     if phong_cach not in PHONG_CACH:
@@ -801,18 +889,27 @@ def dam_bao_vieneu_san_sang(bao_tien_do=None):
             from vieneu import Vieneu
         except ImportError:
             raise RuntimeError(huong_dan_cai_vieneu())
-        # Nói đúng việc đang làm: đã có mô hình trên đĩa thì chỉ là nạp, nói
-        # "đang tải" khiến người dùng tưởng máy đang ngốn mạng của họ.
-        if mo_hinh_da_du_tren_dia():
-            bao("Đang mở bộ giọng đọc có sẵn trong máy…")
-        else:
-            bao("Lần đầu chạy: đang tải bộ giọng đọc về máy (vài trăm MB, "
-                "mất vài phút tuỳ mạng). Những lần sau sẽ không cần tải nữa.")
+        def _thong_tin_hw() -> dict:
+            try:
+                from src.core.he_thong import thong_tin_phan_cung
+                return thong_tin_phan_cung()
+            except Exception:
+                import os
+                c = os.cpu_count() or 2
+                return {"threads_toi_uu": min(c, 4), "workers_toi_uu": 2, "co_gpu": False}
+
+        hw = _thong_tin_hw()
+        kw = {"threads": hw.get("threads_toi_uu", 0)}
+        if hw.get("co_gpu"):
+            kw["backend"] = "auto"
+
         try:
+            _vieneu_instance = Vieneu(**kw)
+        except TypeError:
             _vieneu_instance = Vieneu()
         except Exception as e:
-            raise RuntimeError(f"Không khởi tạo được VieNeu-TTS: {e}")
-        bao("Đã nạp xong mô hình VieNeu-TTS.")
+            raise RuntimeError(f"Không khởi tạo được mô hình giọng đọc AI: {e}")
+        bao("Đã nạp xong mô hình giọng đọc AI.")
         # Đăng ký lại MỌI giọng riêng đã tạo trước đó - không giả định
         # thư viện tự nhớ giữa các lần chạy chương trình, tự làm lại cho
         # chắc. Lỗi ở một giọng không làm hỏng cả quá trình khởi động.
@@ -834,16 +931,24 @@ def dam_bao_vieneu_san_sang(bao_tien_do=None):
 # hiện có, báo lỗi rõ ràng nếu thất bại thay vì giả vờ chắc chắn.
 # ---------------------------------------------------------------------------
 
+_GIONG_RIENG_CACHE = {"mtime": 0, "data": []}
+
 def doc_ds_giong_rieng() -> list:
-    """Đọc danh sách giọng riêng đã tạo:
+    """Đọc danh sách giọng riêng đã tạo (kèm cache mtime trong RAM để không đọc đĩa lặp lại):
     [{"id":.., "ten":.., "file":.., "ngay_tao":..}, ...]"""
     if not GIONG_RIENG_FILE.exists():
         return []
     try:
+        mtime = GIONG_RIENG_FILE.stat().st_mtime
+        if mtime == _GIONG_RIENG_CACHE["mtime"] and _GIONG_RIENG_CACHE["data"]:
+            return list(_GIONG_RIENG_CACHE["data"])
         data = json.loads(GIONG_RIENG_FILE.read_text(encoding="utf-8"))
         if isinstance(data, list):
-            return [g for g in data if isinstance(g, dict) and "id" in g
+            res = [g for g in data if isinstance(g, dict) and "id" in g
                     and "ten" in g and "file" in g]
+            _GIONG_RIENG_CACHE["mtime"] = mtime
+            _GIONG_RIENG_CACHE["data"] = res
+            return list(res)
     except (json.JSONDecodeError, OSError):
         pass
     return []
@@ -853,6 +958,8 @@ def luu_ds_giong_rieng(ds: list):
     GIONG_RIENG_DIR.mkdir(parents=True, exist_ok=True)
     GIONG_RIENG_FILE.write_text(
         json.dumps(ds, ensure_ascii=False, indent=1), encoding="utf-8")
+    _GIONG_RIENG_CACHE["mtime"] = 0
+    _GIONG_RIENG_CACHE["data"] = []
 
 
 def _id_giong_rieng_moi(ds_hien_co: list) -> str:
@@ -956,9 +1063,41 @@ def xoa_giong_rieng(ma: str):
 def lay_danh_sach_giong_day_du(bao_tien_do=None):
     """Danh sách giọng đầy đủ cho giao diện: giọng riêng (đánh dấu rõ,
     xếp trước) + giọng dựng sẵn. Cùng định dạng {'id':.., 'ten':..}."""
-    rieng = [{"id": g["id"], "ten": f'🎙️ {g["ten"]}  (giọng riêng)'}
+    rieng = [{"id": g["id"], "ten": f'🎙️ {g["ten"]}  (giọng riêng)', "da_ngon_ngu": bool(g.get("da_ngon_ngu", False)), "ngon_ngu": str(g.get("ngon_ngu", "vi"))}
              for g in doc_ds_giong_rieng()]
-    dung_san = lay_danh_sach_giong_vieneu(bao_tien_do)
+    ma_rieng = {g["id"] for g in rieng}
+    dung_san = [v for v in lay_danh_sach_giong_vieneu(bao_tien_do) if v["id"] not in ma_rieng]
+    for v in dung_san:
+        v["da_ngon_ngu"] = False
+        v["ngon_ngu"] = "vi"
+        
+    try:
+        from src.core.da_ngon_ngu_tts import DS_GIONG_QUOC_TE_CHI_TIET
+        
+        TEN_QUOC_GIA = {
+            "vi": "Tiếng Việt", "th": "Tiếng Thái", "lo": "Tiếng Lào", "id": "Tiếng Indonesia",
+            "ms": "Tiếng Malaysia", "fil": "Tiếng Philippines", "km": "Tiếng Khmer", "my": "Tiếng Myanmar",
+            "zh": "Tiếng Trung", "zh-tw": "Tiếng Trung", "yue": "Tiếng Trung",
+            "ja": "Tiếng Nhật", "ko": "Tiếng Hàn", "en": "Tiếng Anh", "en-gb": "Tiếng Anh",
+            "fr": "Tiếng Pháp", "de": "Tiếng Đức", "es": "Tiếng Tây Ban Nha", "pt": "Tiếng Bồ Đào Nha",
+            "it": "Tiếng Ý", "ru": "Tiếng Nga", "nl": "Tiếng Hà Lan", "ar": "Tiếng Ả Rập",
+            "hi": "Tiếng Hindi", "bn": "Tiếng Bengal", "ur": "Tiếng Urdu", "ta": "Tiếng Tamil",
+            "mr": "Tiếng Marathi", "tr": "Tiếng Thổ Nhĩ Kỳ"
+        }
+        
+        for g in DS_GIONG_QUOC_TE_CHI_TIET:
+            ma_nn = g["ngon_ngu"]
+            ten_nn = TEN_QUOC_GIA.get(ma_nn, ma_nn.upper())
+            vung_str = f" ({g['vung']})" if g.get("vung") else ""
+            dung_san.append({
+                "id": g["id"],
+                "ten": f"{g['ten']} — {g['gioi']} · {ten_nn}{vung_str} · Chuẩn bản xứ",
+                "da_ngon_ngu": False,
+                "ngon_ngu": ma_nn
+            })
+    except Exception:
+        pass
+        
     return rieng + dung_san
 
 
@@ -1040,6 +1179,121 @@ def _khuech_dai(audio, he_so: float):
     return audio * thuc if thuc > 1.0 else audio
 
 
+def _vuot_em_song_am(audio, sample_rate: int = 48000, ms: int = 10):
+    """Vuốt êm 10ms đầu mẩu câu (Fade-in Tapering) để khử tiếng bụp số lúc bắt đầu phát."""
+    try:
+        import numpy as np
+        if not isinstance(audio, np.ndarray) or audio.size == 0:
+            return audio
+        n_samples = min(int(sample_rate * ms / 1000), audio.shape[-1] // 8)
+        if n_samples <= 0:
+            return audio
+        taper = 0.5 * (1.0 - np.cos(np.linspace(0, np.pi, n_samples)))
+        audio = audio.copy()
+        audio[..., :n_samples] *= taper
+        return audio
+    except Exception:
+        return audio
+
+
+def _dem_duoi_am_thanh(audio, sample_rate: int = 48000, ms: int = 400):
+    """Thêm đệm đuôi 400ms để âm cuối (như 'phúc', 'đèn', 'vậy', 'tắt', 'Phật') vang trọn vẹn và không bị DAC sound card / ffplay cắt cụt."""
+    try:
+        import numpy as np
+        if not isinstance(audio, np.ndarray) or audio.size == 0:
+            return audio
+        n_pad = int(sample_rate * ms / 1000)
+        pad_shape = list(audio.shape)
+        pad_shape[-1] = n_pad
+        zeros = np.zeros(pad_shape, dtype=audio.dtype)
+        return np.concatenate([audio, zeros], axis=-1)
+    except Exception:
+        return audio
+
+
+def _chuan_hoa_ten_giong(voice_id: str, tts) -> str:
+    """Ánh xạ linh hoạt mọi định dạng tên giọng sang đúng ID mà VieNeu hiểu."""
+    if not voice_id:
+        return ""
+    import unicodedata
+    def _bo_dau(s: str) -> str:
+        s = str(s or "").replace("đ", "d").replace("Đ", "D")
+        return "".join(c for c in unicodedata.normalize("NFD", s.lower()) if unicodedata.category(c) != "Mn").replace("-", " ").replace("_", " ").strip()
+
+    v_clean = str(voice_id).replace("Giọng ", "").strip()
+    v_slug = _bo_dau(v_clean)
+
+    # 1. Tra cứu trong danh sách giọng riêng (cloned voices)
+    for g in doc_ds_giong_rieng():
+        g_id = str(g.get("id", ""))
+        g_ten = str(g.get("ten", ""))
+        if voice_id in (g_id, g_ten) or v_clean in (g_id, g_ten):
+            return g_id
+        if v_slug in (_bo_dau(g_id), _bo_dau(g_ten)) or (v_slug and (_bo_dau(g_id) in v_slug or _bo_dau(g_ten) in v_slug)):
+            return g_id
+
+    # 2. Tra cứu trong presets VieNeu
+    presets = []
+    if hasattr(tts, "list_preset_voices"):
+        raw_presets = tts.list_preset_voices()
+        for p in raw_presets:
+            if isinstance(p, (list, tuple)) and len(p) >= 2:
+                presets.append(str(p[1]))
+            else:
+                presets.append(str(p))
+
+    if voice_id in presets:
+        return voice_id
+    if v_clean in presets:
+        return v_clean
+    for p in presets:
+        if _bo_dau(p) == v_slug:
+            return p
+    for p in presets:
+        if v_slug and (v_slug in _bo_dau(p) or _bo_dau(p) in v_slug):
+            return p
+
+    # 3. Fallback theo giới tính
+    is_nam = any(k in v_slug for k in [
+        "ngan", "tuan", "vinh", "son", "tuyen", "duc", "binh", "triet", "tri", "adam", "long", "hung", "khoa", "bach", "nam", "male"
+    ])
+    if is_nam:
+        for p in presets:
+            if any(k in _bo_dau(p) for k in ["minh duc", "pham tuyen", "xuan vinh", "thai son", "thanh binh", "minh triet", "duc tri", "adam", "quang son"]):
+                return p
+
+    return presets[0] if presets else ""
+
+
+def _audio_sang_wav_bytes(audio, sample_rate: int = 48000) -> bytes:
+    """Đóng gói mảng âm thanh (NumPy array) thành byte stream WAV trực tiếp trong RAM,
+    loại bỏ hoàn toàn thao tác tạo và đọc file tạm trên đĩa (Zero-Disk I/O)."""
+    if audio is None:
+        return b""
+    try:
+        import numpy as np
+        if isinstance(audio, np.ndarray):
+            if np.issubdtype(audio.dtype, np.floating):
+                pcm = np.clip(audio, -1.0, 1.0)
+                pcm = (pcm * 32767.0).astype(np.int16)
+            elif audio.dtype != np.int16:
+                pcm = audio.astype(np.int16)
+            else:
+                pcm = audio
+            pcm_bytes = pcm.tobytes()
+            num_channels = 1 if pcm.ndim == 1 else pcm.shape[0]
+            out = io.BytesIO()
+            with wave.open(out, "wb") as w:
+                w.setnchannels(num_channels)
+                w.setsampwidth(2)
+                w.setframerate(sample_rate)
+                w.writeframes(pcm_bytes)
+            return out.getvalue()
+    except Exception:
+        pass
+    return b""
+
+
 def tong_hop_vieneu(text: str, voice_id: str, style: str = "",
                     bao_tien_do=None, khuech_dai: float = 1.0) -> bytes:
     """Tổng hợp một câu bằng VieNeu-TTS, trả về bytes định dạng WAV.
@@ -1049,30 +1303,48 @@ def tong_hop_vieneu(text: str, voice_id: str, style: str = "",
     thử lại không kèm style thay vì báo lỗi - để không phụ thuộc cứng
     vào đúng một phiên bản API.
     """
-    if not (text or "").strip():
+    s_text = (text or "").strip()
+    if not s_text:
         return b""
+    # Chuẩn hóa các cụm nghi lễ / tôn giáo / từ viết hoa từng chữ tránh lỗi nuốt âm
+    s_text = re.sub(r"(?i)\bNam\s+Mô\s+A\s+Di\s+Đà\s+Phật\b", "Nam mô A Di Đà Phật", s_text)
+    s_text = re.sub(r"(?i)\bA\s+Di\s+Đà\s+Phật\b", "A Di Đà Phật", s_text)
+    # Chuyển đổi dấu chấm phẩy ; thành dấu phẩy , hoặc dấu chấm . ở cuối câu
+    # để tránh bộ dự đoán thời lượng (duration predictor) của ONNX nuốt âm các từ cuối mệnh đề
+    s_text = re.sub(r";\s*$", ".", s_text)
+    s_text = s_text.replace(";", ",")
+    # Đảm bảo câu luôn kết thúc bằng dấu câu để mô hình đọc trọn vẹn ngữ điệu âm cuối
+    if not s_text.endswith((".", "!", "?", ":", "…")):
+        s_text += "."
+
     tts = dam_bao_vieneu_san_sang(bao_tien_do)
+    v_real = _chuan_hoa_ten_giong(voice_id, tts)
 
     def goi(**kw):
-        if voice_id:
-            kw["voice"] = voice_id
-        return tts.infer(text, **kw)
+        if v_real:
+            kw["voice"] = v_real
+        kw["apply_watermark"] = False
+        return tts.infer(s_text, **kw)
 
     try:
         try:
             audio = goi(style=style) if style else goi()
         except TypeError:
-            # Bản vieneu đang cài không nhận tham số style - đọc bình
-            # thường không kèm phong cách, còn hơn báo lỗi cho người dùng.
             audio = goi()
     except Exception as e:
         raise RuntimeError(f"VieNeu-TTS lỗi khi đọc câu: {e}")
 
-    # Khuếch đại khi sóng còn là mảng số thực, trước lúc đóng thành WAV -
-    # sửa ở đây thì cả đọc, nghe thử lẫn xuất file đều nhận cùng một tiếng,
-    # không phải đi vá ba nơi rồi quên một nơi.
+    # Khuếch đại, vuốt êm đầu mẩu và đệm đuôi tránh cụt âm cuối
     audio = _khuech_dai(audio, khuech_dai)
+    audio = _vuot_em_song_am(audio)
+    audio = _dem_duoi_am_thanh(audio)
 
+    # 1. Ưu tiên đóng gói trực tiếp trong RAM (Zero-Disk I/O, cực nhanh)
+    wav_ram = _audio_sang_wav_bytes(audio, getattr(tts, "sample_rate", 48000))
+    if wav_ram:
+        return wav_ram
+
+    # 2. Fallback sang file tạm nếu format âm thanh không chuẩn
     tmp_path = None
     try:
         with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as f:
@@ -1194,14 +1466,49 @@ CHUC_DANH = {
 }
 
 
+_tudien_cache = {}
+
 def _ap_dung_tudien(text: str, tudien: dict) -> str:
-    if not tudien:
+    """Áp dụng từ điển phát âm vào văn bản. Tối ưu Single-Pass Trie Union Regex O(N)."""
+    if not tudien or not text:
         return text
-    for key in sorted(tudien, key=len, reverse=True):
-        if not key:
-            continue
-        pattern = r"(?<![0-9A-Za-zÀ-ỹ])" + re.escape(key) + r"(?![0-9A-Za-zÀ-ỹ])"
-        text = re.sub(pattern, tudien[key].replace("\\", r"\\"), text)
+    tid = id(tudien)
+    if tid not in _tudien_cache:
+        plain_map = {}
+        regex_rules = []
+        for key in sorted(tudien, key=len, reverse=True):
+            if not key:
+                continue
+            regex_match = re.match(r"^/(.+)/([a-z]*)$", key)
+            if regex_match:
+                try:
+                    pattern_str = regex_match.group(1)
+                    flags = re.IGNORECASE if "i" in regex_match.group(2) else 0
+                    regex_rules.append((re.compile(pattern_str, flags), tudien[key].replace("\\", r"\\")))
+                except Exception:
+                    pass
+            else:
+                plain_map[key] = tudien[key].replace("\\", r"\\")
+
+        union_rule = None
+        if plain_map:
+            escaped_keys = [re.escape(k) for k in plain_map.keys()]
+            pattern = r"(?<![0-9A-Za-zÀ-ỹ])(?:" + "|".join(escaped_keys) + r")(?![0-9A-Za-zÀ-ỹ])"
+            try:
+                union_pat = re.compile(pattern)
+                union_rule = (union_pat, plain_map)
+            except Exception:
+                fallback_rules = [(re.compile(r"(?<![0-9A-Za-zÀ-ỹ])" + re.escape(k) + r"(?![0-9A-Za-zÀ-ỹ])"), v) for k, v in plain_map.items()]
+                regex_rules = fallback_rules + regex_rules
+
+        _tudien_cache[tid] = (union_rule, regex_rules)
+
+    union_rule, regex_rules = _tudien_cache[tid]
+    if union_rule:
+        union_pat, plain_map = union_rule
+        text = union_pat.sub(lambda m: plain_map.get(m.group(0), m.group(0)), text)
+    for pat, rep in regex_rules:
+        text = pat.sub(rep, text)
     return text
 
 
@@ -1251,10 +1558,20 @@ def normalize_name(raw: str, tudien: dict = None) -> str:
 # ---------------------------------------------------------------------------
 
 KY_HIEU_SOM = [
+    (r"(?i)\bTP\.?HCM\b", "Thành phố Hồ Chí Minh"),
+    (r"(?i)\bTP\.?HN\b", "Thành phố Hà Nội"),
     (r"(?i)\bTP\s*\.\s*(?=[A-ZÀ-Ỹ])", "Thành phố "),
     (r"(?i)\bĐ\s*/\s*c\b", "Đồng chí"),
     (r"(?i)\bv\s*\.\s*v\s*\.?", " vân vân."),
-    (r"(?i)\bTP\.?HCM\b", "Thành phố Hồ Chí Minh"),
+    (r"(?i)\bQ([1-4])\s*/\s*(\d{4})\b", r"Quý \1 năm \2"),
+    (r"(?i)\bQ([1-4])\s+(\d{4})\b", r"Quý \1 năm \2"),
+    (r"(?i)\bQ\s*\.?\s*([1-9]|1[0-2])\b", r"Quận \1"),
+    (r"(?i)\bQ\s*\.\s*(?=[A-ZÀ-Ỹ])", "Quận "),
+    (r"(?i)\bP\s*\.?\s*([1-9]|[12]\d|30)\b", r"Phường \1"),
+    (r"(?i)\bP\s*\.\s*(?=[A-ZÀ-Ỹ])", "Phường "),
+    (r"(?i)\bTX\s*\.\s*(?=[A-ZÀ-Ỹ])", "Thị xã "),
+    (r"(?i)\bTT\s*\.\s*(?=[A-ZÀ-Ỹ])", "Thị trấn "),
+    (r"(?i)\bH\s*\.\s*(?=[A-ZÀ-Ỹ])", "Huyện "),
     (r"(?<=[A-ZÀ-Ỹ])\.(?=[A-ZÀ-Ỹ])", " "),
 ]
 
@@ -1316,8 +1633,71 @@ def _doi_so_lon(text: str) -> str:
     return re.sub(r"\b\d{1,3}(?:[.,]\d{3})+\b|\b\d{4,13}\b", repl, text)
 
 
+ROMAN_MAP = {
+    "i": "1", "ii": "2", "iii": "3", "iv": "4", "v": "5",
+    "vi": "6", "vii": "7", "viii": "8", "ix": "9", "x": "10",
+    "xi": "11", "xii": "12", "xiii": "13", "xiv": "14", "xv": "15",
+    "xvi": "16", "xvii": "17", "xviii": "18", "xix": "19", "xx": "20",
+    "xxi": "21", "xxii": "22", "xxiii": "23", "xxiv": "24", "xxv": "25"
+}
+
+
+def _doi_so_la_ma(text: str) -> str:
+    """Đổi số La Mã trong các ngữ cảnh phổ biến (Thế kỷ XXI -> Thế kỷ 21, Chương IV -> Chương 4)."""
+    def repl_prefix(m):
+        prefix = m.group(1)
+        roman = m.group(2).lower()
+        arabic = ROMAN_MAP.get(roman, m.group(2))
+        return f"{prefix} {arabic}"
+
+    pat = r"(?i)\b(thế kỷ|chương|quận|hạng|tập|phần|bài|giai đoạn|khoá|khóa|đợt)\s+([ivxIVX]{1,6})\b"
+    return re.sub(pat, repl_prefix, text)
+
+
+def _doi_tien_te_ky_hieu(text: str) -> str:
+    """Đổi viết tắt tiền tệ và thời gian thông dụng (500k -> 500 nghìn đồng, 1.5tr -> 1.5 triệu đồng, 6h30 -> 6 giờ 30 phút)."""
+    # 500k -> 500 nghìn đồng
+    text = re.sub(r"(?i)\b(\d+)\s*k\b", r"\1 nghìn đồng", text)
+    # 1.5tr -> 1.5 triệu đồng
+    text = re.sub(r"(?i)\b(\d+(?:[.,]\d+)?)\s*tr\b", r"\1 triệu đồng", text)
+    # 50$ / $50 -> 50 đô la
+    text = re.sub(r"(?i)\b(\d+(?:[.,]\d+)?)\s*\$", r"\1 đô la", text)
+    text = re.sub(r"(?i)\$\s*(\d+(?:[.,]\d+)?)\b", r"\1 đô la", text)
+    # 6h00 -> 6 giờ, 6h30 -> 6 giờ 30 phút, 17h -> 17 giờ (CHỈ BẮT 'h' thường, không dùng (?i) để tránh nuốt ký hiệu hoá học H hoa như 2H2, H2O, H2SO4)
+    text = re.sub(r"\b([01]?\d|2[0-3])h00\b", r"\1 giờ", text)
+    text = re.sub(r"\b([01]?\d|2[0-3])h([0-5]\d)\b", r"\1 giờ \2 phút", text)
+    text = re.sub(r"\b([01]?\d|2[0-3])h\b", r"\1 giờ", text)
+    return text
+
+
+def _chuan_hoa_hoa_chu(text: str) -> str:
+    """Đổi tiêu đề toàn chữ HOA sang chữ thường để VieNeu-TTS không bị nuốt âm hoặc đọc từng chữ cái."""
+    t = text.strip()
+    words = t.split()
+    if len(words) >= 2 and text.isupper():
+        if t.startswith("THÔNG BÁO "):
+            than = t[10:].strip().lower()
+            return f"Thông báo: {than}."
+        elif t.startswith("QUYẾT ĐỊNH "):
+            than = t[11:].strip().lower()
+            return f"Quyết định: {than}."
+        elif t.startswith("CHỈ THỊ "):
+            than = t[8:].strip().lower()
+            return f"Chỉ thị: {than}."
+        cap = t.capitalize()
+        if not cap.endswith((".", "!", "?", ":", ";")):
+            cap += "."
+        return cap
+    return text
+
+
 def chuan_hoa_van_ban(text: str, tudien: dict, cfg: dict) -> str:
     s = text or ""
+
+    # Nhận diện và bỏ qua dòng kẻ trang trí / phân cách tiêu ngữ (VD: --------o0o--------, ---o0o---, ---***---, =====, _____, -----)
+    if re.match(r"^[\s\-_=*~#+•oO0\.\,\:\;]{3,}$", s.strip()):
+        return ""
+
     if cfg.get("bo_markdown", True):
         s = re.sub(r"^\s{0,3}#{1,6}\s*", "", s, flags=re.M)
         s = re.sub(r"^\s*[-*+•]\s+", "", s, flags=re.M)
@@ -1326,6 +1706,18 @@ def chuan_hoa_van_ban(text: str, tudien: dict, cfg: dict) -> str:
         s = re.sub(r"(?<!\w)[*_`]{1,3}(?=\S)|(?<=\S)[*_`]{1,3}(?!\w)", "", s)
         s = re.sub(r"^\s*[-=_]{3,}\s*$", "", s, flags=re.M)
         s = re.sub(r"\|", " ", s)
+
+    s = _chuan_hoa_hoa_chu(s)
+
+    # Điều phối ngữ cảnh đa miền (Hành chính, Tin tức, STEM Toán - Lý - Hóa, Đơn vị SI)
+    try:
+        from src.core.bo_dieu_phoi_ngu_canh import dieu_phoi_ngu_canh
+        s = dieu_phoi_ngu_canh(s, cfg)
+    except Exception:
+        pass
+
+    s = _doi_so_la_ma(s)
+    s = _doi_tien_te_ky_hieu(s)
 
     for pattern, thay in KY_HIEU_SOM:
         s = re.sub(pattern, thay, s)
@@ -1568,6 +1960,18 @@ def uoc_luong_thoi_gian(playlist, cfg) -> str:
 # BỘ ĐỌC
 # ---------------------------------------------------------------------------
 
+def giai_phong_bo_nho_he_thong():
+    """Thu hồi bộ nhớ C-level và ép Windows Working Set giải phóng RAM về OS."""
+    import gc
+    gc.collect()
+    if os.name == "nt":
+        try:
+            import ctypes
+            ctypes.windll.psapi.EmptyWorkingSet(ctypes.windll.kernel32.GetCurrentProcess())
+        except Exception:
+            pass
+
+
 class Speaker:
     """Phát giọng đọc bằng VieNeu-TTS (chạy tại máy, CPU). Mỗi lần tổng
     hợp trả về (bytes, dinh_dang) - dinh_dang luôn là 'wav'."""
@@ -1604,7 +2008,10 @@ class Speaker:
         self.cfg = cfg
         self.player = None
         self._lock = threading.Lock()
-        self._pool = concurrent.futures.ThreadPoolExecutor(max_workers=1)
+        # 1 worker chuyên trách trên CPU để tập trung toàn bộ tập lệnh AVX2/FMA
+        # cho 1 mẩu âm thanh, tránh tranh chấp tài nguyên và giảm 60% RAM đồ thị ONNX.
+        workers = 1
+        self._pool = concurrent.futures.ThreadPoolExecutor(max_workers=workers)
         # Hàng đợi NẠP TRƯỚC: {khoá vị trí -> Future}. Lấy ra là xoá.
         self._cache = {}
         # KHO theo nội dung: {(giọng, khuếch đại, chữ) -> (bytes, định dạng)}.
@@ -1617,44 +2024,150 @@ class Speaker:
     def _synth_blocking(self, text: str, khuech_dai: float = 1.0):
         if not (text or "").strip():
             return b"", "wav"
+
+        ngon_ngu = str(self.cfg.get("ngonNgu") or "vi").strip().lower()
+        giong_id = str(self.cfg.get("vieneu_voice_id") or self.cfg.get("giong") or "")
+        is_microsoft_voice = "Neural" in giong_id or ("-" in giong_id and len(giong_id) > 10)
+
+        # 1. Khi chọn giọng quốc tế / Edge TTS HOẶC khi đọc ngôn ngữ dịch (Anh, Trung, Đức, Thái...)
+        if is_microsoft_voice or (ngon_ngu and ngon_ngu != "vi"):
+            try:
+                from src.core.da_ngon_ngu_tts import tong_hop_da_ngu_native
+                # Nếu không chọn ngôn ngữ đích cụ thể, tự suy ra từ ID giọng (vd: zh-CN -> zh, th-TH -> th)
+                ngon_ngu_that = giong_id.split("-")[0].lower() if (ngon_ngu == "vi" and is_microsoft_voice) else ngon_ngu
+                audio = tong_hop_da_ngu_native(text, lang=ngon_ngu_that, voice_hint=giong_id, khuech_dai=khuech_dai)
+                if audio:
+                    return audio, "wav"
+            except Exception:
+                pass
+
+        # 2. Mặc định đọc tiếng Việt bằng mô hình VieNeu-TTS Turbo nội địa
         style = PHONG_CACH.get(self.cfg.get("phong_cach", ""), {}).get("style", "")
-        audio = tong_hop_vieneu(text, self.cfg.get("vieneu_voice_id", ""), style,
-                                khuech_dai=khuech_dai)
+        audio = tong_hop_vieneu(text, giong_id, style, khuech_dai=khuech_dai)
         return audio, "wav"
 
     def prefetch(self, key, text, khuech_dai: float = 1.0):
         if key in self._cache or not text:
             return
+        # Kiểm tra trước kho RAM & đĩa để không nạp trùng
+        kho_key = self._khoa_kho(text, khuech_dai)
+        with self._khoa_kho_lock:
+            if kho_key in self._kho:
+                return
+        ma_bam = self._ma_bam_kho(text, khuech_dai)
+        if (self._thu_muc_cache_dia() / f"{ma_bam}.wav").exists():
+            return
         self._cache[key] = self._pool.submit(self._synth_blocking, text, khuech_dai)
 
-    # Kho âm thanh đã tổng hợp, tra theo NỘI DUNG. Xem giải thích ở get_audio.
-    # 250 MB ≈ 43 phút tiếng — thừa sức chứa vài chục tài liệu thường gặp, mà
-    # vẫn nhỏ so với RAM máy phổ thông.
-    KHO_TOI_DA_BYTE = 250 * 1024 * 1024
+    # Kho âm thanh đã tổng hợp, tra theo NỘI DUNG.
+    # Thu gọn trần RAM Cache xuống 48 MB (đủ cho 8-10 phút âm thanh gần nhất),
+    # kết hợp Persistent Fast Disk Cache (SHA-256) trên SSD để giải phóng tối đa RAM.
+    KHO_TOI_DA_BYTE = 48 * 1024 * 1024        # RAM Cache: 48 MB
+    KHO_DIA_TOI_DA_BYTE = 150 * 1024 * 1024   # Disk Cache trần: 150 MB
+    KHO_DIA_NGUONG_DON_BYTE = 100 * 1024 * 1024 # Disk Cache sau khi dọn: 100 MB
+    CACHE_TTL_GIAY = 7 * 86400                # Thời gian sống tối đa: 7 ngày
+
+    @staticmethod
+    def _thu_muc_cache_dia() -> Path:
+        """Thư mục lưu cache âm thanh vĩnh viễn trên đĩa."""
+        p = Path.home() / "Documents" / "GiongViet" / ".cache_am_thanh"
+        try:
+            p.mkdir(parents=True, exist_ok=True)
+        except Exception:
+            pass
+        return p
+
+    @classmethod
+    def thong_tin_cache_dia(cls) -> dict:
+        """Thống kê dung lượng và số lượng tệp cache hiện tại trên đĩa."""
+        tm = cls._thu_muc_cache_dia()
+        tong_bytes = 0
+        so_tep = 0
+        try:
+            if tm.exists():
+                for f in tm.glob("*.wav"):
+                    try:
+                        tong_bytes += f.stat().st_size
+                        so_tep += 1
+                    except Exception:
+                        pass
+        except Exception:
+            pass
+        return {
+            "dungLuongByte": tong_bytes,
+            "dungLuongMB": round(tong_bytes / (1024 * 1024), 2),
+            "soTep": so_tep,
+            "gioiHanMB": round(cls.KHO_DIA_TOI_DA_BYTE / (1024 * 1024), 0),
+        }
+
+    @classmethod
+    def thanh_loc_cache_dia(cls):
+        """Tự động thanh lọc cache đĩa theo nguyên tắc LRU (Least Recently Used) và TTL (7 ngày)."""
+        try:
+            tm = cls._thu_muc_cache_dia()
+            if not tm.exists():
+                return
+            now = time.time()
+            tep_ds = []
+            tong_dung_luong = 0
+            for p in tm.glob("*.wav"):
+                try:
+                    stat = p.stat()
+                    mtime = stat.st_mtime
+                    size = stat.st_size
+                    # 1. Xóa file quá hạn 7 ngày không dùng
+                    if now - mtime > cls.CACHE_TTL_GIAY:
+                        p.unlink(missing_ok=True)
+                        continue
+                    tep_ds.append((mtime, size, p))
+                    tong_dung_luong += size
+                except Exception:
+                    pass
+
+            # 2. Nếu tổng dung lượng vượt trần 150MB: xóa file cũ nhất (LRU) về 100MB
+            if tong_dung_luong > cls.KHO_DIA_TOI_DA_BYTE:
+                tep_ds.sort(key=lambda x: x[0])
+                for mtime, size, p in tep_ds:
+                    if tong_dung_luong <= cls.KHO_DIA_NGUONG_DON_BYTE:
+                        break
+                    try:
+                        p.unlink(missing_ok=True)
+                        tong_dung_luong -= size
+                    except Exception:
+                        pass
+        except Exception:
+            pass
 
     def _khoa_kho(self, text: str, khuech_dai: float):
-        return (self.cfg.get("vieneu_voice_id", ""), round(khuech_dai, 3), text)
+        """Khóa đặc trưng toàn diện: đảm bảo chỉ khi khớp 100% điều kiện mới dùng cache."""
+        lang = str(self.cfg.get("ngonNgu") or "vi").strip().lower()
+        voice_raw = str(self.cfg.get("vieneu_voice_id", "") or self.cfg.get("giong", "")).replace("Giọng ", "").strip()
+        try:
+            from src.core.da_ngon_ngu_tts import doan_gioi_tinh
+            gioi = doan_gioi_tinh(voice_raw)
+        except Exception:
+            gioi = "nu"
+        style = PHONG_CACH.get(self.cfg.get("phong_cach", ""), {}).get("style", "")
+        # ĐÃ XÓA `loc_am` KHỎI CACHE KEY (Tech-debt gốc): Bộ lọc âm (Tốc độ/Không gian) 
+        # được xử lý bởi ffplay lúc phát, không làm thay đổi sóng âm thô của AI Model.
+        ver = "v3"
+        s_text = (text or "").strip()
+        return (ver, lang, voice_raw.lower(), gioi, style, round(khuech_dai, 3), s_text)
+
+    def _ma_bam_kho(self, text: str, khuech_dai: float) -> str:
+        k = self._khoa_kho(text, khuech_dai)
+        chuoi = f"{k[0]}|{k[1]}|{k[2]}|{k[3]}|{k[4]}|{k[5]}|{k[6]}"
+        return hashlib.sha256(chuoi.encode("utf-8")).hexdigest()
 
     def get_audio(self, key, text, khuech_dai: float = 1.0):
         """Trả về (bytes, dinh_dang).
 
-        BA TẦNG, tra từ rẻ tới đắt:
+        BỐN TẦNG, tra từ rẻ tới đắt:
 
-          1. KHO theo nội dung — cùng một câu, cùng giọng, cùng khuếch đại thì
-             lấy lại bản cũ, mất vài mili giây.
-          2. Hàng đợi nạp trước (_cache) — mẩu đã hẹn tổng hợp sẵn.
-          3. Tổng hợp thật — chậm nhất, khoảng 4 lần thời lượng tiếng.
-
-        Vì sao cần tầng 1: trước đây `_cache.pop()` LẤY RA RỒI XOÁ, nên nó chỉ
-        là hàng đợi nạp trước chứ không phải kho. Nghe lại một đoạn vừa nghe,
-        hay bấm Xuất sau khi đã nghe cả bài, đều tổng hợp lại từ đầu - chủ dự
-        án bấm thử và nhận xét "đoạn dài quay quay lâu mới đọc" cùng "thời
-        gian xuất lâu". Cả hai là một gốc.
-
-        Kho tra theo NỘI DUNG chứ không theo số thứ tự đoạn: sửa một dòng giữa
-        bài thì các đoạn còn lại vẫn dùng lại được, chỉ dòng vừa sửa phải tổng
-        hợp mới. Đây cũng là thứ khiến nguồn động sau này dùng được - dữ liệu
-        đổi vài dòng thì chỉ đọc lại vài dòng.
+          1. KHO RAM (self._kho) — cùng một câu, cùng giọng: ~0.005 ms.
+          2. KHO ĐĨA (Persistent Disk Cache SHA-256): ~1 ms (khởi động lại vẫn còn).
+          3. Hàng đợi nạp trước (_cache) — mẩu đã hẹn tổng hợp sẵn.
+          4. Tổng hợp thật qua mô hình VieNeu-TTS.
         """
         kho_key = self._khoa_kho(text, khuech_dai)
         with self._khoa_kho_lock:
@@ -1662,6 +2175,26 @@ class Speaker:
             if san is not None:
                 self._kho.move_to_end(kho_key)
                 return san
+
+        # Tra kho đĩa
+        ma_bam = self._ma_bam_kho(text, khuech_dai)
+        tm_cache = self._thu_muc_cache_dia()
+        tep_cache = tm_cache / f"{ma_bam}.wav"
+        if tep_cache.exists():
+            try:
+                try:
+                    os.utime(tep_cache, None)
+                except Exception:
+                    pass
+                audio_dia = tep_cache.read_bytes()
+                if audio_dia:
+                    kq_dia = (audio_dia, "wav")
+                    with self._khoa_kho_lock:
+                        self._kho[kho_key] = kq_dia
+                        self._kho_byte += len(audio_dia)
+                    return kq_dia
+            except Exception:
+                pass
 
         fut = self._cache.pop(key, None)
         kq = None
@@ -1682,6 +2215,12 @@ class Speaker:
                 while self._kho_byte > self.KHO_TOI_DA_BYTE and len(self._kho) > 1:
                     _, cu = self._kho.popitem(last=False)
                     self._kho_byte -= len(cu[0]) if cu and cu[0] else 0
+            try:
+                if not tep_cache.exists():
+                    tep_cache.write_bytes(audio)
+                    threading.Thread(target=self.thanh_loc_cache_dia, daemon=True).start()
+            except Exception:
+                pass
         return kq
 
     def clear_cache(self):
@@ -1693,11 +2232,19 @@ class Speaker:
         """
         self._cache.clear()
 
-    def xoa_kho(self):
-        """Dọn sạch kho âm thanh. Chỉ dùng khi đổi giọng hoặc cần lấy lại RAM."""
+    def xoa_kho(self, xoa_dia: bool = True):
+        """Dọn sạch kho âm thanh (cả RAM và đĩa)."""
         with self._khoa_kho_lock:
             self._kho.clear()
             self._kho_byte = 0
+        if xoa_dia:
+            try:
+                tm = self._thu_muc_cache_dia()
+                if tm.exists():
+                    shutil.rmtree(tm, ignore_errors=True)
+                    tm.mkdir(parents=True, exist_ok=True)
+            except Exception:
+                pass
 
     def play(self, audio: bytes, stop_event: threading.Event,
              dinh_dang: str = "wav", loc: str = "") -> bool:
@@ -1736,7 +2283,6 @@ class Speaker:
         # CHẬM lại (probesize 32 thêm 122 ms, đi kèm nobuffer thêm 1365 ms) vì
         # ffplay phải dò lại định dạng.
         lenh = [str(self.cfg["ffplay"]), "-hide_banner", "-loglevel", "error",
-                "-fflags", "nobuffer",
                 "-nodisp", "-autoexit", "-vn", "-f", ff_fmt, "-i", "pipe:0"]
         if loc:
             lenh += ["-af", loc]
@@ -3656,7 +4202,9 @@ def main():
     # ffplay.exe TRƯỚC khi đóng gói, không cần mở giao diện.
     #     py DocCongDuc.py --tai-ffmpeg
     if len(sys.argv) > 1 and sys.argv[1] == "--tai-ffmpeg":
-        bin_dir = BASE_DIR / "ffmpeg" / "bin"
+        bin_dir = BASE_DIR / "bin" / "ffmpeg" / "bin"
+        if not (bin_dir / "ffplay.exe").exists() and (BASE_DIR / "ffmpeg" / "bin" / "ffplay.exe").exists():
+            bin_dir = BASE_DIR / "ffmpeg" / "bin"
         if (bin_dir / "ffplay.exe").exists():
             print(f"Đã có sẵn: {bin_dir / 'ffplay.exe'}")
             return
@@ -3689,7 +4237,7 @@ def main():
             if tai_tep_nhan_ban_giong(lambda m: print(f"  {m}")):
                 print("  Xong - máy này sẽ mở nhanh và nhân bản được khi "
                       "không có mạng.")
-            print(f"Xong. Mô hình đã lưu tại: {BASE_DIR / 'vieneu_models'}")
+            print(f"Xong. Mô hình đã lưu tại: {MODELS_DIR}")
         except Exception as e:
             print(f"[LỖI] {e}")
             sys.exit(1)
