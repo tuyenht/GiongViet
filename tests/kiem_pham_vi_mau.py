@@ -239,6 +239,11 @@ ok(not _thieu, "SpeakerGia co du moi thu ma Speaker that co", _thieu or "du")
 
 api._bo_doc.speaker = gia
 _C.CHO_NAP_TRUOC_GIAY = 0.15        # rut ngan cho bai kiem chay nhanh
+# Doc so mau nap truoc TU MA NGUON, dung neo cung. Bai nay tung neo cung so 1;
+# khi ma doi sang nap 2 mau mot luot thi ca BON phep duoi bao lech, trong khi
+# khong co gi hong - y nghia that cua bai la "khong nap trung LUOT", khong
+# phai "nap dung mot mau".
+_SO_MAU = getattr(_C, "SO_MAU_NAP_TRUOC", 2)
 
 
 def cho_nap():
@@ -256,7 +261,8 @@ try:
     api._nap_truoc_mau_dau()
     ok(not gia.da_goi, "HEN truoc, chua lam ngay")
     cho_nap()
-    ok(len(gia.da_goi) == 1, "het hen thi nap dung MOT mau", len(gia.da_goi))
+    ok(len(gia.da_goi) == _SO_MAU, f"het hen thi nap dung MOT luot ({_SO_MAU} mau)",
+       len(gia.da_goi))
     ok(gia.da_goi and gia.da_goi[0][0] == 0, "nap dung mau so 0 (mau se phat dau)")
     ok(gia.da_goi and gia.da_goi[0][1] == api._playlist[0]["text"],
        "nap dung noi dung cua mau dau")
@@ -267,20 +273,20 @@ try:
     for _ in range(5):
         api._nap_truoc_mau_dau()
     cho_nap()
-    ok(len(gia.da_goi) == 1, "doi tab 5 lan lien tay -> chi MOT luot tong hop",
+    ok(len(gia.da_goi) == _SO_MAU, "doi tab 5 lan lien tay -> chi MOT luot tong hop",
        len(gia.da_goi))
 
     # Doi giong xong phai nap lai: cap_nhat_cfg vua xoa sach cache.
     gia.da_goi.clear()
     api.doi_giong(api._cfg.get("vieneu_voice_id", "") or "thu")
     cho_nap()
-    ok(len(gia.da_goi) == 1, "doi giong -> nap truoc lai", len(gia.da_goi))
+    ok(len(gia.da_goi) == _SO_MAU, "doi giong -> nap truoc lai", len(gia.da_goi))
 
     # Mo hinh bao san sang giua chung cung phai bat lai nhip nay.
     gia.da_goi.clear()
     api._day_mo_hinh({"model": {"trangThai": "san_sang"}})
     cho_nap()
-    ok(len(gia.da_goi) == 1, "mo hinh san sang -> nap truoc", len(gia.da_goi))
+    ok(len(gia.da_goi) == _SO_MAU, "mo hinh san sang -> nap truoc", len(gia.da_goi))
 
     gia.da_goi.clear()
     api._day_mo_hinh({"model": {"trangThai": "dang_tai"}})

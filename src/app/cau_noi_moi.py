@@ -80,6 +80,12 @@ SO_LAN_NHO_TRE = 5
 # Nạp trước mẩu tiêu điểm siêu tốc (150ms) để khi bấm đọc là có tiếng ngay lập tức.
 CHO_NAP_TRUOC_GIAY = 0.15
 
+# Mỗi lượt nạp trước bao nhiêu mẩu. Mẩu đang đứng cộng một mẩu kế: bấm Phát là
+# có tiếng ngay, và trong lúc mẩu đầu đang kêu thì mẩu hai đã sẵn, không hụt hơi
+# giữa hai câu. Đặt tên thay vì viết thẳng số 2 vào vòng lặp để bài kiểm đọc
+# được nó — trước đây bài kiểm neo cứng số 1, đổi mã là nó báo lệch vô cớ.
+SO_MAU_NAP_TRUOC = 2
+
 
 def _la_tieu_de(dong: str) -> bool:
     d = dong.strip()
@@ -239,7 +245,7 @@ class ApiMoi(Api):
         if p_idx < len(self._playlist):
             from src.core.bo_doc import _dam_bao_da_dich
             cfg_spk = speaker.cfg if speaker else self._cfg
-            for i in range(p_idx, min(p_idx + 2, len(self._playlist))):
+            for i in range(p_idx, min(p_idx + SO_MAU_NAP_TRUOC, len(self._playlist))):
                 seg = self._playlist[i]
                 _dam_bao_da_dich(seg, cfg_spk)
                 try:
