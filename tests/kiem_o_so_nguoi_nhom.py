@@ -142,6 +142,48 @@ print(f"      lop cha tu goi _dung_lai_playlist {_goi_cha} lan - de mat la "
 ok(_goi_cha > 0, "lop cha that su van dung phuong thuc do", _goi_cha)
 print(f"      ApiMoi ghi de co y {len(_de)} ten: {_de}")
 
+print("\n=== I. Nhanh khoa SO khong duoc nuot khoa SO THUC ===")
+# Vap that: ban dau quet ca THANH_TRUOT roi int() moi thu, nen bon khoa thoi
+# gian cung roi vao nhanh nay va bi CAT CUT - nghi_cau = 0,9 giay ghi xuong
+# thanh 0. Duong chinh cac khoang nghi la dat_thong_so, khong phai ham nay.
+# GOI HAM THAT cua ban chay. Ban truoc bai nay tu tinh lai _so bang logic
+# rieng - tuc no kiem chinh no. Da thu dat nguoc loi vao ma bai VAN XANH,
+# nen moi tach khoa_so_nguyen() ra muc module de goi duoc tu day.
+from giaodien_moi import cau_noi_moi as _cnm
+_so = _cnm.khoa_so_nguyen()
+if _ham:
+    _than_h = ast.get_source_segment(_nguon, _ham) or ""
+    ok("khoa_so_nguyen()" in _than_h,
+       "moi_dat_cai_dat lay danh sach khoa tu khoa_so_nguyen(), khong tu quet")
+_thoi_gian = [k for k in ("nghi_nguoi", "nghi_nhom", "nghi_cau", "nghi_doan_vb")
+              if k in _so]
+ok(not _thoi_gian, "bon khoa thoi gian KHONG lot vao nhanh so nguyen",
+   _thoi_gian or "khong cai nao")
+ok(set(_so) == {"so_nguoi_nhom", "so_ky_tu"},
+   "dung hai khoa so nguyen duoc nhan", sorted(_so))
+
+print("\n=== J. Doi mot cong tac KHONG duoc bien danh sach thanh van ban ===")
+# Vap that: nhanh boolean goi moi_dat_doan, ma ham do dat _loai_tai_lieu =
+# "vanban" roi xoa _records. Dang mo danh sach cong duc ma gat mot cong tac la
+# tai lieu AM THAM bien thanh van ban thuong - mat nhom, mat loi dan, va chinh
+# hai muc cua cong duc bien khoi man hinh nguoi dung dang dung.
+#
+# Phep nay soi LOI GOI that bang AST chu khong tim chuoi: chu thich trong ham
+# co nhac ten moi_dat_doan, tim bang chuoi la bao nham ngay - da bao nham that.
+_goi_that = ([n.func.attr for n in ast.walk(_ham)
+              if isinstance(n, ast.Call) and isinstance(n.func, ast.Attribute)]
+             if _ham else [])
+ok("moi_dat_doan" not in _goi_that,
+   "moi_dat_cai_dat KHONG goi moi_dat_doan", sorted(set(_goi_that)))
+ok("_dung_lai_playlist_moi" in _goi_that,
+   "dung duong re nhanh theo loai tai lieu")
+
+_mdd = next((n for n in ast.walk(_cay) if isinstance(n, ast.FunctionDef)
+             and n.name == "moi_dat_doan"), None)
+_than_mdd = (ast.get_source_segment(_nguon, _mdd) or "") if _mdd else ""
+ok('self._loai_tai_lieu = "vanban"' in _than_mdd,
+   "moi_dat_doan VAN dat loai = vanban (ly do khong duoc goi no o tren)")
+
 print("\n=== H. Engine that su dung con so nay ===")
 _eng = (GOC / "DocCongDuc.py").read_text(encoding="utf-8")
 ok('cfg["so_nguoi_nhom"]' in _eng,

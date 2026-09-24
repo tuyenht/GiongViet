@@ -114,6 +114,26 @@ def van_ban_thanh_doan(text: str) -> list:
     return doan
 
 
+def khoa_so_nguyen():
+    """Nhung khoa ma moi_dat_cai_dat nhan nhu SO NGUYEN -> (nho nhat, lon nhat).
+
+    De o MUC MODULE chu khong chon trong than phuong thuc, de bai kiem goi
+    duoc THAT. Ban truoc chon trong than ham nen bai kiem phai tu tinh lai
+    bang logic rieng - tuc no kiem chinh no, khong bao gio do duoc du ma that
+    hong. Da thu dat nguoc loi vao va bai van xanh, nen moi tach ra.
+
+    Loc theo KIEU cua can: bon khoa thoi gian trong THANH_TRUOT co can la so
+    thuc. Nhan ca chung roi int() la CAT CUT - nghi_cau = 0,9 giay ghi xuong
+    thanh 0. Duong chinh cac khoang nghi la dat_thong_so, khong phai duong nay.
+    """
+    ket = {}
+    for _che_do, bang in du_lieu.THANH_TRUOT.items():
+        for k, _nhan, nho, lon, _dv, _gy in bang:
+            if isinstance(nho, int) and isinstance(lon, int):
+                ket.setdefault(k, (nho, lon))
+    return ket
+
+
 class ApiMoi(Api):
     def __init__(self, vung_lam_viec=(0, 0, 1280, 800)):
         # CỐ Ý KHÔNG khoá đường ghi ở đây nữa (2026-08-13).
@@ -1329,10 +1349,7 @@ class ApiMoi(Api):
         # Khóa SỐ: phạm vi lấy từ du_lieu.THANH_TRUOT chứ không gõ lại ở đây.
         # Kẹp hai đầu trước khi ghi: giá trị tới từ trình duyệt, tin thẳng là có ngày
         # so_nguoi_nhom = 0 rồi `stt % 0` ném ZeroDivisionError giữa lúc đang đọc.
-        so_nguyen = {}
-        for che_do, bang in du_lieu.THANH_TRUOT.items():
-            for k, _nhan, nho, lon, _dv, _gy in bang:
-                so_nguyen.setdefault(k, (int(nho), int(lon)))
+        so_nguyen = khoa_so_nguyen()
 
         if khoa in so_nguyen:
             nho, lon = so_nguyen[khoa]
@@ -1359,8 +1376,12 @@ class ApiMoi(Api):
         self._cfg[khoa] = moi
         engine.save_config(self._cfg)
         self._bo_doc.cap_nhat_cfg(self._cfg)
-        if self._doan:
-            self.moi_dat_doan(self._doan)      # cách đọc đổi -> dựng lại
+        # KHÔNG gọi moi_dat_doan ở đây. Hàm đó đặt _loai_tai_lieu = "vanban" và
+        # xóa _records, nên đang mở một danh sách công đức mà gạt một công tắc
+        # trong màn Cài đặt là tài liệu ÂM THẦM biến thành văn bản thường:
+        # mất nhóm, mất lời dẫn, và chính hai mục của công đức biến khỏi màn
+        # hình họ đang đứng. _dung_lai_playlist_moi() rẽ nhánh đúng loại.
+        self._dung_lai_playlist_moi()
         return self.moi_cai_dat()
 
     def moi_chon_thu_muc_xuat(self):
