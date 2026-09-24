@@ -244,13 +244,13 @@ def danh_sach_giong(ds: list) -> list:
                     gioi_phan, dac_trung = chi_tiet.split(" - ", 1)
                     gioi_str = "Nam" if "nam" in gioi_phan.lower() else ("Nữ" if ("nữ" in gioi_phan.lower() or "nu" in gioi_phan.lower()) else "")
                     ten = f"{ten_goc} ({gioi_str})" if gioi_str else ten_goc
-                    mo_ta = f"{dac_trung} · 28+ thứ tiếng (cần mạng) · Nhân bản"
+                    mo_ta = f"{dac_trung} · Nhân bản · ngoại ngữ đọc bằng giọng mẫu (cần mạng)"
                 else:
                     ten = raw_ten
-                    mo_ta = "Giọng riêng · 28+ thứ tiếng (cần mạng)"
+                    mo_ta = "Giọng riêng · ngoại ngữ đọc bằng giọng mẫu (cần mạng)"
             else:
                 ten = re.sub(r"🎙️|\(giọng riêng[^)]*\)", "", raw_ten).strip()
-                mo_ta = "Giọng riêng · 28+ thứ tiếng (cần mạng)"
+                mo_ta = "Giọng riêng · ngoại ngữ đọc bằng giọng mẫu (cần mạng)"
         else:
             ten, mo_ta = _tach_nhan_giong(nhan)
 

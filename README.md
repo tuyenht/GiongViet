@@ -10,6 +10,7 @@
 
 > **Hai tính năng CẦN MẠNG** — phần còn lại chạy offline:
 > - **Đọc ngoại ngữ (28+ thứ tiếng)** dùng dịch vụ giọng đọc của Microsoft. Câu văn được gửi tới máy chủ `speech.platform.bing.com` để tổng hợp, nên cần Internet và văn bản có rời khỏi máy. Đọc tiếng Việt thì không.
+>   Và xin nói rõ: phần ngoại ngữ **chưa dùng chất giọng bạn nhân bản** — nó đọc bằng giọng mẫu sẵn có. Giọng riêng của bạn chỉ dùng cho tiếng Việt, và phần đó chạy hoàn toàn trên máy.
 > - **Dịch thuật song ngữ** gọi dịch vụ dịch trực tuyến. Mất mạng thì câu giữ nguyên văn gốc.
 >
 > Nếu bạn đọc danh sách có tên và số tiền của người khác, hãy cân nhắc điều này trước khi bật đọc ngoại ngữ.
