@@ -252,6 +252,14 @@ def cho_nap():
 
 that = api._bo_mo_hinh.san_sang
 try:
+    # Huy moi lan hen con treo tu cac phan tren, cho no troi qua, roi moi xoa
+    # so. Timer 0.15s cua phan truoc ban muon se lot vao phep dau tien o duoi
+    # va lam no bao lech vo co - do duoc: chay lien ba lan ra 0, 3, 4 cho lech
+    # khac nhau trong khi ma nguon khong doi mot dong.
+    api._huy_hen_nap_truoc()
+    cho_nap()
+    gia.da_goi.clear()
+
     api._bo_mo_hinh.san_sang = False
     api._nap_truoc_mau_dau()
     cho_nap()
