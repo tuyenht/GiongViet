@@ -158,7 +158,13 @@ ok(_d3 > 0, "mac dinh dung la 20", f"DocCongDuc.py:{_d3}")
 print("\n  [3] giaodien/du_lieu.py:126-134 — cho DUY NHAT bay khoa nay ra")
 print(_dong("giaodien/du_lieu.py", 126, 134))
 nguon_dl = _tep_that("giaodien/du_lieu.py").read_text(encoding="utf-8").splitlines()
-ok('"so_nguoi_nhom"' in nguon_dl[131], "dong 132 nam trong bang THANH_TRUOT")
+# Neo theo NOI DUNG, khong theo so dong - thanh vien thu tu cua ho loi da
+# vap o cac phep [1] va [2] ben tren. Bang THANH_TRUOT dai ra hay ngan di
+# la chi so 131 tro nham dong khac, roi bai bao lech trong khi ma khong sai.
+_d4 = next((k + 1 for k, dong in enumerate(nguon_dl)
+           if '"so_nguoi_nhom"' in dong), 0)
+ok(_d4 > 0, "khoa so_nguoi_nhom nam trong bang THANH_TRUOT",
+   f"du_lieu.py:{_d4}")
 
 print("\n  [4] giaodien/du_lieu.py:156 va :173 — hai cho doc bang THANH_TRUOT")
 print(_dong("giaodien/du_lieu.py", 154, 156))
