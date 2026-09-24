@@ -29,7 +29,7 @@ import webview
 
 import DocCongDuc as engine
 
-from giaodien import cai_dat, he_thong, nhat_ky, thu_vien_giong, tu_dien
+from giaodien import cai_dat, du_lieu, he_thong, nhat_ky, thu_vien_giong, tu_dien
 from giaodien_moi import (am_thanh_loc, ho_so_v2, khoa_du_lieu, luu_tep,
                           so_dien_thoai, soat_moi, xuat_moi)
 from giaodien.cau_noi import Api
@@ -160,6 +160,42 @@ class ApiMoi(Api):
         self._bo_mo_hinh.bat_dau()
 
     # ------------------------------------------------------------ nạp nội dung
+
+    def _dung_lai_playlist_moi(self):
+        """Dựng lại playlist theo loại tài liệu đang mở, giữ nguyên nội dung.
+
+        TÊN PHẢI CÓ ĐUÔI _moi. Lớp cha Api đã có _dung_lai_playlist(giu_vi_tri=False)
+        và MƯỜI MỘT chỗ trong cau_noi.py gọi nó. Đặt trùng tên là đè mất: năm
+        phương thức kế thừa (doi_phong_cach, dat_cai_dat, them_tu, sua_tu, xoa_tu)
+        chết ngay với TypeError vì chúng truyền giu_vi_tri=True. Đã vấp thật -
+        tests/kiem_bam_loan.py bắt được.
+
+        Bản của cha dùng self._che_do và ĐỌC LẠI cfg["data_file"] từ đĩa - mô hình
+        một tài liệu của bản cũ. Bản mới mở nhiều tab, nội dung nằm sẵn trong
+        _records/_doan, nên phải có đường riêng chứ không dùng chung được.
+
+        Chỗ nghỉ dài được chèn NGAY LÚC dựng playlist chứ không phải lúc phát,
+        nên đổi một thiết lập nhịp đọc mà không dựng lại thì người dùng phải
+        đóng rồi mở lại tệp mới thấy tác dụng - mà họ sẽ không đoán ra điều đó.
+
+        KHÔNG dùng moi_dat_doan cho danh sách công đức: hàm ấy đặt
+        _loai_tai_lieu = "vanban" và xóa _records, tức biến danh sách thành văn
+        bản thường ngay sau khi người dùng đổi một con số.
+        """
+        if self._loai_tai_lieu == "congduc" and self._records:
+            self._bo_doc.dung()
+            self._trong_so_cache.clear()
+            self._moc_phat = None
+            self._playlist = engine.build_playlist_congduc(
+                self._records, self._noidung, self._cfg, self._tudien)
+            self._doan_cua_mau = list(range(1, len(self._playlist) + 1))
+            self._doan = [{"kieu": self._kieu_doan(s), "chu": self._chu_doan(s)}
+                          for s in self._playlist]
+            self._bo_doc.dat_playlist(self._playlist, self._cfg)
+            self._nghe_rieng = False
+            self._nap_truoc_mau_dau()
+        elif self._doan:
+            self.moi_dat_doan(self._doan)
 
     def moi_dat_doan(self, doan):
         """Giao diện gửi sang mảng đoạn: [{kieu, chu}, ...], đếm từ 1.
@@ -1268,11 +1304,19 @@ class ApiMoi(Api):
     def moi_cai_dat(self):
         """Màn hình 6.
 
-        Truyền loại "vanban" chứ không để rỗng: cai_dat.du_lieu sẽ lọc bỏ
-        `nhan_manh_tien` - thiết lập ấy chỉ có nghĩa với danh sách công đức,
-        mà bản mới chưa có chế độ đó. Bày ra là một công tắc bấm không đổi gì.
+        Truyền ĐÚNG loại tài liệu đang mở để cai_dat.du_lieu lọc nhóm "Cách
+        đọc" cho khớp: mỗi thiết lập trong đó thuộc về MỘT loại hồ sơ, bày mục
+        của loại khác ra là bẫy - người dùng đổi nó rồi không thấy gì xảy ra.
+
+        Bản trước gõ cứng "vanban" kèm lý do "bản mới chưa có chế độ công
+        đức". Lý do đó ĐÃ SAI: moi_mo_tep đặt self._loai_tai_lieu = "congduc"
+        rồi gọi thẳng engine.build_playlist_congduc. Hậu quả đo được: mở một
+        danh sách công đức thì hai thiết lập của chính nó - "Nhấn mạnh dòng có
+        số lớn" và "Số người mỗi nhóm" - bị ẩn mất, trong khi engine vẫn đang
+        dùng chúng để quyết định chỗ nghỉ dài.
         """
-        return cai_dat.du_lieu(self._cfg, self._tuy_chon, "vanban", "")
+        return cai_dat.du_lieu(self._cfg, self._tuy_chon,
+                               self._loai_tai_lieu or "vanban", "")
 
     def moi_dat_cai_dat(self, khoa, gia_tri):
         """Đổi một thiết lập rồi trả bảng đã cập nhật.
@@ -1281,7 +1325,32 @@ class ApiMoi(Api):
         giữ trong hoso-v2.json - gửi sang đây nữa là hai nơi cùng nhớ một thứ,
         và có ngày chúng lệch nhau.
         """
-        cho_phep = {"doc_so_bang_chu", "bo_markdown"}
+        cho_phep = {"doc_so_bang_chu", "bo_markdown", "nhan_manh_tien"}
+        # Khóa SỐ: phạm vi lấy từ du_lieu.THANH_TRUOT chứ không gõ lại ở đây.
+        # Kẹp hai đầu trước khi ghi: giá trị tới từ trình duyệt, tin thẳng là có ngày
+        # so_nguoi_nhom = 0 rồi `stt % 0` ném ZeroDivisionError giữa lúc đang đọc.
+        so_nguyen = {}
+        for che_do, bang in du_lieu.THANH_TRUOT.items():
+            for k, _nhan, nho, lon, _dv, _gy in bang:
+                so_nguyen.setdefault(k, (int(nho), int(lon)))
+
+        if khoa in so_nguyen:
+            nho, lon = so_nguyen[khoa]
+            try:
+                moi = max(nho, min(lon, int(float(gia_tri))))
+            except (TypeError, ValueError):
+                return None
+            if moi == self._cfg.get(khoa):
+                return self.moi_cai_dat()
+            self._cfg[khoa] = moi
+            engine.save_config(self._cfg)
+            self._bo_doc.cap_nhat_cfg(self._cfg)
+            # Dựng lại playlist: số này quyết định chỗ chèn nghỉ dài, mà chỗ nghỉ
+            # được chèn ngay lúc DỰNG playlist chứ không phải lúc phát. Không dựng
+            # lại thì đổi xong phải đóng mở lại tệp mới thấy tác dụng.
+            self._dung_lai_playlist_moi()
+            return self.moi_cai_dat()
+
         if khoa not in cho_phep:
             return None
         moi = bool(gia_tri)

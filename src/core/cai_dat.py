@@ -57,6 +57,27 @@ def _cong_tac(khoa, nhan, goi_y, bat) -> dict:
             "goiY": goi_y, "bat": bool(bat)}
 
 
+def _so_nguyen(khoa, che_do, gia_tri, mac_dinh) -> dict:
+    """Một mục chỉnh SỐ, lấy nhãn/phạm vi từ du_lieu.THANH_TRUOT.
+
+    KHÔNG gõ lại nhãn và phạm vi ở đây. Bảng THANH_TRUOT đã là nơi khai báo
+    duy nhất; chép sang đây là hai chỗ cùng nhớ một thứ, rồi có ngày màn Cài
+    đặt cho kéo tới 50 trong khi engine chặn ở 30 mà không ai hay.
+    """
+    from . import du_lieu
+    for k, nhan, nho, lon, don_vi, goi_y in du_lieu.THANH_TRUOT.get(che_do, []):
+        if k != khoa:
+            continue
+        try:
+            v = int(float(gia_tri))
+        except (TypeError, ValueError):
+            v = mac_dinh
+        return {"kieu": "songuyen", "khoa": khoa, "nhan": nhan, "goiY": goi_y,
+                "giaTri": max(int(nho), min(int(lon), v)),
+                "nhoNhat": int(nho), "lonNhat": int(lon), "donVi": don_vi}
+    return {}
+
+
 def _chu(nhan, goi_y, gia_tri) -> dict:
     return {"kieu": "chu", "nhan": nhan, "goiY": goi_y, "giaTri": gia_tri}
 
@@ -110,6 +131,12 @@ def du_lieu(cfg: dict, tuy_chon: dict, loai_ho_so: str = "",
                           "Nhóm có số lớn nhất trong danh sách được đọc to hơn "
                           "một chút và nghỉ lâu hơn sau đó.",
                           cfg.get("nhan_manh_tien")),
+                # Số này chi phối nhịp đọc THẬT (DocCongDuc.py: cứ bao nhiêu
+                # tên thì nghỉ dài một lần) nhưng trước giờ không màn nào đặt
+                # được - hồ sơ vẫn cất nó, người dùng vẫn chịu. Bài đo:
+                # tests/kiem_so_nguoi_nhom.py
+                _so_nguyen("so_nguoi_nhom", "congduc",
+                           cfg.get("so_nguoi_nhom"), 20),
             ],
         },
         {
@@ -149,6 +176,11 @@ def du_lieu(cfg: dict, tuy_chon: dict, loai_ho_so: str = "",
     # đổi không có chỗ cất, chuyển sang hồ sơ văn bản thì nó bật lại - tưởng
     # chương trình không nghe lời. Đo được thật, nên chỉ hiện đúng mục hợp
     # với hồ sơ đang mở.
+    # _so_nguyen trả {} nếu khóa không có trong THANH_TRUOT. Bỏ trước khi lọc,
+    # không thì khi loai_ho_so rỗng nó lọt ra giao diện thành một dòng trống.
+    for n in nhom:
+        n["muc"] = [m for m in n["muc"] if m]
+
     if loai_ho_so:
         from . import ho_so
         cho_phep = set(ho_so.khoa_cua(loai_ho_so))

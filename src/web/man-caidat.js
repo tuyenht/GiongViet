@@ -176,6 +176,23 @@ function veMucCaiDat(m) {
           >${m.bat ? '✓ Đang bật' : '× Đang tắt'}</button>
       </div></div>`;
   }
+  /* SỐ chỉnh bằng hai nút − / + chứ không phải thanh trượt hay ô gõ. Người
+     dùng của chương trình này phần lớn lớn tuổi: kéo trượt cần giữ chuột đúng
+     một rãnh hẹp, còn ô gõ thì gõ vào rồi quên Enter là mất. Hai nút bấm to
+     không hỏng được kiểu nào. */
+  if (m.kieu === 'songuyen') {
+    const v = Number(m.giaTri);
+    const lui = Math.max(m.nhoNhat, v - 1);
+    const toi = Math.min(m.lonNhat, v + 1);
+    return `<div class="caidat__muc">${nhan}
+      <div class="caidat__dieu caidat__so">
+        <button class="nut nut--vien" data-cdso="${esc(m.khoa)}" data-cdgt="${lui}"
+                ${v <= m.nhoNhat ? 'disabled' : ''} title="Bớt một">−</button>
+        <span class="caidat__gt">${v} ${esc(m.donVi === 'nguoi' ? 'người' : '')}</span>
+        <button class="nut nut--vien" data-cdso="${esc(m.khoa)}" data-cdgt="${toi}"
+                ${v >= m.lonNhat ? 'disabled' : ''} title="Thêm một">+</button>
+      </div></div>`;
+  }
   if (m.kieu === 'duongdan') {
     // Chỉ thư mục xuất mới đổi được; tệp danh sách thuộc chế độ công đức mà
     // bản mới chưa có, nên hiện dạng chữ chứ không bày nút.

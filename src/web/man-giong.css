@@ -202,6 +202,19 @@
   font-size: 13px; color: var(--txt2); max-width: 420px;
   word-break: break-all;
 }
+/* Ô chỉnh số: hai nút − / + kỹp lấy con số. Nút 34px và số cỡ 16px vì
+   người dùng phần lớn lớn tuổi; số căn giữa và cố định 92px để hai nút
+   không nhảy chỗ khi đổi từ "9 người" sang "10 người". */
+.caidat__so { gap: 10px; }
+.caidat__so .nut {
+  min-width: 34px; height: 34px; padding: 0; font-size: 18px; line-height: 1;
+}
+.caidat__so .nut[disabled] { opacity: .4; cursor: default; }
+.caidat__so .caidat__gt {
+  min-width: 92px; text-align: center; font-size: 16px; color: var(--txt);
+  word-break: normal;
+}
+
 .caidat kbd {
   font: inherit; font-size: 12.5px; padding: 2px 8px; border-radius: 4px;
   background: var(--chip-bg); border: 1px solid var(--stroke2); color: var(--txt2);

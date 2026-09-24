@@ -3380,6 +3380,9 @@ document.addEventListener('click', async (e) => {
   if ((n = t('[data-cdzoom]')))   return dat({ ...S, zoom: +n.dataset.cdzoom });
   if ((n = t('[data-cdcongtac]'))) return datCaiDat(n.dataset.cdcongtac,
                                                     n.dataset.cdbat === '1');
+  // Khóa SỐ: gửi thẳng giá trị mới. Python kẹp lại hai đầu theo THANH_TRUOT,
+  // ở đây không kẹp nữa - hai nơi cùng giữ một phạm vi là có ngày lệch.
+  if ((n = t('[data-cdso]'))) return datCaiDat(n.dataset.cdso, +n.dataset.cdgt);
   if (t('[data-cdthumuc]'))     return doiThuMucXuat();
   if (t('[data-tudienmoi]'))    return dat({ ...S, tuDienSua: { tuCu: '', tu: '', doc: '' } });
   if (t('[data-tudienhuy]'))    return dat({ ...S, tuDienSua: null });
