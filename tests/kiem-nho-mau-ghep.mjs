@@ -97,5 +97,82 @@ for (const xau of [null, undefined, {}, { maus: 'khong phai mang' }]) {
 ok(true, 'bốn kiểu bản lưu hỏng đều về bản mặc định');
 ok(M.vbgCanLuu(null) === null, 'không có gì để lưu thì trả null, không dựng rác');
 
+
+/* ------------------------------------------------------------------------
+   F. TRÁO CẤU HÌNH KHI ĐỔI HỒ SƠ
+
+   Vòng trước bài này chỉ kiểm hai hàm tuần tự hoá (vbgCanLuu / vbgTuDaLuu),
+   trong khi BỐN hàm thật sự nối vào mã chạy — vbgGhiNho, vbgDoiSang, vbgDeLuu,
+   vbgNapTuHoSo — không có phép nào. Đó mới là mấy hàm chạm trạng thái thật.
+
+   Điều phải chứng minh: link Sheet của hồ sơ này KHÔNG được rò sang hồ sơ kia.
+   Đúng buổi lễ ở chùa, đổi hồ sơ mà mẫu ghép vẫn của hồ sơ cũ thì máy đọc nhầm
+   danh sách.                                                              */
+console.log('\n--- F. Tráo cấu hình khi đổi hồ sơ ---');
+
+const LINK_A = 'https://docs.google.com/spreadsheets/d/CHUA-A/edit';
+const LINK_B = 'https://docs.google.com/spreadsheets/d/CHUA-B/edit';
+
+// Hồ sơ 0: đặt link A
+M.vbgDoiSang(0);
+const d0 = M.vbgHienTai();
+d0.maus[d0.mauHienTai].srcVal = LINK_A;
+ok(M.vbgHienTai().maus[M.vbgHienTai().mauHienTai].srcVal === LINK_A,
+   'đặt link cho hồ sơ 0');
+
+// Chuyển sang hồ sơ 1 — phải là bản KHÁC, chưa có link A
+M.vbgGhiNho(0);
+M.vbgDoiSang(1);
+const d1 = M.vbgHienTai();
+ok(d1 !== d0, 'đổi hồ sơ thì duLieuVBG trỏ sang bản khác hẳn');
+ok(d1.maus[d1.mauHienTai].srcVal !== LINK_A,
+   'link của hồ sơ 0 KHÔNG rò sang hồ sơ 1',
+   d1.maus[d1.mauHienTai].srcVal.slice(-18));
+
+// Đặt link B cho hồ sơ 1 rồi quay lại hồ sơ 0
+d1.maus[d1.mauHienTai].srcVal = LINK_B;
+M.vbgGhiNho(1);
+M.vbgDoiSang(0);
+ok(M.vbgHienTai().maus[M.vbgHienTai().mauHienTai].srcVal === LINK_A,
+   'quay lại hồ sơ 0 thì link A còn nguyên');
+
+// vbgDeLuu lấy đúng bản của từng hồ sơ, kể cả hồ sơ KHÔNG đang mở
+const luu0 = M.vbgDeLuu(0, 0);
+const luu1 = M.vbgDeLuu(1, 0);
+ok(luu0.maus.find((m) => m.srcVal === LINK_A), 'lưu hồ sơ 0 ra đúng link A');
+ok(luu1 && luu1.maus.find((m) => m.srcVal === LINK_B),
+   'lưu hồ sơ 1 ra đúng link B dù nó KHÔNG phải hồ sơ đang mở');
+ok(M.vbgDeLuu(5, 0) === null, 'hồ sơ chưa đụng tới thì trả null, không dựng rác');
+
+/* ------------------------------------------------------------------------
+   G. DỰNG LẠI KHO TỪ HỒ SƠ ĐÃ LƯU (lúc khởi động)                        */
+console.log('\n--- G. Dựng lại kho lúc khởi động ---');
+
+const dsHoSo = [
+  { ma: 'a', ten: 'Chùa A', vanBanGhep: luu0 },
+  { ma: 'b', ten: 'Chùa B', vanBanGhep: luu1 },
+  { ma: 'c', ten: 'Chưa dùng' },                 // không có mẫu ghép
+];
+M.vbgNapTuHoSo(dsHoSo, 1);
+ok(M.vbgHienTai().maus.find((m) => m.srcVal === LINK_B),
+   'khởi động ở hồ sơ 1 thì mở ra đúng mẫu ghép của nó');
+
+M.vbgDoiSang(0);
+ok(M.vbgHienTai().maus.find((m) => m.srcVal === LINK_A),
+   'chuyển sang hồ sơ 0 vẫn đúng mẫu ghép của nó');
+
+M.vbgDoiSang(2);
+const d2 = M.vbgHienTai();
+ok(!d2.maus.some((m) => m.srcVal === LINK_A || m.srcVal === LINK_B),
+   'hồ sơ chưa có mẫu ghép thì nhận bản mặc định, không mượn của ai');
+ok(Array.isArray(d2.maus) && d2.maus.length > 0,
+   'và bản mặc định ấy dựng được, không rỗng');
+
+// Danh sách hồ sơ rỗng / hỏng thì không được ném lỗi
+M.vbgNapTuHoSo(null, 0);
+M.vbgNapTuHoSo([], 0);
+M.vbgNapTuHoSo([{ ten: 'không có mẫu ghép' }], 0);
+ok(true, 'danh sách hồ sơ rỗng hoặc thiếu khoá đều không ném lỗi');
+
 console.log(loi ? `\nĐỎ — ${loi} chỗ lệch` : '\nXANH — mẫu ghép nhớ được qua lần đóng cửa sổ');
 process.exit(loi ? 1 : 0);

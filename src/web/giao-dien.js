@@ -5123,7 +5123,7 @@ async function napHoSoDaLuu() {
      that - va neu nguoi dung kip bam "Dong bo Live" trong nhip do thi no keo ve
      GOOGLE_SHEET_MAC_DINH chu khong phai Sheet cua ho. */
   if (typeof vbgNapTuHoSo === 'function') {
-    vbgNapTuHoSo(d.hoSo, d.dangDung || 0);
+    vbgNapTuHoSo(d.hoSo, Math.min(d.dangDung || 0, d.hoSo.length - 1));
   }
 
   // Khôi phục nội dung các tab đã lưu (văn bản ghép, tab tự tạo)
@@ -5633,7 +5633,7 @@ async function khoiDong() {
            lai kho mau ghep o day nua - neu khong thi ban .exe that khong bao gio
            khoi phuc duoc, chi duong lui moi khoi phuc. */
         if (typeof vbgNapTuHoSo === 'function') {
-          vbgNapTuHoSo(d.hoSo, d.dangDung || 0);
+          vbgNapTuHoSo(d.hoSo, Math.min(d.dangDung || 0, d.hoSo.length - 1));
         }
         if (d.noiDung) {
           Object.keys(d.noiDung).forEach((ten) => {

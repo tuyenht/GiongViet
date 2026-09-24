@@ -456,6 +456,13 @@ function vbgDoiSang(iHoSo) {
   vbgTheoHoSo[iHoSo] = duLieuVBG;
 }
 
+/* Cửa sổ nhỏ để bài kiểm nhìn được duLieuVBG đang trỏ vào đâu. Mã chạy thật
+   không dùng hàm này — nó tồn tại chỉ để kiểm chứng việc TRÁO cấu hình khi
+   đổi hồ sơ có thật sự đổi được biến dùng chung hay không. */
+function vbgHienTai() {
+  return duLieuVBG;
+}
+
 /* Gọi lúc lưu hồ sơ: trả về mẫu ghép đã bỏ rows, của đúng một hồ sơ. */
 function vbgDeLuu(iHoSo, iDangMo) {
   const d = (iHoSo === iDangMo) ? duLieuVBG : vbgTheoHoSo[iHoSo];
@@ -1039,5 +1046,6 @@ function veModalTaoMoi() {
 
 if (typeof module !== 'undefined') {
   module.exports = { veManVanBanGhep, MAU_VAN_BAN_GHEP_MAC_DINH, formatRowSentence,
-                     vbgCanLuu, vbgTuDaLuu };
+                     vbgCanLuu, vbgTuDaLuu, vbgGhiNho, vbgDoiSang, vbgDeLuu,
+                     vbgNapTuHoSo, vbgHienTai };
 }
