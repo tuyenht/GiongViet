@@ -24,6 +24,8 @@ thay vi suy tu ma L. Tep nay khong tu doan bua - doan sai con te hon khong doan.
 CHAY:
     py tests/chay_tat_ca.py            # bo qua cac bai mo cua so / phat tieng
     py tests/chay_tat_ca.py --tat-ca   # chay ca chung (se chiem man hinh)
+    py tests/chay_tat_ca.py --cong     # che do CONG: chi do khi co bai
+                                       # do NGOAI du kien (xem DO_CO_CHU_Y)
 """
 import io
 import os
@@ -50,6 +52,18 @@ CHIEM_MAN_HINH = {
 }
 
 HET_GIO = 300  # giay cho moi bai
+# Bai DO CO CHU Y: do la dung, khong phai hong. Che do --cong bo qua chung.
+#
+# MOI muc PHAI co ly do viet ra day. Danh sach khong co ly do se phinh dan
+# cho toi khi cai cong nay vo nghia - do dung la cach moi cai cong tu chet.
+#
+# Muc nao XANH tro lai thi cong se BAO, vi luc do no da het ly do ton tai.
+DO_CO_CHU_Y = {
+    "_soi.mjs":
+        "1 phep: chu dau mau thu 3 sang som hon loa 0,30 s - bang dung khoang "
+        "nghi giua mau. Da truy ra nguyen nhan va ghi ngay trong tep. Sua dung "
+        "phai NHIN moi biet, khong phai chay bai do ma biet.",
+}
 
 _MA_L = re.compile(r"(?:T[aá]i hi[eệ]n(?: LOI| L[OÔ]I)?\s*)?(L\d)\b", re.I)
 _KHAI_BAO = re.compile(r"^LOAI_BAI\s*=\s*['\"](\w+)['\"]", re.M)
@@ -83,6 +97,7 @@ def chay(tep):
 
 def main():
     tat_ca = "--tat-ca" in sys.argv
+    cong = "--cong" in sys.argv
     bai = sorted(
         [p for p in THU_MUC.glob("*.py")
          if p.name not in ("chay_tat_ca.py", "sitecustomize.py")]
@@ -121,16 +136,43 @@ def main():
     hong = [x for x in thuong if x[3] not in (0, None)]
     cho = [x for x in thuong if x[3] is None]
     xanh = len(thuong) - len(hong) - len(cho)
+
+    # Tach lam hai: do MOI (dang lo) va do DA BIET (da co ly do ghi san).
+    do_moi = [x for x in hong if x[0] not in DO_CO_CHU_Y]
+    do_biet = [x for x in hong if x[0] in DO_CO_CHU_Y]
+    # Bai nam trong danh sach ma nay da XANH -> ly do ton tai cua no het roi.
+    het_ly_do = [x for x in thuong if x[3] == 0 and x[0] in DO_CO_CHU_Y]
+
     print("\n" + "=" * 78)
     print("BAI CANH (xanh la tot): {}/{} xanh".format(xanh, len(thuong)))
-    for ten, _ma, _d, _rc, cuoi, _l in hong:
-        print("  DO   {:<32} {}".format(ten, cuoi))
-    for ten, _ma, _d, _rc, cuoi, _l in cho:
-        print("  ?    {:<32} {}".format(ten, cuoi))
+    for ten, _ma, _d, _rc, cuoi_dong, _l in do_moi:
+        print("  DO MOI  {:<30} {}".format(ten, cuoi_dong))
+    for ten, _ma, _d, _rc, cuoi_dong, _l in do_biet:
+        print("  do (da biet)  {:<24} {}".format(ten, cuoi_dong))
+        print("        vi: {}".format(DO_CO_CHU_Y[ten][:70]))
+    for ten, _ma, _d, _rc, cuoi_dong, _l in cho:
+        print("  ?       {:<30} {}".format(ten, cuoi_dong))
+    for ten, *_ in het_ly_do:
+        print("  XANH LAI  {:<28} dang nam trong DO_CO_CHU_Y - go no ra"
+              .format(ten))
+
     if bo_qua:
         print("\nBo qua {} bai mo cua so / phat tieng (them --tat-ca de chay):"
               .format(len(bo_qua)))
         print("  " + ", ".join(sorted(bo_qua)))
+
+    if cong:
+        print("\n" + "=" * 78)
+        if do_moi or het_ly_do:
+            print("CONG DONG - khong nen day len kho.")
+            for ten, *_ in do_moi:
+                print("  · {} do ma khong co ly do ghi san".format(ten))
+            for ten, *_ in het_ly_do:
+                print("  · {} da xanh lai, phai go khoi DO_CO_CHU_Y".format(ten))
+            return 1
+        print("CONG MO - khong co bai nao do ngoai du kien.")
+        return 0
+
     return 1 if hong else 0
 
 

@@ -1,0 +1,67 @@
+#!/bin/sh
+# Cong truoc khi day len kho. Cai bang: py tests/hooks/cai_cong.py
+#
+# VI SAO CO TEP NAY - da tra gia that:
+#
+# Commit 42badf5 len GitHub mang theo HAI loi song. Mot cai lam danh sach cong
+# duc am tham bien thanh van ban thuong khi nguoi dung gat mot cong tac trong
+# man Cai dat. Giua luc "viet xong" va luc "no len GitHub" khong co cua nao.
+#
+# Cong nay KHONG chan duoc loi logic - no chi chan cai ma bo kiem bat duoc.
+# Do la phan lon, khong phai tat ca. Dung tuong co no roi thi khoi soi lai.
+#
+# Bo qua mot lan (chi khi that su can): git push --no-verify
+
+GOC=$(git rev-parse --show-toplevel)
+cd "$GOC" || exit 1
+
+echo ""
+echo "================================================================"
+echo "  CONG TRUOC KHI DAY - dang chay bo kiem..."
+echo "================================================================"
+
+if command -v py >/dev/null 2>&1; then
+    PY=py
+elif command -v python >/dev/null 2>&1; then
+    PY=python
+else
+    echo "  [BO QUA] Khong tim thay Python. Cong khong chay duoc."
+    echo "  Tu chay truoc khi day:  py tests/chay_tat_ca.py --cong"
+    exit 0
+fi
+
+# py_compile truoc: no nhanh, va bat duoc loi cu phap ma bo kiem khong toi noi.
+$PY -c "import glob,py_compile,sys
+loi = []
+for f in ['GiongViet.py','DocCongDuc.py']+glob.glob('src/core/*.py')+glob.glob('src/app/*.py'):
+    try:
+        py_compile.compile(f, doraise=True)
+    except Exception as e:
+        loi.append(f'{f}: {e}')
+if loi:
+    print('  [LOI] Khong bien dich duoc:')
+    for x in loi: print('    ' + x)
+    sys.exit(1)
+print('  [OK] py_compile sach')
+" || exit 1
+
+if command -v node >/dev/null 2>&1; then
+    for f in src/web/*.js; do
+        node --check "$f" || { echo "  [LOI] Cu phap JS hong: $f"; exit 1; }
+    done
+    echo "  [OK] node --check sach"
+fi
+
+$PY tests/chay_tat_ca.py --cong
+MA=$?
+
+if [ $MA -ne 0 ]; then
+    echo ""
+    echo "  KHONG DAY. Xem cac dong 'DO MOI' o tren."
+    echo "  That su can day thi: git push --no-verify"
+    exit 1
+fi
+
+echo ""
+echo "  Cong mo - dang day..."
+exit 0

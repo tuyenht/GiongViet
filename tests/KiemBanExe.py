@@ -83,7 +83,12 @@ print("--- A. Ban dong goi co day du khong ---")
 ok(EXE.exists(), "co GiongViet.exe", f"{EXE.stat().st_size / 1048576:.1f} MB"
    if EXE.exists() else "")
 for p, vi_sao in [
-    ("_internal/ui-moi/index.html", "thieu thi cua so mo ra trang tron"),
+    # src/paths.py thu "web" TRUOC roi moi lui ve "ui-moi". Kiem ca hai:
+    # DongGoi.bat co y chep src\web hai lan de duong lui chac chan co cho
+    # bam. Chi kiem "ui-moi" thi ngay nao bo ban trung lap di, bai nay van
+    # xanh trong khi duong CHINH da hong.
+    ("_internal/web/index.html", "duong CHINH - thieu thi cua so mo ra trang tron"),
+    ("_internal/ui-moi/index.html", "duong LUI - giu cho ban cu"),
     ("_internal/sea_g2p/sea_g2p.bin", "thieu thi 'os error 2' luc bam doc"),
     ("_internal/vieneu/assets/voices_v3_turbo.json", "thieu thi danh sach giong rong"),
 ]:
