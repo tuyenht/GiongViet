@@ -490,6 +490,73 @@ function veHopNhanBanGiong(d) {
       ` : ''}
 
       ${buoc === 3 ? `
+        <div style="margin-bottom:12px">
+          <div class="the__nhan" style="margin-bottom:6px">Tệp âm thanh thu âm (.wav, .mp3, .m4a, .flac)</div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <button class="nut nut--vien" id="nbChonTep">📂 Chọn tệp âm thanh…</button>
+            <span style="font-size:13px;color:${fileDaChon ? 'var(--txt)' : 'var(--txt3)'};font-weight:${fileDaChon ? '600' : 'normal'};flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" id="nbTenFile">
+              ${fileDaChon ? e(fileDaChon.split('\\').pop().split('/').pop()) : 'Chưa chọn tệp'}
+            </span>
+          </div>
+        </div>
+
+        ${d.phanTich ? `
+          <!-- Studio Waveform Trimmer & Audio Scorer -->
+          <div style="background:var(--sub-h);border:1px solid var(--stroke2);border-radius:10px;padding:14px;margin-bottom:14px">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+              <div style="font-size:11.5px;font-weight:700;letter-spacing:.04em;color:var(--txt3);text-transform:uppercase;display:flex;align-items:center;gap:6px">
+                <span>CẮT ĐOẠN MẪU CHUẨN STUDIO (5s – 12s)</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:6px">
+                <span class="vanbanghep__badge" style="font-size:11px;padding:2px 8px;border-radius:10px;background:${d.phanTich.diem >= 80 ? 'rgba(16,124,65,.15)' : 'rgba(216,59,1,.15)'};color:${d.phanTich.diem >= 80 ? '#107c41' : '#d83b01'};font-weight:700">
+                  ${d.phanTich.diem >= 85 ? '🟢 ' + d.phanTich.diem + '/100 · Xuất sắc' : (d.phanTich.diem >= 70 ? '🟢 ' + d.phanTich.diem + '/100 · Rất tốt' : '🟡 ' + d.phanTich.diem + '/100 · Đạt chuẩn')}
+                </span>
+                <span style="font-size:11.5px;color:var(--txt3)">SNR: ${d.phanTich.snrDb} dB · Giọng: ${d.phanTich.speechRatio}%</span>
+              </div>
+            </div>
+
+            <!-- Waveform Canvas -->
+            <div style="position:relative;height:54px;background:var(--layer);border:1px solid var(--stroke);border-radius:6px;overflow:hidden;margin-bottom:8px;display:flex;align-items:center;justify-content:center">
+              <div style="position:absolute;inset:0;display:flex;align-items:center;gap:1.5px;padding:0 4px">
+                ${(d.phanTich.peaks || []).map((p, idx) => {
+                  const pct = (idx / (d.phanTich.peaks.length || 1)) * 100;
+                  const inRange = pct >= ((d.startTrim || 0) / (d.phanTich.thoiLuong || 1)) * 100 && pct <= ((d.endTrim || d.phanTich.thoiLuong || 8) / (d.phanTich.thoiLuong || 1)) * 100;
+                  return `<span style="flex:1;height:${Math.max(4, Math.round(p * 46))}px;background:${inRange ? 'var(--acc)' : 'var(--stroke2)'};border-radius:1px;transition:background .1s"></span>`;
+                }).join('')}
+              </div>
+            </div>
+
+            <!-- Điều khiển khoảng cắt thời gian -->
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:12.5px;margin-bottom:6px">
+              <div style="display:flex;align-items:center;gap:6px">
+                <span style="color:var(--txt3)">Bắt đầu:</span>
+                <input type="number" id="nbInpStart" min="0" max="${d.phanTich.thoiLuong || 60}" step="0.1" value="${d.startTrim != null ? d.startTrim : (d.phanTich.goldenWindow ? d.phanTich.goldenWindow.start : 0)}" style="width:64px;height:24px;font-size:12px;padding:0 6px;border:1px solid var(--stroke2);border-radius:4px;background:var(--layer);color:var(--txt)">
+                <span style="color:var(--txt3)">s</span>
+              </div>
+
+              <div style="font-weight:600;color:var(--acc);font-size:12px">
+                Độ dài đoạn cắt: ${Math.max(0, ((d.endTrim != null ? d.endTrim : (d.phanTich.goldenWindow ? d.phanTich.goldenWindow.end : d.phanTich.thoiLuong)) - (d.startTrim != null ? d.startTrim : (d.phanTich.goldenWindow ? d.phanTich.goldenWindow.start : 0)))).toFixed(1)}s (Chuẩn 5s – 12s)
+              </div>
+
+              <div style="display:flex;align-items:center;gap:6px">
+                <span style="color:var(--txt3)">Kết thúc:</span>
+                <input type="number" id="nbInpEnd" min="0" max="${d.phanTich.thoiLuong || 60}" step="0.1" value="${d.endTrim != null ? d.endTrim : (d.phanTich.goldenWindow ? d.phanTich.goldenWindow.end : d.phanTich.thoiLuong)}" style="width:64px;height:24px;font-size:12px;padding:0 6px;border:1px solid var(--stroke2);border-radius:4px;background:var(--layer);color:var(--txt)">
+                <span style="color:var(--txt3)">s</span>
+              </div>
+            </div>
+
+            <!-- Nút nghe thử đoạn cắt và Gợi ý Cửa Sổ Vàng -->
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;padding-top:8px;border-top:1px solid var(--stroke)">
+              <button class="nut nut--vien" id="nbNgheDoanCat" style="font-size:12px;padding:3px 10px;height:26px">
+                ▶ Nghe đoạn đã chọn
+              </button>
+              <button class="lienket" id="nbDungGolden" style="font-size:11.5px;cursor:pointer">
+                ✨ Tự động chọn Cửa Sổ Vàng (${d.phanTich.goldenWindow ? d.phanTich.goldenWindow.duration : 8}s)
+              </button>
+            </div>
+          </div>
+        ` : ''}
+
         <div style="margin-bottom:14px">
           <div class="the__nhan" style="margin-bottom:6px">Ngôn ngữ của bản thu âm</div>
           <select class="chon" id="nbNgonNguGoc" style="width:100%">
@@ -499,16 +566,6 @@ function veHopNhanBanGiong(d) {
               </optgroup>
             `).join('')}
           </select>
-        </div>
-
-        <div style="margin-bottom:14px">
-          <div class="the__nhan" style="margin-bottom:6px">Tệp âm thanh thu âm (.wav, .mp3, .m4a, .flac)</div>
-          <div style="display:flex;align-items:center;gap:10px">
-            <button class="nut nut--vien" id="nbChonTep">📂 Chọn tệp âm thanh…</button>
-            <span style="font-size:13px;color:${fileDaChon ? 'var(--txt)' : 'var(--txt3)'};font-weight:${fileDaChon ? '600' : 'normal'};flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" id="nbTenFile">
-              ${fileDaChon ? e(fileDaChon.split('\\').pop().split('/').pop()) : 'Chưa chọn tệp'}
-            </span>
-          </div>
         </div>
 
         <div style="margin-bottom:14px">
@@ -538,7 +595,7 @@ function veHopNhanBanGiong(d) {
           <div style="font-size:16px;font-weight:600;color:var(--txt);margin-bottom:8px">Đang nhân bản giọng "${e(tenGiong)}"…</div>
           <div style="font-size:13px;color:var(--txt2);margin-bottom:16px" id="nbTienDoText">${e(d.tienDo || 'Hệ thống đang trích xuất đặc trưng âm sắc và huấn luyện vector giọng…')}</div>
           <div style="background:var(--sub-h);border:1px solid var(--stroke2);border-radius:8px;padding:12px 14px;font-size:12px;color:var(--txt3);line-height:1.5;max-width:440px;margin:0 auto;text-align:left">
-            💡 <b>Ghi chú:</b> Quá trình nhân bản diễn ra cục bộ trên máy. Bạn có thể bấm <b>"Chạy nền"</b> để tiếp tục làm việc, hệ thống sẽ tự động thông báo khi hoàn tất.
+            💡 <b>Quy trình:</b> Đoạn mẫu được gọt tỉa và chuẩn hoá, rồi máy đọc thử một câu bằng giọng vừa tạo để đo lại độ giống so với tệp mẫu gốc.
           </div>
         </div>
       ` : ''}
@@ -546,7 +603,11 @@ function veHopNhanBanGiong(d) {
       ${buoc === 5 ? `
         <div style="padding:24px 16px;text-align:center">
           <div style="width:52px;height:52px;border-radius:50%;background:rgba(16,124,65,.1);color:#107c41;display:inline-flex;align-items:center;justify-content:center;font-size:26px;margin-bottom:14px;margin-left:auto;margin-right:auto">✓</div>
-          <div style="font-size:17px;font-weight:700;color:var(--txt);margin-bottom:6px">Nhân bản thành công giọng "${e(tenGiong)}"!</div>
+          <div style="font-size:17px;font-weight:700;color:var(--txt);margin-bottom:4px">Nhân bản thành công giọng "${e(tenGiong)}"!</div>
+          ${typeof d.doKhop === 'number' ? `
+          <div style="display:inline-block;padding:3px 12px;background:rgba(16,124,65,.12);color:#107c41;border-radius:12px;font-size:12.5px;font-weight:700;margin-bottom:14px">
+            Độ tương đồng âm sắc: ${d.doKhop}%
+          </div>` : ''}
           <div style="font-size:13px;color:var(--txt3);margin-bottom:20px">
             Giọng đọc đã sẵn sàng và được lưu vào mục <b>"Giọng của tôi"</b> trong Thư viện giọng.
           </div>

@@ -26,6 +26,39 @@ DUOI_TAM = ".tam"
 # Chặn vòng lặp vô hạn nếu thư mục có sẵn hàng nghìn bản đánh số.
 SO_TOI_DA = 999
 
+# Windows cấm hẳn 9 ký tự này trong tên tệp, và cấm cả một số tên thiết bị.
+_KY_TU_CAM = r'\/:*?"<>|'
+_TEN_THIET_BI = {
+    "CON", "PRN", "AUX", "NUL",
+    *(f"COM{i}" for i in range(1, 10)),
+    *(f"LPT{i}" for i in range(1, 10)),
+}
+DAI_TOI_DA = 120
+
+
+def ten_tep_an_toan(ten: str, mac_dinh: str = "Ban ghi") -> str:
+    """Đưa tên người dùng gõ về một tên tệp Windows nhận được.
+
+    Người dùng gõ "Công đức T8/2026" là chuyện rất thường - đó là cách người ta
+    viết tháng. Không lọc thì lệnh ghi ném [Errno 22] Invalid argument, và câu
+    báo lỗi hiện ra cho người lớn tuổi là một dòng tiếng Anh kèm đường dẫn.
+    Đổi ký tự cấm thành gạch ngang thì tệp vẫn ra, tên vẫn đọc được.
+    """
+    s = "".join(("-" if c in _KY_TU_CAM else c)
+                for c in str(ten or "")
+                if ord(c) >= 32)
+    s = re.sub(r"-{2,}", "-", s).strip()
+    # Windows không cho tên kết thúc bằng dấu chấm hay khoảng trắng.
+    s = s.rstrip(" .")
+    if len(s) > DAI_TOI_DA:
+        s = s[:DAI_TOI_DA].rstrip(" .-")
+    if not s:
+        return mac_dinh
+    # "CON.wav" vẫn trúng tên thiết bị vì Windows chỉ nhìn phần trước dấu chấm.
+    if s.upper() in _TEN_THIET_BI or s.upper().split(".")[0] in _TEN_THIET_BI:
+        s += "_"
+    return s
+
 
 def _tach_so(ten_goc: str) -> str:
     """Bỏ phần " (n)" ở cuối tên nếu có, để không đẻ ra "tên (1) (1)"."""

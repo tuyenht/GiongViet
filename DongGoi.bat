@@ -154,7 +154,24 @@ rem Go junction TRUOC khi don ban cu. rmdir /s khong di theo junction, nhung
 rem ffmpeg va vieneu_models nang vai GB va nam ngoai git - khong danh cuoc vao
 rem mot hanh vi cua he dieu hanh khi cai gia la phai tai lai tu dau.
 set "CU=%DICH%_cu"
+set "CUU=%ROOT%_cuu_dulieu"
 if exist "%CU%" rmdir /s /q "%CU%"
+
+rem CUU DU LIEU NGUOI DUNG TRUOC KHI GO JUNCTION.
+rem Vong go junction ngay duoi xoa ca thu muc data\, ma giongviet.db - noi THAT
+rem SU giu thiet lap sau khi gom - nam trong do. Truoc ban va nay, moi lan build
+rem la thiet lap nguoi dung bien mat khong mot loi bao: vong cuu o cuoi tep di
+rem tim no trong %CU%\data, ma thu muc ay da bi xoa tu truoc do roi.
+rem Chi cuu TEP. giong_rieng la junction nen khong dung toi - rmdir khong di theo.
+if exist "%CUU%" rmdir /s /q "%CUU%"
+if exist "%DICH%\data" (
+    if not exist "%CUU%" mkdir "%CUU%"
+    for %%F in ("%DICH%\data\*.db" "%DICH%\data\*.txt" "%DICH%\data\*.json" "%DICH%\data\*.ini") do (
+        if exist "%%~fF" copy /Y "%%~fF" "%CUU%\" >nul
+    )
+    if exist "%DICH%\data\mau_google_sheets" xcopy /E /I /Y /Q "%DICH%\data\mau_google_sheets" "%CUU%\mau_google_sheets" >nul
+)
+
 if exist "%DICH%" (
     for %%L in (ffmpeg vieneu_models giong_rieng bin models data) do (
         if exist "%DICH%\%%L" rmdir /s /q "%DICH%\%%L" 2>nul
@@ -201,6 +218,18 @@ if not exist "%DICH%\data\giong_rieng" (
     ) else if exist "%ROOT%giong_rieng" (
         mklink /J "%DICH%\data\giong_rieng" "%ROOT%giong_rieng" >nul
     )
+)
+
+rem TRA LAI du lieu nguoi dung da cuu o buoc tren. Phai chay TRUOC doan chep tu
+rem %ROOT% ben duoi: cac lenh do deu co "if not exist" nen ban CUA NGUOI DUNG
+rem thang. Do la co y - ban trong %ROOT% van nam nguyen o thu muc goc, mat cung
+rem lay lai duoc; ban cua nguoi dung mat la mat han.
+if not exist "%DICH%\data" mkdir "%DICH%\data"
+if exist "%CUU%" (
+    for %%F in ("%CUU%\*.db" "%CUU%\*.txt" "%CUU%\*.json" "%CUU%\*.ini") do (
+        if exist "%%~fF" copy /Y "%%~fF" "%DICH%\data\" >nul
+    )
+    if exist "%CUU%\mau_google_sheets" xcopy /E /I /Y /Q "%CUU%\mau_google_sheets" "%DICH%\data\mau_google_sheets" >nul
 )
 
 rem CHEP co so du lieu SQLite vao duy nhat thu muc data\:

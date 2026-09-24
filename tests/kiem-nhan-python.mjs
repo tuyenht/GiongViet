@@ -684,6 +684,22 @@ console.log('\n--- Y. Ba thanh chỉnh gửi ĐÚNG GIÁ TRỊ sang Python ---')
   ok(!goiSangPython.some((x) => x[0] === 'moi_dat_chinh_am'),
      'không đổi gì thì KHÔNG gọi lại, tránh dội Python');
 
+  // Đổi không gian âm học: phải gửi sang Python cùng các thông số khác
+  goiSangPython.length = 0;
+  chay("dat(datChinh(S, 'khongGian', 'podcast'))");
+  await new Promise((r) => setTimeout(r, 0));
+  const g3 = goiSangPython.find((x) => x[0] === 'moi_dat_chinh_am');
+  ok(!!g3 && g3[1].khongGian === 'podcast', 'đổi không gian âm học thì gửi sang Python',
+     g3 ? JSON.stringify(g3[1]) : '(không gọi)');
+
+  // Đặt lại mặc định: phải xoá không gian âm học về rỗng
+  goiSangPython.length = 0;
+  chay("LENH['Đặt lại mặc định']()");
+  await new Promise((r) => setTimeout(r, 0));
+  const g4 = goiSangPython.find((x) => x[0] === 'moi_dat_chinh_am');
+  ok(!!g4 && g4[1].khongGian === '' && g4[1].tocDo === 0 && g4[1].caoDo === 0 && g4[1].amLuong === 100,
+     'đặt lại mặc định đưa cả 4 thông số về chuẩn', g4 ? JSON.stringify(g4[1]) : '(không gọi)');
+
   chay("dat(datChinh(S, 'tocDo', 0))");
 }
 

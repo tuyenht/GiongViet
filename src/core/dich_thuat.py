@@ -113,6 +113,10 @@ def _chuan_hoa_thuc_the_viet_nam(text: str, tgt_lang: str = "en") -> str:
     if not s.strip():
         return ""
 
+    # Nếu đích không phải tiếng Anh (vd: Trung, Nhật, Hàn, Đức, Pháp...), để Google Translate dịch nguyên bản tự nhiên 100%
+    if not str(tgt_lang).lower().startswith("en"):
+        return s
+
     # 1. Danh xưng Phật giáo / Tôn giáo / Lễ nghi
     s = re.sub(r"(?i)\bPháp danh\s+([A-ZÀ-Ỹ][a-zà-ỹ]+(?:\s+[A-ZÀ-Ỹ][a-zà-ỹ]+)*)", lambda m: f"Dharma name {_bo_dau_ten(m.group(1))}", s)
     s = re.sub(r"(?i)\bPhật tử\s+([A-ZÀ-Ỹ][a-zà-ỹ]+(?:\s+[A-ZÀ-Ỹ][a-zà-ỹ]+)*)", lambda m: f"Buddhist disciple {_bo_dau_ten(m.group(1))}", s)

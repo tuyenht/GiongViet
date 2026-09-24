@@ -223,8 +223,12 @@ class BoXuatMoi:
                     return self._bao_huy(phien)
 
                 duoi_so = "" if len(nhom) == 1 else f"-{chi_so:03d}"
+                # Lọc tên TRƯỚC khi ghép đường dẫn: "Công đức T8/2026" mà để
+                # nguyên thì lệnh ghi ném [Errno 22] và người dùng nhận một câu
+                # tiếng Anh kèm đường dẫn, không hiểu mình đã làm sai gì.
+                ten_an_toan = luu_tep.ten_tep_an_toan(ten)
                 dich = luu_tep.duong_dan_moi(
-                    Path(thu_muc) / f"{ten}{duoi_so}{dd['duoi']}")
+                    Path(thu_muc) / f"{ten_an_toan}{duoi_so}{dd['duoi']}")
                 # Tệp tạm cũng phải né tệp sẵn có: người dùng hoàn toàn có thể
                 # đang giữ một "thongbao.goc.wav" của riêng họ trong thư mục ấy.
                 tam = dich if not dd["ma"] else luu_tep.duong_dan_moi(
@@ -309,8 +313,12 @@ class BoXuatMoi:
         giay = 0.0
         byte_tep = 0
         try:
+            from src.core.bo_doc import _dam_bao_da_dich
+            cfg_spk = speaker.cfg if speaker else {}
+
             # Prefetch gối đầu các mẩu đầu tiên
             for s in cac_doan[:3]:
+                _dam_bao_da_dich(s, cfg_spk)
                 speaker.prefetch(id(s), s["text"], s.get("khuech_dai", 1.0))
 
             for idx_s, seg in enumerate(cac_doan):
@@ -319,8 +327,10 @@ class BoXuatMoi:
                 # Đẩy mẩu tiếp theo vào hàng đợi tổng hợp ngầm
                 if idx_s + 3 < len(cac_doan):
                     tiep = cac_doan[idx_s + 3]
+                    _dam_bao_da_dich(tiep, cfg_spk)
                     speaker.prefetch(id(tiep), tiep["text"], tiep.get("khuech_dai", 1.0))
 
+                _dam_bao_da_dich(seg, cfg_spk)
                 audio, _dd = speaker.get_audio(
                     id(seg), seg["text"], seg.get("khuech_dai", 1.0))
                 # Kiểm lại NGAY SAU get_audio: mẩu vừa rồi có thể đã ngốn 40

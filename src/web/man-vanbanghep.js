@@ -473,10 +473,30 @@ function veManVanBanGhep(S, duLieu) {
     <div class="vanbanghep__duoi">
       <div class="vanbanghep__duoi-trai"></div>
       <div class="vanbanghep__duoi-phai">
-        <span class="vanbanghep__dot"></span>
+        ${(() => {
+          /* Chấm này trước đây LUÔN xanh và chữ LUÔN là "Đã đồng bộ", kể cả khi
+             chưa tải gì và bảng còn nguyên 25 dòng dữ liệu mẫu, hoặc khi người
+             dùng đã tắt tự đồng bộ. Nhìn chấm xanh, người dùng tưởng đây là
+             danh sách thật rồi bấm "Mở bản ghép để nghe" — máy đọc to tên người
+             mẫu kèm số tiền. CSS đã có sẵn .tat và .canhbao, chỉ là chưa ai gán. */
+          const soDong = cur.tongSo || (cur.rows ? cur.rows.length : 0);
+          if (!cur.daTaiThat) {
+            return `<span class="vanbanghep__dot canhbao"></span>
         <span style="font-size:13px;color:var(--txt2);white-space:nowrap">
-          Đã đồng bộ · <strong>${cur.tongSo || (cur.rows ? cur.rows.length : 0)}</strong> dòng · tự kiểm tra định kỳ 5 phút/lần
-        </span>
+          Dữ liệu mẫu · <strong>${soDong}</strong> dòng · bấm “Tải dữ liệu” để lấy danh sách thật
+        </span>`;
+          }
+          if (!cur.autoSync) {
+            return `<span class="vanbanghep__dot tat"></span>
+        <span style="font-size:13px;color:var(--txt2);white-space:nowrap">
+          Đã tải · <strong>${soDong}</strong> dòng · không tự kiểm tra
+        </span>`;
+          }
+          return `<span class="vanbanghep__dot"></span>
+        <span style="font-size:13px;color:var(--txt2);white-space:nowrap">
+          Đã đồng bộ · <strong>${soDong}</strong> dòng · tự kiểm tra định kỳ 5 phút/lần
+        </span>`;
+        })()}
         <span style="margin-left:auto;font-size:13px;color:var(--txt3);white-space:nowrap">
           ${cur.tongSo || (cur.rows ? cur.rows.length : 0)} dòng dữ liệu
         </span>
@@ -833,7 +853,18 @@ function vePreviewGhep(cur) {
           <span class="vanbanghep__khoi-ten">DANH SÁCH — TỪ BẢNG TÍNH (${tong} DÒNG)</span>
         </div>
         <div class="vanbanghep__khoi-chu">${sampleRows.map((r, i) => {
-            const cau = formatRowSentence(cur.T.mau, r, cur.cols);
+            /* Dung DUNG ham ma bai doc that dung. Truoc day khung xem truoc
+               co ban don cau rieng, con thieu buoc go gioi tu bi bo roi:
+                 xem truoc : "Tran Thi Bich, o, da cong duc 1.200.000 dong."
+                 doc that  : "Tran Thi Bich, da cong duc 1.200.000 dong."
+               Nguoi dung nhin cau que tren man hinh roi tuong may hong,
+               trong khi tieng doc ra lai sach. Hai noi ghep cau la mot ho
+               loi chinh tep giao-dien.js da tung ghi chu phai tranh.
+               ghepMotCauVBG nam trong giao-dien.js - khong co khi chay bang
+               Node (module.exports o cuoi tep nay), nen van giu duong lui. */
+            const cau = (typeof ghepMotCauVBG === 'function')
+              ? ghepMotCauVBG(cur, r)
+              : formatRowSentence(cur.T.mau, r, cur.cols);
             return `<div style="margin-bottom:6px">${i + 1}. ${esc(cau)}</div>`;
           }).join('')}${tong > sampleRows.length ? `<div style="color:var(--txt3);font-size:12.5px;margin-top:6px">… và ${tong - sampleRows.length} dòng tiếp theo trong bảng tính</div>` : ''}</div>
       </div>
@@ -863,26 +894,44 @@ function vePreviewGhep(cur) {
   </div>`;
 }
 
+/* Mô tả một dòng cho mỗi mẫu, tra theo ID của chính mẫu đó. */
+const MO_TA_MAU = {
+  congduc: 'Đọc lời tán thán đầu/cuối, câu ghép tên + địa chỉ + số tiền công đức.',
+  hocphi: 'Đọc danh sách học sinh, lớp, số tiền học phí và hạn nộp.',
+  khenthuong: 'Đọc tuyên dương cá nhân, phòng ban, thành tích và mức thưởng.',
+  donhang: 'Đọc tên khách, mặt hàng, số lượng và tiền phải trả.',
+  lichtruc: 'Đọc lịch trực, người phụ trách, thời gian và nơi làm việc.',
+  phuongxa: 'Đọc thông báo tổ dân phố: hộ gia đình, nội dung, thời hạn.',
+};
+
+
 function veModalTaoMoi() {
-  const presets = [
-    { id: 'congduc', name: 'Công đức chùa / Nhà hảo tâm', desc: 'Đọc lời tán thán đầu/cuối, câu ghép tên + địa chỉ + số tiền công đức.' },
-    { id: 'hocphi', name: 'Thông báo học phí / Tiền dịch vụ', desc: 'Đọc danh sách học sinh, lớp, số tiền học phí và hạn nộp.' },
-    { id: 'khenthuong', name: 'Danh sách khen thưởng / Tuyên dương', desc: 'Đọc tuyên dương cá nhân, phòng ban, thành tích và mức thưởng.' },
-    { id: 'lichhen', name: 'Thông báo lịch hẹn / Khách hàng', desc: 'Đọc tên khách hàng, thời gian hẹn và địa điểm làm việc.' }
-  ];
+  /* Dựng thẳng từ duLieuVBG.maus, KHÔNG chép lại thành một bảng riêng.
+     Bảng chép tay trước đây có 4 mục trong khi thật ra có 6 mẫu, và một mục
+     mang id 'lichhen' — cái id đó không tồn tại. Bấm vào nó, bản cũ nhảy sang
+     mẫu "Bán hàng & Chốt đơn Livestream" vì gắn theo thứ tự mảng. */
+  const presets = duLieuVBG.maus.map((m) => ({
+    id: m.id,
+    name: m.name,
+    desc: MO_TA_MAU[m.id] || '',
+  }));
 
   return `<div class="man" style="z-index:90">
     <div class="hop" style="width:620px">
       <div class="hop__dau" style="display:flex;align-items:flex-start;justify-content:space-between">
         <div style="flex:1;min-width:0">
-          <div class="hop__ten">Tạo mẫu ghép mới</div>
-          <div class="hop__phu">Chọn loại danh sách gần giống của bạn để bắt đầu nhanh</div>
+          <div class="hop__ten">Chọn mẫu ghép</div>
+          <div class="hop__phu">Chuyển sang mẫu có sẵn gần giống danh sách của bạn</div>
         </div>
         <button class="nut nut--icon" data-vbg="dong_tao_moi" title="Đóng" style="font-size:20px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;color:var(--txt3);cursor:pointer">×</button>
       </div>
       <div class="hop__than" style="padding:16px 22px;display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        ${presets.map((p, idx) => `
-          <div class="vanbanghep__the" data-vbgpreset="${idx}" style="flex-direction:column;cursor:pointer;padding:12px 14px">
+        ${/* Gắn theo ID, KHÔNG theo thứ tự trong mảng này: hai danh sách xếp
+              khác nhau nên idx=3 ("Thông báo lịch hẹn") từng nhảy sang mẫu
+              "Bán hàng & Chốt đơn Livestream". Trường p.id có sẵn từ đầu mà
+              chưa ai dùng. */
+          presets.map((p) => `
+          <div class="vanbanghep__the" data-vbgpreset="${esc(p.id)}" style="flex-direction:column;cursor:pointer;padding:12px 14px">
             <div style="font-weight:600;font-size:14px;color:var(--txt)">${esc(p.name)}</div>
             <div style="font-size:12.5px;color:var(--txt2);margin-top:4px;line-height:1.4">${esc(p.desc)}</div>
           </div>

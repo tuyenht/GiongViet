@@ -80,14 +80,33 @@ class BoNapMoHinh:
         try:
             tts = engine.dam_bao_vieneu_san_sang(
                 lambda msg: self._bao(tieu_de, str(msg)))
-            # Khởi động nóng ONNX execution graph để câu đầu tiên của người dùng phát tức thì
-            try:
-                tts.infer("Xin chào.", apply_watermark=False)
-            except Exception:
+            self.san_sang = True
+            self.loi = ""
+            self._bao("Giọng Việt · Sẵn sàng",
+                      "Động cơ giọng đọc chạy ngay trên máy, không cần Internet.",
+                      "san_sang")
+
+
+            # Khởi động nóng ONNX execution graph và active voice trong luồng nền để câu đầu tiên phát tức thì
+            def _warmup():
                 try:
-                    tts.infer("Xin chào.")
+                    cfg = engine.load_config()
+                    active_voice = str(cfg.get("vieneu_voice_id", "") or "")
+                    if active_voice and hasattr(tts, "_preset_voices") and active_voice in tts._preset_voices:
+                        try:
+                            tts.infer("Xin chào.", voice=active_voice, apply_watermark=False)
+                        except Exception:
+                            tts.infer("Xin chào.", apply_watermark=False)
+                    else:
+                        tts.infer("Xin chào.", apply_watermark=False)
                 except Exception:
                     pass
+                try:
+                    engine.giai_phong_bo_nho_he_thong()
+                except Exception:
+                    pass
+
+            threading.Thread(target=_warmup, daemon=True).start()
         except Exception as e:
             nhat_ky.ghi_loi("nạp mô hình VieNeu-TTS", e)
             self.loi = str(e)
@@ -101,9 +120,3 @@ class BoNapMoHinh:
                 },
             })
             return
-
-        self.san_sang = True
-        self.loi = ""
-        self._bao("VieNeu-TTS · Đã sẵn sàng",
-                  "Giọng đọc chạy ngay trên máy, không cần Internet.",
-                  "san_sang")

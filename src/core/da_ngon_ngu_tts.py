@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Optional, Tuple
 import edge_tts
 
-# Danh sách đầy đủ toàn bộ giọng quốc tế chất lượng cao theo từng quốc gia
+# Danh sách đầy đủ toàn bộ giọng quốc tế chất lượng cao theo từng quốc gia (100% hợp lệ trên Edge TTS)
 DS_GIONG_QUOC_TE_CHI_TIET = [
     # Tiếng Việt (Bản địa)
     {"id": "vi-VN-HoaiMyNeural", "ten": "Hoài My", "gioi": "Nữ", "ngon_ngu": "vi", "vung": "Miền Bắc"},
@@ -45,42 +45,24 @@ DS_GIONG_QUOC_TE_CHI_TIET = [
     # Tiếng Nhật
     {"id": "ja-JP-NanamiNeural", "ten": "Nanami", "gioi": "Nữ", "ngon_ngu": "ja", "vung": "Nhật Bản"},
     {"id": "ja-JP-KeitaNeural", "ten": "Keita", "gioi": "Nam", "ngon_ngu": "ja", "vung": "Nhật Bản"},
-    {"id": "ja-JP-AoiNeural", "ten": "Aoi", "gioi": "Nữ", "ngon_ngu": "ja", "vung": "Nhật Bản"},
-    {"id": "ja-JP-DaichiNeural", "ten": "Daichi", "gioi": "Nam", "ngon_ngu": "ja", "vung": "Nhật Bản"},
-    {"id": "ja-JP-MayuNeural", "ten": "Mayu", "gioi": "Nữ", "ngon_ngu": "ja", "vung": "Nhật Bản"},
-    {"id": "ja-JP-NaokiNeural", "ten": "Naoki", "gioi": "Nam", "ngon_ngu": "ja", "vung": "Nhật Bản"},
 
     # Tiếng Hàn
     {"id": "ko-KR-SunHiNeural", "ten": "Sun-Hi", "gioi": "Nữ", "ngon_ngu": "ko", "vung": "Hàn Quốc"},
     {"id": "ko-KR-InJoonNeural", "ten": "In-Joon", "gioi": "Nam", "ngon_ngu": "ko", "vung": "Hàn Quốc"},
-    {"id": "ko-KR-BongJinNeural", "ten": "Bong-Jin", "gioi": "Nam", "ngon_ngu": "ko", "vung": "Hàn Quốc"},
-    {"id": "ko-KR-GookMinNeural", "ten": "Gook-Min", "gioi": "Nam", "ngon_ngu": "ko", "vung": "Hàn Quốc"},
-    {"id": "ko-KR-JiMinNeural", "ten": "Ji-Min", "gioi": "Nữ", "ngon_ngu": "ko", "vung": "Hàn Quốc"},
-    {"id": "ko-KR-SeoHyeonNeural", "ten": "Seo-Hyeon", "gioi": "Nữ", "ngon_ngu": "ko", "vung": "Hàn Quốc"},
-    {"id": "ko-KR-SoonBokNeural", "ten": "Soon-Bok", "gioi": "Nữ", "ngon_ngu": "ko", "vung": "Hàn Quốc"},
-    {"id": "ko-KR-YuJinNeural", "ten": "Yu-Jin", "gioi": "Nữ", "ngon_ngu": "ko", "vung": "Hàn Quốc"},
 
     # Tiếng Pháp
     {"id": "fr-FR-DeniseNeural", "ten": "Denise", "gioi": "Nữ", "ngon_ngu": "fr", "vung": "Pháp"},
     {"id": "fr-FR-HenriNeural", "ten": "Henri", "gioi": "Nam", "ngon_ngu": "fr", "vung": "Pháp"},
     {"id": "fr-FR-EloiseNeural", "ten": "Eloise", "gioi": "Nữ", "ngon_ngu": "fr", "vung": "Pháp"},
-    {"id": "fr-FR-AlainNeural", "ten": "Alain", "gioi": "Nam", "ngon_ngu": "fr", "vung": "Pháp"},
-    {"id": "fr-FR-BrigitteNeural", "ten": "Brigitte", "gioi": "Nữ", "ngon_ngu": "fr", "vung": "Pháp"},
 
     # Tiếng Đức
     {"id": "de-DE-KatjaNeural", "ten": "Katja", "gioi": "Nữ", "ngon_ngu": "de", "vung": "Đức"},
     {"id": "de-DE-ConradNeural", "ten": "Conrad", "gioi": "Nam", "ngon_ngu": "de", "vung": "Đức"},
     {"id": "de-DE-AmalaNeural", "ten": "Amala", "gioi": "Nữ", "ngon_ngu": "de", "vung": "Đức"},
-    {"id": "de-DE-BerndNeural", "ten": "Bernd", "gioi": "Nam", "ngon_ngu": "de", "vung": "Đức"},
-    {"id": "de-DE-ChristophNeural", "ten": "Christoph", "gioi": "Nam", "ngon_ngu": "de", "vung": "Đức"},
-    {"id": "de-DE-KlausNeural", "ten": "Klaus", "gioi": "Nam", "ngon_ngu": "de", "vung": "Đức"},
 
     # Tiếng Tây Ban Nha
     {"id": "es-ES-ElviraNeural", "ten": "Elvira", "gioi": "Nữ", "ngon_ngu": "es", "vung": "Tây Ban Nha"},
     {"id": "es-ES-AlvaroNeural", "ten": "Alvaro", "gioi": "Nam", "ngon_ngu": "es", "vung": "Tây Ban Nha"},
-    {"id": "es-ES-AbrilNeural", "ten": "Abril", "gioi": "Nữ", "ngon_ngu": "es", "vung": "Tây Ban Nha"},
-    {"id": "es-ES-ArnauNeural", "ten": "Arnau", "gioi": "Nam", "ngon_ngu": "es", "vung": "Tây Ban Nha"},
-    {"id": "es-ES-DarioNeural", "ten": "Dario", "gioi": "Nam", "ngon_ngu": "es", "vung": "Tây Ban Nha"},
 
     # Tiếng Ý
     {"id": "it-IT-ElsaNeural", "ten": "Elsa", "gioi": "Nữ", "ngon_ngu": "it", "vung": "Ý"},
@@ -94,13 +76,10 @@ DS_GIONG_QUOC_TE_CHI_TIET = [
     # Tiếng Bồ Đào Nha
     {"id": "pt-BR-FranciscaNeural", "ten": "Francisca", "gioi": "Nữ", "ngon_ngu": "pt", "vung": "Brazil"},
     {"id": "pt-BR-AntonioNeural", "ten": "Antonio", "gioi": "Nam", "ngon_ngu": "pt", "vung": "Brazil"},
-    {"id": "pt-BR-BrendaNeural", "ten": "Brenda", "gioi": "Nữ", "ngon_ngu": "pt", "vung": "Brazil"},
-    {"id": "pt-BR-FabioNeural", "ten": "Fabio", "gioi": "Nam", "ngon_ngu": "pt", "vung": "Brazil"},
 
     # Đông Nam Á (ASEAN)
     {"id": "th-TH-PremwadeeNeural", "ten": "Premwadee", "gioi": "Nữ", "ngon_ngu": "th", "vung": "Thái Lan"},
     {"id": "th-TH-NiwatNeural", "ten": "Niwat", "gioi": "Nam", "ngon_ngu": "th", "vung": "Thái Lan"},
-    {"id": "th-TH-AcharaNeural", "ten": "Achara", "gioi": "Nữ", "ngon_ngu": "th", "vung": "Thái Lan"},
     {"id": "lo-LA-KeomanyNeural", "ten": "Keomany", "gioi": "Nữ", "ngon_ngu": "lo", "vung": "Lào"},
     {"id": "lo-LA-ChanthavongNeural", "ten": "Chanthavong", "gioi": "Nam", "ngon_ngu": "lo", "vung": "Lào"},
     {"id": "id-ID-GadisNeural", "ten": "Gadis", "gioi": "Nữ", "ngon_ngu": "id", "vung": "Indonesia"},
@@ -133,9 +112,8 @@ DS_GIONG_QUOC_TE_CHI_TIET = [
     {"id": "tr-TR-AhmetNeural", "ten": "Ahmet", "gioi": "Nam", "ngon_ngu": "tr", "vung": "Thổ Nhĩ Kỳ"},
 ]
 
-GIONG_BAN_XU_28 = {
-    g["ngon_ngu"]: {"nu": g["id"], "nam": g["id"]} for g in DS_GIONG_QUOC_TE_CHI_TIET
-}
+
+GIONG_BAN_XU_28 = {}
 for g in DS_GIONG_QUOC_TE_CHI_TIET:
     nn = g["ngon_ngu"]
     if nn not in GIONG_BAN_XU_28:
@@ -144,6 +122,12 @@ for g in DS_GIONG_QUOC_TE_CHI_TIET:
         GIONG_BAN_XU_28[nn]["nu"] = g["id"]
     elif g["gioi"] == "Nam" and "nam" not in GIONG_BAN_XU_28[nn]:
         GIONG_BAN_XU_28[nn]["nam"] = g["id"]
+
+for nn, d in GIONG_BAN_XU_28.items():
+    if "nu" not in d and "nam" in d:
+        d["nu"] = d["nam"]
+    elif "nam" not in d and "nu" in d:
+        d["nam"] = d["nu"]
 
 
 def doan_gioi_tinh(voice_hint: str) -> str:
@@ -196,7 +180,8 @@ def doan_gioi_tinh(voice_hint: str) -> str:
     return "nam"
 
 
-def tong_hop_da_ngu_native(text: str, lang: str = "en", voice_hint: str = "", khuech_dai: float = 1.0) -> bytes:
+def tong_hop_da_ngu_native(text: str, lang: str = "en", voice_hint: str = "",
+                           khuech_dai: float = 1.0, ref_audio_path: str = None) -> bytes:
     s = (text or "").strip()
     if not s:
         return b""
@@ -213,25 +198,132 @@ def tong_hop_da_ngu_native(text: str, lang: str = "en", voice_hint: str = "", kh
         else:
             voice = lang_voices
 
+    pitch_arg, rate_arg = "+0Hz", "+0%"
+
     async def _chay_edge():
-        communicate = edge_tts.Communicate(s, voice)
+        communicate = edge_tts.Communicate(s, voice, pitch=pitch_arg, rate=rate_arg)
         buffer = bytearray()
         async for chunk in communicate.stream():
             if chunk["type"] == "audio":
                 buffer.extend(chunk["data"])
         return bytes(buffer)
 
+    raw_audio = b""
     try:
         raw_audio = asyncio.run(_chay_edge())
-        return _mp3_sang_wav(raw_audio)
     except Exception:
         try:
             loop = asyncio.new_event_loop()
             raw_audio = loop.run_until_complete(_chay_edge())
             loop.close()
-            return _mp3_sang_wav(raw_audio)
         except Exception:
-            return b""
+            raw_audio = b""
+
+    return _mp3_sang_wav(raw_audio)
+
+
+def tong_hop_da_ngu_stream(text: str, lang: str = "en", voice_hint: str = "",
+                           khuech_dai: float = 1.0, ref_audio_path: str = None):
+    """Generator sinh PCM 16-bit 48kHz mono trực tiếp từ Microsoft Neural TTS theo thời gian thực (Streaming).
+    100% trong trẻo, tự nhiên chuẩn bản xứ, không can thiệp méo tiếng.
+    """
+    s = (text or "").strip()
+    if not s:
+        return
+
+    import os, subprocess, threading
+    ff_bin = _tim_ffmpeg()
+    creationflags = subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0
+
+    if voice_hint and ("Neural" in voice_hint or ("-" in voice_hint and len(voice_hint) > 8)):
+        voice = voice_hint
+    else:
+        lang_code = lang.lower().split("-")[0] if "-" not in lang else lang.lower()
+        gioi = doan_gioi_tinh(voice_hint)
+        lang_voices = GIONG_BAN_XU_28.get(lang.lower(), GIONG_BAN_XU_28.get(lang_code, {"nu": "en-US-JennyNeural", "nam": "en-US-GuyNeural"}))
+        if isinstance(lang_voices, dict):
+            voice = lang_voices.get(gioi, lang_voices.get("nu"))
+        else:
+            voice = lang_voices
+
+    pitch_arg, rate_arg = "+0Hz", "+0%"
+
+    proc = subprocess.Popen(
+        [ff_bin, "-hide_banner", "-loglevel", "error", "-f", "mp3", "-i", "pipe:0", "-f", "s16le", "-ar", "48000", "-ac", "1", "pipe:1"],
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.DEVNULL,
+        creationflags=creationflags
+    )
+
+    stdin = getattr(proc, "stdin", None)
+
+    def _feed():
+        async def _run():
+            try:
+                comm = edge_tts.Communicate(s, voice, pitch=pitch_arg, rate=rate_arg)
+                async for chunk in comm.stream():
+                    if chunk["type"] == "audio":
+                        if stdin and not stdin.closed:
+                            try:
+                                stdin.write(chunk["data"])
+                                stdin.flush()
+                            except (BrokenPipeError, OSError, ValueError):
+                                break
+            except Exception:
+                pass
+            finally:
+                try:
+                    if stdin and not stdin.closed:
+                        stdin.close()
+                except (BrokenPipeError, OSError, ValueError):
+                    pass
+        try:
+            asyncio.run(_run())
+        except Exception:
+            try:
+                loop = asyncio.new_event_loop()
+                loop.run_until_complete(_run())
+                loop.close()
+            except Exception:
+                pass
+
+    threading.Thread(target=_feed, daemon=True).start()
+
+    try:
+        while True:
+            data = proc.stdout.read(4096 * 2)
+            if not data:
+                break
+            yield data
+    finally:
+        try:
+            if proc.stdin and not proc.stdin.closed:
+                try:
+                    proc.stdin.close()
+                except Exception:
+                    pass
+        except Exception:
+            pass
+        try:
+            if proc.stdout and not proc.stdout.closed:
+                try:
+                    proc.stdout.close()
+                except Exception:
+                    pass
+        except Exception:
+            pass
+        try:
+            proc.wait(timeout=0.2)
+        except Exception:
+            try:
+                proc.kill()
+            except Exception:
+                pass
+
+
+
+
 
 
 _FFMPEG_BIN = None

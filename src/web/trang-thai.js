@@ -25,9 +25,19 @@ const KHOA_NGHE_VA_XUAT = [
   TINH_HUONG.MAT_KET_NOI, TINH_HUONG.HET_LUOT, TINH_HUONG.GIONG_DANG_TAI,
 ];
 
-/* Thời lượng ước tính: số ký tự chia 11 ra giây. Con số 11 là của đặc tả,
-   không phải đo từ engine - lúc nối engine thật phải đo lại. */
-const KY_TU_MOI_GIAY = 11;
+/* Thời lượng ước tính: số ký tự chia cho hằng số này ra giây.
+   Con số cũ là 11, lấy từ đặc tả chứ chưa đo, và Python thì dùng 14
+   (src/core/du_lieu.py) - hai tầng lệch nhau 27% cho cùng một đại lượng.
+
+   Đo lại trên 5 bản đọc do chính VieNeu tổng hợp (data/cache_am/syn_11_*.wav,
+   94-120 ký tự mỗi câu): 13,8 · 14,4 · 16,3 · 20,2 · 20,8 -> trung bình 17,1
+   ký tự/giây, độ lệch chuẩn 3,2 (phân tán 19% vì mỗi giọng đọc một nhịp).
+   11 nằm NGOÀI khoảng đo được, 14 thì nằm trong - nên lấy 14 cho khớp Python.
+
+   Đây vẫn là ƯỚC TÍNH và chỉ dùng khi chưa có thời lượng thật: lúc đọc thật,
+   Python gửi kèm `thoiLuong` đo từ chính khối WAV và chỗ tô chữ dùng số đó.
+   Muốn ước tính sát hơn thì phải đo rộng hơn - 5 mẫu, đều là giọng riêng. */
+const KY_TU_MOI_GIAY = 14;
 
 // ---------------------------------------------------------------- trạng thái
 
@@ -321,7 +331,15 @@ function dichThe(chips, tep, tuDoan, delta) {
 /* Chọn giọng và kéo thanh điều chỉnh ghi vào HỒ SƠ ĐANG DÙNG, không phải
    một biến toàn cục dùng chung. Đây là điểm mấu chốt của mô hình hồ sơ. */
 function datGiong(S, maGiong) {
-  const ds = S.profiles.map((h, i) => i === S.profile ? { ...h, giong: maGiong } : h);
+  const ds = S.profiles.map((h, i) => {
+    if (i === S.profile) {
+      const gTheoNN = { ...(h.giongTheoNgonNgu || {}) };
+      const nn = h.ngonNgu || 'vi';
+      gTheoNN[nn] = maGiong;
+      return { ...h, giong: maGiong, giongTheoNgonNgu: gTheoNN };
+    }
+    return h;
+  });
   return { ...dongHetMenu(S), profiles: ds };
 }
 

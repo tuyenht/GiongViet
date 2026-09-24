@@ -1,99 +1,105 @@
 # -*- coding: utf-8 -*-
-"""Canh viec DongGoi.bat cuu du lieu nguoi dung khi hoan doi thu muc.
+"""BAI CANH (xanh = tot): DongGoi.bat phai cuu du lieu nguoi dung TRUOC khi xoa.
 
 VI SAO CO BAI NAY
 
-Bo build khong xoa ban cu — no doi ten %DICH% thanh %DICH%_cu roi moi dua ban
-moi ra, va co han mot vong cuu du lieu nguoi dung tu ban cu sang ban moi. Nhung
-vong cuu ay chi bat BA kieu tep:
+Buoc 4 cua DongGoi.bat go junction bang mot vong:
 
-    for %%F in ("%CU%\\*.json" "%CU%\\*.ini" "%CU%\\*.txt")
+    for %%L in (ffmpeg vieneu_models giong_rieng bin models data) do (
+        if exist "%DICH%\\%%L" rmdir /s /q "%DICH%\\%%L" 2>nul
+    )
 
-Khong co *.db, va glob khong di vao thu muc con. Trong khi do:
+`data` nam trong danh sach do, va giongviet.db - NOI THAT SU giu thiet lap sau
+khi gom - nam ngay trong `data`. Da do bang thuc nghiem (07/09/2026):
 
-  - Sau khi gom, MOI lenh ghi cau hinh di vao giongviet.db chu khong vao tep
-    .ini roi nua (DocCongDuc.py:96-100 ghi_tep_cau_hinh -> kho_cau_hinh.ghi).
-  - Nen tep .ini roi o goc du an dung yen tu luc gom, con thiet lap that da
-    chay tiep trong kho.
+  · rmdir /s /q tren thu muc chua junction XOA tep thuong ben trong
+    -> giongviet.db bien mat.
+  · rmdir /s /q KHONG di theo junction
+    -> data\\giong_rieng chi mat cai junction, mau giong o thu muc goc con nguyen.
 
-Hau qua: build lai mot lan la thiet lap nguoi dung lang le lui ve moc cua cac
-tep .ini roi; build lan hai thi %CU% bi rmdir /s /q xoa sach, mat han.
+Nen hau qua dung muc la: MAT THIET LAP, khong mat giong rieng.
 
-Chu du an da biet va CHON hoan viec va (19/8). Bai nay khong sua gi — no chi
-lam cho rui ro ay KEU TO thay vi nam im: bat cu ai chay bo kiem truoc khi build
-deu thay ngay.
+Ban truoc con co mot vong cuu o cuoi tep di tim %CU%\\data\\giongviet.db - nhung
+data da bi xoa tu truoc khi doi ten sang %CU%, nen khong con gi de cuu.
 
-BAI NAY DO: KHONG chay build, KHONG cham du lieu nguoi dung, chi DOC DongGoi.bat.
+BAI NAY CANH BA DIEU, theo dung thu tu chung phai xay ra:
+  A. Co khoi CUU chay TRUOC vong go junction.
+  B. Khoi cuu bat het cac duoi tep giu thiet lap (.db .txt .json .ini).
+  C. Co khoi TRA LAI, va no chay TRUOC doan chep tu %ROOT% - de ban cua
+     nguoi dung thang ban cua thu muc du an.
+
+Bai chi DOC DongGoi.bat. Khong chay build, khong cham mot byte du lieu nguoi dung.
 """
 import io
-import os
 import re
 import sys
 from pathlib import Path
 
-_GOC = Path(os.environ.get("GIONGVIET_GOC")
-            or Path(__file__).resolve().parent.parent)
-sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8",
-                              line_buffering=True)
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
+
+GOC = Path(__file__).resolve().parent.parent
+BAT = GOC / "DongGoi.bat"
 
 loi = 0
 
 
-def ok(dk, nhan, them=""):
+def ok(dieu_kien, nhan, them=""):
     global loi
-    print(f"  {'ĐẠT ' if dk else 'LỆCH'} {nhan}{'  →  ' + str(them) if them else ''}")
-    if not dk:
+    print(f"  {'ĐẠT ' if dieu_kien else 'LỆCH'} {nhan}" + (f"  →  {them}" if them else ""))
+    if not dieu_kien:
         loi += 1
 
 
-BAT = _GOC / "DongGoi.bat"
 print(f"Đọc: {BAT}")
-if not BAT.is_file():
-    sys.exit("Không thấy DongGoi.bat — bài kiểm này cần nó.")
-
 nguon = BAT.read_text(encoding="utf-8", errors="replace")
 
-# --- A. Vong cuu du lieu con do khong -----------------------------------------
-print("\n--- A. Vòng cứu dữ liệu từ bản cũ vẫn còn ---")
-mo = re.search(r'for\s+%%F\s+in\s+\(([^)]*%CU%[^)]*)\)', nguon, re.I)
-ok(mo is not None, "vẫn còn vòng cứu dữ liệu từ %CU%")
-danh_sach = mo.group(1) if mo else ""
-if mo:
-    print(f"      glob hiện tại: {danh_sach.strip()}")
 
-# --- B. Cac kieu tep duoc cuu --------------------------------------------------
-print("\n--- B. Glob cứu có bắt hết những thứ giữ thiết lập không ---")
-for duoi in ("*.json", "*.ini", "*.txt"):
-    ok(duoi in danh_sach, f"cứu {duoi}")
+def dong_cua(mau):
+    m = re.search(mau, nguon, re.I)
+    return nguon[:m.start()].count("\n") + 1 if m else None
 
-ok("*.db" in danh_sach,
-   "cứu *.db  ← giongviet.db là NƠI THẬT chứa thiết lập sau khi gom",
-   "CHƯA CÓ — build lại là thiết lập lùi về mốc các tệp .ini rời")
 
-# --- C. Thu muc con -------------------------------------------------------------
-print("\n--- C. Thư mục con có được cứu không ---")
-cuu_thu_muc = bool(re.search(r'sao-luu-cu', nguon, re.I))
-ok(cuu_thu_muc,
-   "cứu thư mục sao-luu-cu/  ← ảnh chụp cấu hình đọc được bằng Notepad",
-   "CHƯA CÓ — glob không đệ quy nên cả thư mục nằm lại %CU% rồi bị xoá")
+d_cuu = dong_cua(r'if exist "%DICH%\\data"\s*\(\s*\r?\n\s*if not exist "%CUU%" mkdir')
+d_go = dong_cua(r'for %%L in \(ffmpeg')
+d_tra = dong_cua(r'if exist "%CUU%"\s*\(\s*\r?\n\s*for %%F in \("%CUU%')
+d_chep_root = dong_cua(r'if exist "%ROOT%data\\giongviet\.db"')
 
-# --- D. Ban cu co bi xoa o lan build sau khong ----------------------------------
-print("\n--- D. Bản cũ bị xoá ở lần build kế tiếp ---")
-ok(bool(re.search(r'rmdir\s+/s\s+/q\s+"%CU%"', nguon, re.I)),
-   "có lệnh rmdir /s /q \"%CU%\" — nên thứ không được cứu sẽ mất sau LẦN BUILD THỨ HAI",
-   "đây là lý do vá sớm rẻ hơn vá muộn")
+print("\n--- A. Khối CỨU phải chạy TRƯỚC vòng gỡ junction ---")
+ok(d_cuu is not None, "có khối cứu dữ liệu từ %DICH%\\data",
+   f"dòng {d_cuu}" if d_cuu else "KHÔNG CÓ — build là mất thiết lập người dùng")
+ok(d_go is not None, "vẫn còn vòng gỡ junction", f"dòng {d_go}" if d_go else "")
+if d_cuu and d_go:
+    ok(d_cuu < d_go, "cứu TRƯỚC rồi mới xoá",
+       f"cứu ở dòng {d_cuu}, xoá ở dòng {d_go}")
 
-# --- E. Nhac lai cach va -------------------------------------------------------
-print("\n--- E. Cách vá (chưa làm — chủ dự án đã chọn hoãn 19/8) ---")
-print("      1. Thêm \"%CU%\\*.db\" vào glob ở vòng cứu.")
-print("      2. Chép cả thư mục: if exist \"%CU%\\sao-luu-cu\" xcopy /E /I /Y ...")
-print("      Đây là ĐƯỜNG ĐÓNG GÓI — việc hội đồng, không tự sửa.")
+print("\n--- B. Khối cứu bắt đủ các đuôi tệp giữ thiết lập ---")
+m = re.search(r'for %%F in \(([^)]*%DICH%\\data[^)]*)\)', nguon, re.I)
+ds_cuu = m.group(1) if m else ""
+if ds_cuu:
+    print(f"      glob cứu: {ds_cuu.strip()}")
+for duoi, vi_sao in (("*.db", "giongviet.db — nơi thật chứa thiết lập sau khi gom"),
+                     ("*.txt", "congduc.txt — danh sách của người dùng"),
+                     ("*.json", "hồ sơ, giao diện"),
+                     ("*.ini", "cấu hình bản trước khi gom")):
+    ok(duoi in ds_cuu, f"cứu {duoi}", vi_sao if duoi not in ds_cuu else "")
 
-print("\n" + "=" * 62)
+print("\n--- C. Khối TRẢ LẠI phải chạy TRƯỚC đoạn chép từ %ROOT% ---")
+ok(d_tra is not None, "có khối trả lại dữ liệu đã cứu",
+   f"dòng {d_tra}" if d_tra else "cứu rồi mà không trả thì cũng như không")
+if d_tra and d_chep_root:
+    ok(d_tra < d_chep_root,
+       "trả lại TRƯỚC khi chép bản của thư mục dự án",
+       f"trả ở dòng {d_tra}, chép ở dòng {d_chep_root} — các lệnh chép đều có "
+       '"if not exist" nên bản người dùng thắng')
+
+print("\n--- D. Thư mục cứu không bị xoá ngay trong cùng lượt build ---")
+ok(not re.search(r'rmdir /s /q "%CUU%"[^\r\n]*\r?\n[^\r\n]*echo\s+BUILD', nguon, re.I),
+   "giữ %CUU% lại sau khi build xong — còn đường lui nếu bản mới hỏng")
+
+print()
 if loi:
-    print(f"ĐỎ — {loi} chỗ lệch.")
-    print("KHÔNG chạy DongGoi.bat cho tới khi vá xong: build lại sẽ làm")
-    print("thiết lập người dùng lùi về mốc cũ mà không báo một lời nào.")
+    print(f"ĐỎ — {loi} chỗ lệch. KHÔNG chạy DongGoi.bat cho tới khi vá xong:")
+    print("build lại sẽ xoá thiết lập người dùng mà không báo một lời nào.")
 else:
-    print("XANH — bộ build cứu đủ dữ liệu người dùng.")
+    print("XANH — DongGoi.bat cứu dữ liệu người dùng đúng thứ tự.")
 sys.exit(1 if loi else 0)

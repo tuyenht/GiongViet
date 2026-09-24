@@ -208,7 +208,7 @@ def chuyen_ngu_hoa_hoc(text: str) -> str:
 
 # ---------------------------------------------------------------------------
 # Fast-path check: chỉ quét nếu có số, ký tự đặc thù hoặc công thức STEM
-_STEM_CHARS = set("0123456789%°℃℉²³Ωµ±≠≤≥≈√∫∑→⇄<=>+*/^[]_")
+_STEM_CHARS = set("0123456789%°℃℉²³Ωµ±≠≤≥≈√∫∑→⇄<=>+*/^[]_()")
 
 def chuyen_ngu_stem_toan_dien(text: str) -> str:
     """Bộ chuyển ngữ khoa học tổng hợp: Đơn vị -> Hóa học -> Toán học (có Fast-Path)."""

@@ -467,11 +467,14 @@ class Api:
 
     def _nghe_thu(self, ma):
         if not self._bo_mo_hinh.san_sang:
-            return {"loi": "Mô hình giọng đọc đang khởi động, vui lòng chờ vài giây rồi thử lại."}
+            msg = "Mô hình giọng đọc đang khởi động, vui lòng chờ vài giây rồi thử lại."
+            self._goi_js("window.gd.baoLoi", "Chưa sẵn sàng", msg)
+            return {"loi": msg}
         # Đang đọc dở mà nghe thử thì hai giọng nói chồng lên nhau. Tạm dừng
         # bài đọc trước; người dùng bấm Phát là đọc tiếp đúng chỗ đang dở.
         self._bo_doc.tam_dung()
-        self._bo_nghe_thu.phat(self._cfg, ma)
+        loc = getattr(self, "_loc_am", "")
+        self._bo_nghe_thu.phat(self._cfg, ma, loc=loc)
         return None
 
     # ================================================== điều khiển đọc

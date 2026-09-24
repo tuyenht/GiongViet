@@ -233,7 +233,7 @@
 .doc__goiy { margin-left: auto; font-size: 12.5px; color: var(--txt3); }
 /* Cuộn THẬT. Đệm đáy 72px để thanh đảo nổi không che mất dòng cuối cùng khi cuộn hết bài */
 .doc__cuon { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden;
-             padding: 8px 10px 72px 8px;
+             padding: 8px 10px 180px 8px;
              scrollbar-width: thin; scrollbar-color: transparent transparent;
              transition: scrollbar-color .15s; }
 .doc__cuon:hover { scrollbar-color: var(--rail, #868686) transparent; }
@@ -415,10 +415,30 @@
 .the__phan { padding: 12px 14px; }
 .the__nhan { font-size: 12px; font-weight: 600; letter-spacing: .04em;
              text-transform: uppercase; color: var(--txt3); }
-.giong-hang { display: flex; gap: 8px; margin-top: 6px; }
-.giong-hang .chon { flex: 1; min-width: 0; }
-.giong-hang .nut { width: 36px; height: 36px; flex: none; justify-content: center;
-                   border: 1px solid var(--stroke2); background: var(--ctl); }
+.giong-hang { display: flex; gap: 8px; margin-top: 6px; align-items: stretch; }
+.giong-hang .chon { flex: 1; min-width: 0; height: 36px; border-radius: 6px; }
+.giong-hang .nut--nghemau {
+  height: 36px; min-width: 66px; padding: 0 10px; flex: none;
+  display: flex; align-items: center; justify-content: center; gap: 5px;
+  font-size: 13px; font-weight: 600; border-radius: 6px;
+  cursor: pointer; transition: all .15s ease;
+}
+.giong-hang .nut--acc-soft {
+  background: rgba(0, 103, 192, 0.08); color: var(--acc, #0067c0);
+  border: 1px solid rgba(0, 103, 192, 0.28);
+}
+.giong-hang .nut--acc-soft:hover {
+  background: rgba(0, 103, 192, 0.16); border-color: var(--acc, #0067c0);
+  transform: translateY(-1px); box-shadow: 0 2px 6px rgba(0, 103, 192, 0.15);
+}
+.giong-hang .nut--dang {
+  background: rgba(209, 52, 56, 0.12); color: var(--err, #d13438);
+  border: 1px solid rgba(209, 52, 56, 0.4); animation: pulseStop 1.2s infinite;
+}
+@keyframes pulseStop {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.75; }
+}
 .mau-dang-phat { display: flex; align-items: center; gap: 7px; margin-top: 8px;
                  font-size: 12.5px; color: var(--acc); }
 
@@ -672,26 +692,27 @@
 
 /* ============================================================ KHUNG PHỤ ĐỀ NỔI SONG NGỮ */
 .phude-songngu {
-  position: fixed;
-  bottom: 74px;
+  position: absolute;
+  bottom: 68px;
   left: 50%;
   transform: translateX(-50%);
-  width: calc(100% - 460px);
-  max-width: 820px;
+  width: calc(100% - 32px);
+  max-width: 760px;
   min-width: 380px;
-  z-index: 85;
   background: var(--layer);
   border: 1px solid var(--stroke2);
   border-radius: 10px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.16);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.12);
   backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   animation: phuDeHien .22s cubic-bezier(0.16, 1, 0.3, 1);
   overflow: hidden;
   transition: all .2s ease;
+  z-index: 45;
 }
 
 @keyframes phuDeHien {
-  from { opacity: 0; transform: translate(-50%, 12px); }
+  from { opacity: 0; transform: translate(-50%, 8px); }
   to { opacity: 1; transform: translate(-50%, 0); }
 }
 

@@ -62,14 +62,13 @@ const DS_LOC_NGON_NGU = [
 ];
 
 const laNam = (g) => {
-  if (/\(nam\)/i.test(g.ten)) return true;
-  const moTa = (g.moTa || '').replace(/miền\s+nam/gi, '');
-  return /\bnam\b/i.test(moTa);
+  const full = (String(g.ten || '') + ' ' + String(g.moTa || '') + ' ' + String(g.phu || '')).replace(/miền\s+nam/gi, '');
+  return /\bnam\b/i.test(full);
 };
 
 const laNu = (g) => {
-  if (/\(nữ\)/i.test(g.ten)) return true;
-  return /\bnữ\b/i.test(g.moTa || '');
+  const full = (String(g.ten || '') + ' ' + String(g.moTa || '') + ' ' + String(g.phu || ''));
+  return /\bnữ\b/i.test(full);
 };
 
 function veManGiong(S, D) {
@@ -177,55 +176,193 @@ function veManGiong(S, D) {
   </div>`;
 }
 
+function layThongTinGiongChiTiet(g) {
+  const ten = String(g.ten || '');
+  const moTa = String(g.moTa || '');
+  const phu = String(g.phu || '');
+  const phongCachGoc = String(g.phongCach || '');
+  const khuyenDungGoc = String(g.khuyenDung || '');
+  const fullText = (ten + ' ' + moTa + ' ' + phu + ' ' + phongCachGoc).toLowerCase();
+
+  // 1. Tách tên chính và phần phụ trong ngoặc
+  let tenChinh = ten;
+  let phuTrongNgoac = '';
+  const match = ten.match(/^(.*?)\s*\((.*?)\)$/);
+  if (match) {
+    tenChinh = match[1].trim();
+    phuTrongNgoac = match[2].trim();
+  }
+
+  // 2. Xác định Giới tính & Vùng miền
+  let tagGioiVung = g.gioi ? `${g.gioi === 'Nữ' ? '👩' : '👨'} ${g.gioi} · ${g.vung || 'Toàn quốc'}` : 'Giọng đọc AI';
+  let icon = '🎙️';
+  let cls = 'the-giong__avatar--tunhien';
+
+  const laNam = (g.gioi === 'Nam') || (ten + ' ' + phuTrongNgoac).toLowerCase().includes('nam') || fullText.includes('nam ') || fullText.includes('nam·') || fullText.includes('(nam)');
+  const laNu = (g.gioi === 'Nữ') || (ten + ' ' + phuTrongNgoac).toLowerCase().includes('nữ') || fullText.includes('nữ');
+
+  let vung = g.vung || '';
+  if (!vung) {
+    if (fullText.includes('miền bắc') || fullText.includes('hà nội') || fullText.includes('bắc')) vung = 'Miền Bắc';
+    else if (fullText.includes('miền nam') || fullText.includes('sài gòn') || fullText.includes('nam')) vung = 'Miền Nam';
+    else if (fullText.includes('miền trung') || fullText.includes('huế') || fullText.includes('đà nẵng') || fullText.includes('trung')) vung = 'Miền Trung';
+  }
+
+  if (laNu) {
+    tagGioiVung = vung ? `👩 Nữ · ${vung}` : '👩 Giọng Nữ';
+    icon = '👩';
+    cls = 'the-giong__avatar--nu';
+  } else if (laNam) {
+    tagGioiVung = vung ? `👨 Nam · ${vung}` : '👨 Giọng Nam';
+    icon = '👨';
+    cls = 'the-giong__avatar--nam';
+  }
+
+  // 3. Phong cách / Thể loại sở trường
+  let phongCach = phongCachGoc || 'Tự nhiên · Đa dụng';
+  if (fullText.includes('kiếm hiệp') || fullText.includes('cổ trang') || fullText.includes('dã sử') || g.id === 'rieng_001') {
+    icon = '⚔️';
+    phongCach = 'Kiếm hiệp · Cổ trang';
+    cls = 'the-giong__avatar--kiemhiep';
+  } else if (fullText.includes('review') || fullText.includes('recap') || g.id === 'rieng_002' || fullText.includes('duy onyx')) {
+    icon = '🍿';
+    phongCach = 'Review phim · Kịch bản';
+    cls = 'the-giong__avatar--review';
+  } else if (fullText.includes('sách') || fullText.includes('podcast') || fullText.includes('tản văn') || g.id === 'rieng_003' || fullText.includes('truyền cảm')) {
+    icon = '☕';
+    phongCach = 'Sách nói · Truyền cảm';
+    cls = 'the-giong__avatar--sachnoi';
+  } else if (fullText.includes('tin') || fullText.includes('thời sự') || fullText.includes('chính luận') || g.id === 'rieng_004' || fullText.includes('minh đức') || fullText.includes('mai anh') || fullText.includes('minh triết') || fullText.includes('thùy dung')) {
+    icon = '📢';
+    phongCach = 'Tin tức · Thời sự';
+    cls = 'the-giong__avatar--tintuc';
+  } else if (fullText.includes('truyện') || fullText.includes('tự sự') || fullText.includes('sâu lắng') || g.id === 'rieng_005' || fullText.includes('thái sơn') || fullText.includes('ngọc linh') || fullText.includes('thanh bình') || fullText.includes('thục đoan') || fullText.includes('mỹ duyên')) {
+    icon = '🎙️';
+    phongCach = 'Kể chuyện · Tự sự';
+    cls = 'the-giong__avatar--doctruyen';
+  } else if (fullText.includes('công đức') || fullText.includes('trang nghiêm')) {
+    icon = '🏛️';
+    phongCach = 'Trang nghiêm · Nghi lễ';
+    cls = 'the-giong__avatar--congduc';
+  } else if (fullText.includes('quảng cáo') || fullText.includes('tiktok')) {
+    icon = '🛍️';
+    phongCach = 'Quảng cáo · Sôi nổi';
+    cls = 'the-giong__avatar--quangcao';
+  } else if (fullText.includes('bản xứ') || (g.ngonNgu && g.ngonNgu !== 'vi')) {
+    icon = '🌐';
+    phongCach = 'Quốc tế · Bản xứ';
+    cls = 'the-giong__avatar--tunhien';
+  }
+
+  // 4. Dòng mô tả chi tiết phong phú (Full Rich Subtitle with Suggestions)
+  let dongChiTiet = phu;
+  if (!dongChiTiet || dongChiTiet === 'Giọng dựng sẵn trong mô hình') {
+    if (khuyenDungGoc) {
+      dongChiTiet = `${vung || 'Toàn quốc'} · ${phongCach} · Gợi ý: ${khuyenDungGoc}`;
+    } else if (moTa) {
+      dongChiTiet = moTa;
+    } else {
+      dongChiTiet = `${tagGioiVung} · ${phongCach} · Đọc sách báo và tài liệu`;
+    }
+  }
+
+  return { icon, tagGioiVung, phongCach, cls, tenChinh, dongChiTiet };
+}
+
 function veTheGiong(g, S) {
-  const dangNghe = g.dangNgheThu;
+  const dangNghe = !!(g.dangNgheThu || (S && S.dangNgheThu === g.id));
   const daNgu = !!g.daNgonNgu;
-  const langCode = g.ngonNgu || 'vi';
-  const langObj = DS_LOC_NGON_NGU.find((x) => x.ma === langCode) || { co: '🇻🇳', ten: 'Tiếng Việt' };
+  const dsNgonNgu = Array.isArray(g.dsNgonNgu) && g.dsNgonNgu.length > 0
+    ? g.dsNgonNgu
+    : (daNgu ? DS_LOC_NGON_NGU.map((x) => x.ma) : [g.ngonNgu || 'vi']);
+  const laTatCa = daNgu || dsNgonNgu.length === DS_LOC_NGON_NGU.length;
   const moMenu = S && S.moMenuLangGiongId === g.id;
 
+  const { icon, tagGioiVung, phongCach, cls, tenChinh, dongChiTiet } = layThongTinGiongChiTiet(g);
+
+  let btnLabel = '';
+  if (laTatCa) {
+    btnLabel = '🌐 Đa ngữ (28) ▾';
+  } else if (dsNgonNgu.length > 1) {
+    const flags = dsNgonNgu.slice(0, 2).map((c) => (DS_LOC_NGON_NGU.find((x) => x.ma === c) || {}).co || '').filter(Boolean).join('');
+    btnLabel = `${flags} (${dsNgonNgu.length}) ▾`;
+  } else {
+    const langObj = DS_LOC_NGON_NGU.find((x) => x.ma === dsNgonNgu[0]) || { co: '🇻🇳', ten: 'Tiếng Việt' };
+    btnLabel = `${langObj.co} ${langObj.ten} ▾`;
+  }
+
   return `<div class="the-giong${g.dangDung ? ' dung' : ''}" style="position:relative">
+    <!-- Tầng 1: Avatar Icon + Tên Giọng To Rõ + Badges (Đang dùng / Xoá) -->
     <div class="the-giong__dau">
-      <span class="the-giong__tron${g.rieng ? ' rieng' : ''}">${ic('micro', 17)}</span>
-      <span class="the-giong__ten" title="${esc(g.ten)}">${esc(g.ten)}</span>
-      <button class="the-giong__dangu-btn${daNgu ? ' bat' : ''}" data-toggledangu="${esc(g.id)}" title="Bấm để chọn ngôn ngữ hoặc bật/tắt chế độ Đa ngôn ngữ">
-        ${daNgu ? '🌐 Đa ngữ ▾' : `${langObj.co} ${langObj.ten.split(' ')[0]} ▾`}
-      </button>
-      ${g.dangDung ? '<span class="the-giong__nhan">Đang dùng</span>' : ''}
+      <span class="the-giong__avatar ${cls}">${icon}</span>
+      <div class="the-giong__info-ten">
+        <span class="the-giong__ten" title="${esc(g.ten)}">${esc(tenChinh)}</span>
+        <span class="the-giong__phongcach-sub" title="${esc(phongCach)}">${esc(phongCach)}</span>
+      </div>
+      ${g.dangDung ? '<span class="the-giong__nhan">✓ Đang dùng</span>' : ''}
       ${g.rieng ? `<button class="the-giong__xoa-top" data-xoagiong="${esc(g.id)}" data-xoaten="${esc(g.ten)}" title="Xoá giọng này khỏi máy">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
         <span>Xoá</span>
       </button>` : ''}
     </div>
 
+    <!-- Tầng 2: Tag Thể Loại & Nút Đa Ngôn Ngữ -->
+    <div class="the-giong__hang-tag">
+      <span class="the-giong__tag-phongcach" title="${esc(tagGioiVung)}">${esc(tagGioiVung)}</span>
+      <button class="the-giong__dangu-btn${laTatCa || dsNgonNgu.length > 1 ? ' bat' : ''}" data-toggledangu="${esc(g.id)}" title="Bấm để chọn 1 hoặc nhiều ngôn ngữ phát âm">
+        ${btnLabel}
+      </button>
+    </div>
+
     ${moMenu ? `
-      <div class="the-giong__menu-lang" style="position:absolute;top:40px;left:30px;right:10px;z-index:99;background:var(--card-bg,#fff);border:1px solid var(--stroke);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.18);max-height:240px;overflow-y:auto;padding:6px">
-        <div style="font-size:11px;font-weight:700;color:var(--txt3);padding:4px 8px;text-transform:uppercase">Chọn ngôn ngữ phát âm</div>
-        <button class="giongkho__item-ngonngu${daNgu ? ' da-chon' : ''}" data-chonlanggiong="${esc(g.id)}" data-langcode="all" style="width:100%;text-align:left;display:flex;align-items:center;gap:6px;padding:6px 8px;font-size:12.5px;border-radius:4px;border:none;background:${daNgu ? 'var(--acc-soft)' : 'transparent'};cursor:pointer">
-          <span style="font-size:14px">🌐</span>
-          <span style="font-weight:600;flex:1">Đa ngôn ngữ (Toàn cầu)</span>
-          ${daNgu ? '<span style="color:var(--acc);font-weight:bold">✓</span>' : ''}
-        </button>
-        <div style="height:1px;background:var(--divider);margin:4px 0"></div>
-        ${DS_LOC_NGON_NGU.map((l) => `
-          <button class="giongkho__item-ngonngu${!daNgu && langCode === l.ma ? ' da-chon' : ''}" data-chonlanggiong="${esc(g.id)}" data-langcode="${l.ma}" style="width:100%;text-align:left;display:flex;align-items:center;gap:6px;padding:5px 8px;font-size:12px;border-radius:4px;border:none;background:${!daNgu && langCode === l.ma ? 'var(--acc-soft)' : 'transparent'};cursor:pointer">
-            <span>${l.co}</span>
-            <span style="flex:1">${l.ten}</span>
-            ${!daNgu && langCode === l.ma ? '<span style="color:var(--acc);font-weight:bold">✓</span>' : ''}
-          </button>
-        `).join('')}
+      <div class="the-giong__menu-lang" style="position:absolute;top:40px;left:20px;right:10px;z-index:99;background:var(--card-bg,#fff);border:1px solid var(--stroke);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.2);max-height:280px;display:flex;flex-direction:column;padding:6px">
+        <div style="font-size:11px;font-weight:700;color:var(--txt3);padding:4px 8px;text-transform:uppercase;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--stroke);flex:none">
+          <span>Chọn ngôn ngữ (${dsNgonNgu.length}/28)</span>
+          <button class="lienket" data-dongmenulang="${esc(g.id)}" style="font-size:11px;cursor:pointer">Đóng</button>
+        </div>
+        <div style="flex:1;min-height:0;overflow-y:auto;padding:4px 0">
+          <label style="display:flex;align-items:center;gap:8px;padding:6px 8px;font-size:12.5px;font-weight:600;color:var(--txt);cursor:pointer;user-select:none;border-radius:4px" class="giongkho__item-ngonngu">
+            <input type="checkbox" data-checklang="${esc(g.id)}" data-langcode="all" ${laTatCa ? 'checked' : ''} style="accent-color:var(--acc);cursor:pointer;width:15px;height:15px">
+            <span style="font-size:14px">🌐</span>
+            <span style="flex:1">Đa ngôn ngữ (Tất cả 28 thứ tiếng)</span>
+          </label>
+          <div style="height:1px;background:var(--divider);margin:4px 0"></div>
+          ${DS_LOC_NGON_NGU.map((l) => {
+            const isChecked = laTatCa || dsNgonNgu.includes(l.ma);
+            return `
+              <label style="display:flex;align-items:center;gap:8px;padding:5px 8px;font-size:12px;color:var(--txt);cursor:pointer;user-select:none;border-radius:4px" class="giongkho__item-ngonngu">
+                <input type="checkbox" data-checklang="${esc(g.id)}" data-langcode="${l.ma}" ${isChecked ? 'checked' : ''} style="accent-color:var(--acc);cursor:pointer;width:15px;height:15px">
+                <span>${l.co}</span>
+                <span style="flex:1">${l.ten}</span>
+              </label>
+            `;
+          }).join('')}
+        </div>
+        <div style="padding:6px 8px 2px;border-top:1px solid var(--stroke);display:flex;justify-content:flex-end;flex:none">
+          <button class="nut nut--acc" data-dongmenulang="${esc(g.id)}" style="font-size:11.5px;padding:2px 10px;height:24px">Xong</button>
+        </div>
       </div>
     ` : ''}
 
-    <div class="the-giong__phu">${esc([g.moTa, g.phu].filter(Boolean).join(' · '))}</div>
+    <!-- Tầng 3: Sóng Âm Waveform sống động -->
     ${veSongAm(g)}
+
+    <!-- Tầng 4: Metadata thông tin chi tiết đầy đủ -->
+    <div class="the-giong__phu" title="${esc(dongChiTiet)}">
+      <span class="the-giong__dot-indicator"></span>
+      <span class="the-giong__phu-text">${esc(dongChiTiet)}</span>
+    </div>
+
+    <!-- Tầng 5: Bộ Nút Hành Động -->
     <div class="the-giong__nut">
-      <button class="nut nut--vien${dangNghe ? ' nut--dang' : ''}"
+      <button class="nut nut--vien${dangNghe ? ' nut--dang' : ''} the-giong__btn-nghe"
               data-nghegiong="${esc(g.id)}"
-        >${ic(dangNghe ? 'dunghan' : 'tamgiac', 11)} ${dangNghe ? 'Dừng' : 'Nghe thử'}</button>
+              title="${dangNghe ? 'Dừng đọc thử' : 'Nghe thử giọng này'}">
+        ${ic(dangNghe ? 'dunghan' : 'tamgiac', 11)} <span>${dangNghe ? 'Dừng' : 'Nghe thử'}</span>
+      </button>
       ${g.dangDung
-        ? '<span class="the-giong__dangdung">Đang dùng</span>'
-        : `<button class="nut nut--acc" data-giong="${esc(g.id)}">Dùng giọng này</button>`}
+        ? '<span class="the-giong__dangdung">✓ Đang dùng</span>'
+        : `<button class="nut nut--acc the-giong__btn-chon" data-giong="${esc(g.id)}">Dùng giọng này</button>`}
     </div>
   </div>`;
 }
@@ -245,7 +382,7 @@ function veTheNhanBan(S) {
   return `<button class="the-giong the-giong--moi" data-nhanbangiong="1">
     ${ic('cong', 26)}
     <div class="the-giong__ten">Nhân bản giọng mới</div>
-    <div class="the-giong__phu">Cần một tệp thu âm khoảng 30 giây</div>
+    <div class="the-giong__phu">Chuẩn 6s – 10s · Có kịch bản mẫu sẵn</div>
   </button>`;
 }
 

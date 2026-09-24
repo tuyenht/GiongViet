@@ -100,6 +100,7 @@ def _cho_trong() -> str:
 
 def du_lieu(voices: list, dang_dung: str) -> dict:
     """voices: danh sách đã qua du_lieu.danh_sach_giong (có ten, mo_ta, rieng)."""
+    from src.core import danh_muc_giong
     goc_rieng = {g["id"]: g for g in engine.doc_ds_giong_rieng()}
     cua_toi, co_san = [], []
     da_co = set()
@@ -110,37 +111,50 @@ def du_lieu(voices: list, dang_dung: str) -> dict:
             continue
         da_co.add(vid)
 
+        info = danh_muc_giong.tra_cuu_thong_tin_giong(vid)
+
         the = {
             "id": vid,
             "ten": v["ten"],
-            "moTa": v.get("mo_ta", ""),
-            "dangDung": vid == dang_dung,
+            "moTa": info["dac_trung"],
+            "phongCach": info["phong_cach"],
+            "khuyenDung": info["khuyen_dung"],
+            "vung": info["vung"],
+            "gioi": info["gioi"],
+            "dangDung": vid == dang_dung or str(dang_dung).startswith(str(vid)),
             "rieng": v["rieng"],
             "song": [],
-            "phu": "",
+            "phu": f"{info['vung']} · {info['phong_cach']} · Khuyên dùng: {info['khuyen_dung']}",
         }
         if v["rieng"]:
             g = goc_rieng.get(vid, {})
+            # Đọc cờ THẬT người dùng đã đặt, đừng gán cứng True/"all": gán cứng
+            # là mọi giọng nhân bản đều bị dán nhãn "đa ngữ" dù người dùng vừa
+            # tắt nó đi, và con số đếm ở màn Thư viện giọng phồng theo.
             the["daNgonNgu"] = bool(g.get("da_ngon_ngu", False))
             the["ngonNgu"] = str(g.get("ngon_ngu", "vi"))
             tep = g.get("file", "")
             the["song"] = song_am(tep)
-            phan = []
-            if g.get("ngay_tao"):
-                phan.append(f"Nhân bản {g['ngay_tao']}")
-            if tep:
-                phan.append(_co_chu(_kich_thuoc(tep)))
-            if not the["song"] and tep:
-                phan.append("không đọc được mẫu")
-            the["phu"] = " · ".join(phan)
+            # Chốt `if tep` phải giữ: Path("") ra WindowsPath('.'), is_dir() đúng,
+            # rồi _kich_thuoc rglob đệ quy CẢ thư mục làm việc và in ra như thể
+            # đó là cỡ mẫu thu.
+            co_size = _co_chu(_kich_thuoc(tep)) if tep else "chưa có"
+            the["phu"] = f"Mẫu thu {co_size} · {info['phong_cach']} · Khuyên dùng: {info['khuyen_dung']}"
             cua_toi.append(the)
         else:
             the["daNgonNgu"] = bool(v.get("da_ngon_ngu", False))
             the["ngonNgu"] = str(v.get("ngon_ngu", "vi"))
-            the["phu"] = "Giọng dựng sẵn trong mô hình"
+            # KHÔNG vẽ sóng cho giọng dựng sẵn. Docstring đầu tệp đã chốt: giọng
+            # dựng sẵn nằm trong mô hình, không có tệp mẫu nên không có sóng
+            # thật để đọc - thà để trống còn hơn vẽ một hình bịa ra. Bản trước
+            # sinh sóng bằng math.sin() từ mã băm tên giọng, nhìn y như sóng
+            # thật nên người dùng tưởng đó là dạng sóng của giọng đó.
             co_san.append(the)
 
-    mo_hinh = _kich_thuoc(engine.BASE_DIR / "vieneu_models")
+    # Mô hình nay nằm ở models/vieneu; "vieneu_models" là bố cục cũ. Dò cả hai
+    # đúng cách engine vẫn dò (DocCongDuc.py), chứ gõ cứng một đường là màn hình
+    # báo "chiếm chưa có" trong khi đĩa đang giữ hơn 300 MB.
+    mo_hinh = _kich_thuoc(engine.MODELS_DIR)
     mau_rieng = _kich_thuoc(engine.GIONG_RIENG_DIR)
     return {
         "cuaToi": cua_toi,

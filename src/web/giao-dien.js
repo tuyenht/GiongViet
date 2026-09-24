@@ -683,15 +683,65 @@ const DS_NGON_NGU = [
   { ma: 'tr', ten: 'Tiếng Thổ Nhĩ Kỳ (Türkçe)', co: '🇹🇷', nhom: 'Nam Á & Trung Đông' },
 ];
 
+const GIONG_BAN_XU_MAC_DINH = {
+  'vi': { nam: 'ngan', nu: 'sach-noi' },
+  'en': { nam: 'en-US-GuyNeural', nu: 'en-US-JennyNeural' },
+  'en-gb': { nam: 'en-GB-RyanNeural', nu: 'en-GB-SoniaNeural' },
+  'en-au': { nam: 'en-AU-WilliamMultilingualNeural', nu: 'en-AU-NatashaNeural' },
+  'de': { nam: 'de-DE-ConradNeural', nu: 'de-DE-KatjaNeural' },
+  'fr': { nam: 'fr-FR-HenriNeural', nu: 'fr-FR-DeniseNeural' },
+  'es': { nam: 'es-ES-AlvaroNeural', nu: 'es-ES-ElviraNeural' },
+  'it': { nam: 'it-IT-DiegoNeural', nu: 'it-IT-ElsaNeural' },
+  'pt': { nam: 'pt-BR-AntonioNeural', nu: 'pt-BR-FranciscaNeural' },
+  'ru': { nam: 'ru-RU-DmitryNeural', nu: 'ru-RU-SvetlanaNeural' },
+  'zh': { nam: 'zh-CN-YunxiNeural', nu: 'zh-CN-XiaoxiaoNeural' },
+  'yue': { nam: 'zh-HK-WanLungNeural', nu: 'zh-HK-HiuGaaiNeural' },
+  'zh-tw': { nam: 'zh-TW-YunJheNeural', nu: 'zh-TW-HsiaoChenNeural' },
+  'ja': { nam: 'ja-JP-KeitaNeural', nu: 'ja-JP-NanamiNeural' },
+  'ko': { nam: 'ko-KR-InJoonNeural', nu: 'ko-KR-SunHiNeural' },
+  'th': { nam: 'th-TH-NiwatNeural', nu: 'th-TH-PremwadeeNeural' },
+  'lo': { nam: 'lo-LA-ChanthavongNeural', nu: 'lo-LA-KeomanyNeural' },
+  'id': { nam: 'id-ID-ArdiNeural', nu: 'id-ID-GadisNeural' },
+  'ms': { nam: 'ms-MY-OsmanNeural', nu: 'ms-MY-YasminNeural' },
+  'fil': { nam: 'fil-PH-AngeloNeural', nu: 'fil-PH-BlessicaNeural' },
+  'km': { nam: 'km-KH-PisethNeural', nu: 'km-KH-SreymomNeural' },
+  'my': { nam: 'my-MM-ThihaNeural', nu: 'my-MM-NilarNeural' },
+  'nl': { nam: 'nl-NL-MaartenNeural', nu: 'nl-NL-FennaNeural' },
+  'ar': { nam: 'ar-SA-HamedNeural', nu: 'ar-SA-ZariyahNeural' },
+  'hi': { nam: 'hi-IN-MadhurNeural', nu: 'hi-IN-SwaraNeural' },
+  'tr': { nam: 'tr-TR-AhmetNeural', nu: 'tr-TR-EmelNeural' }
+};
+
+function doanGioiTinhGiong(giongMa) {
+  if (!giongMa) return 'nam';
+  const g = GIONG.find(x => (x.id || x.ma) === giongMa || x.ten === giongMa);
+  if (g) {
+    if (g.gioi) {
+      const gStr = String(g.gioi).toLowerCase();
+      if (gStr.includes('nữ') || gStr.includes('nu') || gStr.includes('female')) return 'nu';
+      if (gStr.includes('nam') || gStr.includes('male')) return 'nam';
+    }
+    const ten = (g.ten || '') + ' ' + (g.moTa || '') + ' ' + (g.ma || '') + ' ' + (g.id || '');
+    const tenNorm = ten.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    if (['nu', 'linh', 'ly', 'trang', 'dung', 'thao', 'huyen', 'jenny', 'sonia', 'katja', 'denise', 'xiaoxiao', 'nanami', 'sunhi', 'gadis', 'premwadee', 'keomany', 'sach noi'].some(k => tenNorm.includes(k))) {
+      return 'nu';
+    }
+  }
+  return 'nam';
+}
+
 // ---------------------------------------------------------------- cột phải
 
 function veCotPhai() {
   const h = hoSoDangDung(S);
-  const g = GIONG.find((x) => x.ma === h.giong);
+  const tgtLang = h.ngonNgu || 'vi';
+  let g = GIONG.find((x) => (x.id || x.ma) === h.giong || x.ten === h.giong);
+  if (!g && GIONG.length) {
+    g = GIONG[0];
+  }
   const chuY = chuYDangXem(S, TAI_LIEU);
   const dangTai = S.situation === 'giong_dang_tai';
   const srcLang = h.ngonNguNguon || 'auto';
-  const tgtLang = h.ngonNgu || 'vi';
   const phatHien = S.ngonNguPhatHien || 'vi';
   const objPhatHien = DS_NGON_NGU.find((l) => l.ma === phatHien) || { co: '🇻🇳', ten: 'Tiếng Việt' };
   const thucTeNguon = srcLang === 'auto' ? phatHien : srcLang;
@@ -747,10 +797,10 @@ function veCotPhai() {
                   title="${esc(g ? g.ten + (g.ngan ? ' — ' + g.ngan : '') : '')}">
             ${ic('micro')}<span class="chon__gt">${esc(g ? g.ten : '')}</span>
             <span class="chon__mui">${ic('mui', 13)}</span></button>
-          <button class="nut${S.mauDangPhat ? ' nut--dang' : ''}" id="ngheMau"
-                  title="${S.mauDangPhat ? 'Đang đọc thử — bấm để dừng'
+          <button class="nut nut--nghemau${S.mauDangPhat ? ' nut--dang' : ' nut--acc-soft'}" id="ngheMau"
+                  title="${S.mauDangPhat ? 'Đang đọc thử — bấm để dừng (Ctrl+M)'
                                          : 'Nghe mẫu giọng (Ctrl+M)'}"
-                  >${ic(S.mauDangPhat ? 'dunghan' : 'loa')}</button>
+                  >${ic(S.mauDangPhat ? 'dunghan' : 'loa', 15)}<span>${S.mauDangPhat ? 'Dừng' : 'Thử'}</span></button>
         </div>
         ${S.mauDangPhat ? `<div class="mau-dang-phat">
           <span class="cham cham--acc"></span>Đang phát mẫu ${esc(g ? g.ten : '')}…</div>` : ''}
@@ -899,33 +949,59 @@ const xepGiong = (a, b) =>
 function veRoiGiong() {
   const hoso = hoSoDangDung(S);
   const dung = hoso.giong;
-  const nn = hoso.ngonNgu || 'vi';
+  const nn = (hoso.ngonNgu || 'vi').toLowerCase();
 
-  // Lọc giọng: 
-  // 1. Khi ở tiếng Việt (vi): Hiển thị tất cả giọng tiếng Việt (VieNeu + Cloned + Hoài My, Nam Minh)
-  // 2. Khi ở tiếng Anh (en, en-gb, us, uk): Hiển thị tất cả giọng tiếng Anh + Giọng VieNeu song ngữ
-  // 3. Khi ở tiếng Trung (zh, yue, zh-tw): Hiển thị tất cả giọng tiếng Trung
-  // 4. Khi ở các tiếng khác (ja, ko, de, fr, th, ms...): Hiển thị tất cả giọng bản xứ tương ứng
+  // Lọc giọng:
+  // 1. Giọng của tôi (rieng = true): LUÔN LUÔN hiển thị ở mọi ngôn ngữ (hỗ trợ đọc 28+ thứ tiếng).
+  // 2. Giọng chuẩn / dựng sẵn: CHỈ hiển thị giọng thuộc đúng ngôn ngữ đích tương ứng.
   let ds = GIONG.filter((g) => {
+    if (g.rieng) return true;
+    const gnn = (g.ngonNgu || g.ngon_ngu || 'vi').toLowerCase();
+    const gId = (g.id || g.ma || '').toLowerCase();
+    const gVung = (g.vung || '').toLowerCase();
+
     if (nn === 'vi') {
-      return g.ngonNgu === 'vi' || !g.ngonNgu;
+      return gnn === 'vi' || !gnn;
     }
-    if (['en', 'en-gb', 'us', 'uk'].includes(nn)) {
-      return ['en', 'en-gb', 'us', 'uk'].includes(g.ngonNgu) || g.rieng || !(g.id || '').includes('Neural');
+    if (nn === 'en') {
+      return gnn === 'en' || gVung.includes('us') || gVung.includes('mỹ') || gId.startsWith('en-us');
     }
-    if (['zh', 'yue', 'zh-tw'].includes(nn)) {
-      return ['zh', 'yue', 'zh-tw'].includes(g.ngonNgu) || (g.rieng && g.daNgonNgu);
+    if (nn === 'en-gb') {
+      return gnn === 'en-gb' || gVung.includes('uk') || gVung.includes('anh') || gId.startsWith('en-gb');
     }
-    return g.ngonNgu === nn || (g.rieng && g.daNgonNgu);
+    if (nn === 'en-au') {
+      return gnn === 'en-au' || gVung.includes('au') || gVung.includes('úc') || gId.startsWith('en-au');
+    }
+    if (nn === 'zh') {
+      return gnn === 'zh' || gId.startsWith('zh-cn');
+    }
+    if (nn === 'yue') {
+      return gnn === 'yue' || gId.startsWith('zh-hk');
+    }
+    if (nn === 'zh-tw') {
+      return gnn === 'zh-tw' || gId.startsWith('zh-tw');
+    }
+    return gnn === nn || gId.startsWith(`${nn}-`);
   });
-                
-  // Đảm bảo giọng đang dùng luôn hiện lên dù có bị lọc
-  if (dung && !ds.find(g => (g.id || g.ma) === dung)) {
-    const gd = GIONG.find(g => (g.id || g.ma) === dung);
-    if (gd) ds.unshift(gd);
+
+  // Nếu danh sách lọc bị rỗng (ví dụ ngôn ngữ hiếm), fallback lấy giọng mặc định của ngôn ngữ đó
+  if (!ds.length) {
+    const dMap = GIONG_BAN_XU_MAC_DINH[nn] || GIONG_BAN_XU_MAC_DINH[nn.split('-')[0]];
+    if (dMap) {
+      const gFallback = GIONG.filter(g => (g.id || g.ma) === dMap.nam || (g.id || g.ma) === dMap.nu);
+      ds.push(...gFallback);
+    }
   }
 
-  const nhom = (rieng) => ds.filter((g) => g.rieng === rieng).sort(xepGiong).map((g) => {
+  // Đảm bảo nếu giọng đang chọn hợp lệ với ngôn ngữ này thì được ưu tiên hiển thị
+  if (dung && !ds.find(g => (g.id || g.ma) === dung)) {
+    const gd = GIONG.find(g => (g.id || g.ma) === dung);
+    if (gd && (gd.rieng || (gd.ngonNgu || 'vi').toLowerCase() === nn)) {
+      ds.unshift(gd);
+    }
+  }
+
+  const nhom = (rieng) => ds.filter((g) => Boolean(g.rieng) === rieng).sort(xepGiong).map((g) => {
     const ma = g.id || g.ma;
     const dangNghe = S.dangNgheThu === ma;
     const moTa = g.ngan || g.moTa || g.mo_ta || '';
@@ -944,11 +1020,14 @@ function veRoiGiong() {
     </button>`;
   }).join('');
 
-  const coSan = nhom(false);
   const cuaToi = nhom(true);
-  return `<div class="roi roi--giong" style="position:absolute;z-index:60;margin-top:4px">
-    ${coSan ? `<div class="roi__nhom">Giọng có sẵn</div>${coSan}` : ''}
-    ${cuaToi ? `<div class="roi__nhom">Giọng của tôi</div>${cuaToi}` : ''}
+  const coSan = nhom(false);
+  const langObj = (typeof DS_NGON_NGU !== 'undefined' ? DS_NGON_NGU : []).find((x) => x.ma === nn) || { co: '🌐', ten: nn };
+  const tieuDeCoSan = nn === 'vi' ? 'Giọng có sẵn (Tiếng Việt)' : `${langObj.co || '🌐'} Giọng bản xứ ${langObj.ten || nn}`;
+
+  return `<div class="roi roi--giong" style="position:absolute;z-index:60;margin-top:4px;max-height:420px;overflow-y:auto;box-shadow:0 10px 30px rgba(0,0,0,0.18);border-radius:8px">
+    ${coSan ? `<div class="roi__nhom">${esc(tieuDeCoSan)}</div>${coSan}` : ''}
+    ${cuaToi ? `<div class="roi__nhom">🎙️ Giọng của tôi (Nhân bản)</div>${cuaToi}` : ''}
     <div class="roi__ngan"></div>
     <button class="roi__muc" data-lenh="Nhân bản giọng từ file…">
       <span class="roi__tich">${ic('cong', 13)}</span>
@@ -958,6 +1037,7 @@ function veRoiGiong() {
 }
 
 // ---------------------------------------------------------------- phụ đề song ngữ
+
 
 function vePhuDeSongNgu(S, h) {
   if (S.view !== 'dang_doc' || !h || !h.ngonNgu || h.ngonNgu === 'vi') return '';
@@ -1029,6 +1109,8 @@ function veThanhPhat() {
   const tong = tongThoiLuongDangNghe(S, TAI_LIEU);
   const daNghe = S.mode === 'one' ? giayDoanNay : giayDaNghe;
   const pct = tong ? Math.min(100, (daNghe / tong) * 100) : 0;
+  const h = hoSoDangDung(S);
+  const coPhuDe = h && h.ngonNgu && h.ngonNgu !== 'vi';
 
   return `<div class="phat">
     <button class="nut phat__nut phat__nut--acc" data-lenh="Tạm dừng">${ic('tamdung', 15)}</button>
@@ -1039,6 +1121,9 @@ function veThanhPhat() {
     <span class="phat__tien"><i id="phatTien" style="width:${pct}%"></i></span>
     <span class="phat__ghi">${S.mode === 'one'
       ? 'Nghe hết đoạn này sẽ dừng' : 'Đang chuẩn bị đoạn tiếp theo…'}</span>
+    ${coPhuDe ? `<button class="nut nut--vien" data-lenh="Chuyển phụ đề" style="flex:none;height:28px;padding:0 9px;font-size:11.5px;margin-left:auto;display:flex;align-items:center;gap:4px;border-color:${!S.anPhuDe ? 'var(--acc)' : 'var(--stroke2)'};color:${!S.anPhuDe ? 'var(--acc)' : 'var(--txt3)'}" title="${!S.anPhuDe ? 'Đang hiển thị phụ đề song ngữ (Bấm để ẩn)' : 'Bấm để hiển thị khung phụ đề song ngữ'}">
+      🌐 <span>${!S.anPhuDe ? 'Phụ đề: Bật' : 'Phụ đề: Tắt'}</span>
+    </button>` : ''}
   </div>`;
 }
 
@@ -1146,9 +1231,20 @@ function ve() {
 
      Hậu quả với người lớn tuổi: cuộn xuống tìm một công tắc, bấm vào, màn hình
      nhảy phắt về đầu, phải cuộn lại từ đầu cho MỖI lần bấm. */
+  /* Man Van ban ghep ra sau dot va "tam khung cuon deu giu cho", nen ba khung
+     cua no lot luoi. Dang ke nhat: napDuLieuVBGTuDong() tu goi ve() moi 5 phut
+     khi dang o man nay - nguoi dung cuon xuong giua bang khop cot, 5 phut sau
+     man hinh tu nhay ve dau ma khong ai dong vao. */
   const KHUNG_CUON = ['#cuon', '.trai__ds', '.phai', '.roi--giong',
-                      '.soat__bang', '.caidat', '.giongkho__than', '.tin'];
-  const cuonCu = KHUNG_CUON.map((s) => [s, $(s) ? $(s).scrollTop : 0]);
+                      '.soat__bang', '.caidat', '.giongkho__than', '.tin',
+                      '.vanbanghep__than', '.vanbanghep__preview-than',
+                      '.vanbanghep__khoi-chu'];
+  /* querySelectorAll chu khong phai $(): .vanbanghep__khoi-chu co BON o
+     (dau danh sach / danh sach / xen giua / cuoi), moi o max-height 160px
+     va cuon rieng. Dung $() thi chi o dau tien duoc giu cho, ba o kia van
+     nhay ve dau moi lan ve lai. */
+  const cuonCu = KHUNG_CUON.map((s) =>
+    [s, Array.from(document.querySelectorAll(s)).map((o) => o.scrollTop)]);
   const ten = tenTepDangXem(S) || 'Chưa đặt tên';
   document.documentElement.dataset.theme = S.theme === 'toi' ? 'dark' : 'light';
   // Cỡ chữ chỉ áp cho VÙNG ĐỌC, không phóng cả giao diện: phóng hết thì nút và
@@ -1188,7 +1284,10 @@ function ve() {
   /* Trả chỗ cuộn SAU veLopNoi(): .tin nằm trong lớp nổi mà veLopNoi() mới dựng
      ra, trả trước là trả vào một phần tử sắp bị thay. Trình duyệt tự kẹp về mức
      lớn nhất khi nội dung ngắn đi, nên không phải tự tính. */
-  cuonCu.forEach(([s, v]) => { const o = $(s); if (o && v) o.scrollTop = v; });
+  cuonCu.forEach(([s, ds]) => {
+    const os = document.querySelectorAll(s);
+    ds.forEach((v, i) => { if (os[i] && v) os[i].scrollTop = v; });
+  });
 }
 
 /* Tám dải mỏng ở mép để kéo đổi cỡ cửa sổ.
@@ -1223,6 +1322,99 @@ let _vbgDangNap = false;
 let _vbgLanNapCuoi = 0;
 let _vbgNguonDaNap = '';
 
+/* ---- Ghép danh sách: dùng chung cho đường "Áp dụng" và đường đồng bộ ngầm ----
+
+   Ba công tắc ở mục "Lọc & nhóm" trước đây chỉ SÁNG LÊN chứ không làm gì:
+   `cur.rule` chỉ được lật giá trị rồi vẽ trạng thái, không một dòng nào áp nó
+   vào dữ liệu. Người dùng bật "Bỏ dòng thiếu", chữ đổi thành "Đang lọc", mà
+   danh sách vẫn nguyên si — đúng thứ KPI dự án cấm. `rule.dupCol` và
+   `rule.group` thì không ai đọc lần nào. */
+
+const _oCuaDongVBG = (cur, r, c) => {
+  const cIdx = cur.cols.indexOf(c);
+  const v = r && (r[c.letter] != null ? r[c.letter] : (Array.isArray(r) ? r[cIdx] : ''));
+  return String(v == null ? '' : v).trim();
+};
+
+function locDongTheoQuyTacVBG(cur) {
+  let ds = (cur.rows && cur.rows.length) ? cur.rows.slice() : [];
+  if (!ds.length || !cur.cols) return ds;
+  const quy = cur.rule || {};
+
+  /* "Bỏ dòng thiếu" hiểu HẸP: chỉ bỏ dòng mà MỌI ô có biến đều rỗng. Ở buổi lễ,
+     bỏ sót một người chỉ vì họ không ghi địa chỉ là chuyện lớn hơn nhiều so với
+     một câu hơi cụt — mà câu cụt thì đã được dọn ở lanVaoDoanGhepVBG. */
+  if (quy.trong) {
+    const cotCoBien = cur.cols.filter(c => c.varName);
+    if (cotCoBien.length) {
+      ds = ds.filter(r => cotCoBien.some(c => _oCuaDongVBG(cur, r, c) !== ''));
+    }
+  }
+
+  // "Gộp trùng": giữ lần xuất hiện đầu, so theo cột đã chọn (mặc định cột A).
+  if (quy.trung) {
+    const cotTrung = cur.cols.find(c => c.letter === (quy.dupCol || 'A')) || cur.cols[0];
+    if (cotTrung) {
+      const daCo = new Set();
+      ds = ds.filter(r => {
+        const k = _oCuaDongVBG(cur, r, cotTrung).toLowerCase();
+        if (!k) return true;
+        if (daCo.has(k)) return false;
+        daCo.add(k);
+        return true;
+      });
+    }
+  }
+
+  // "Thứ tự": bật = giữ nguyên thứ tự bảng tính; tắt = xếp theo cột đầu.
+  if (quy.thutu === false && cur.cols.length) {
+    const cot0 = cur.cols[0];
+    ds = ds.slice().sort((a, b) =>
+      _oCuaDongVBG(cur, a, cot0).localeCompare(_oCuaDongVBG(cur, b, cot0), 'vi'));
+  }
+  return ds;
+}
+
+function ghepMotCauVBG(cur, r) {
+  let cau = (cur.T && cur.T.mau) || '';
+  cur.cols.forEach((c) => {
+    const val = _oCuaDongVBG(cur, r, c);
+    if (c.varName && val !== '') cau = cau.split(c.varName).join(val);
+  });
+  /* Ô trống để lại câu què, và máy đọc to nguyên câu ấy:
+       "Xin tán thán Trần Thị Bích, ở, đã công đức 1.200.000 đồng."
+     Ô địa chỉ hay pháp danh bỏ trống là chuyện rất thường trong danh sách
+     công đức. */
+  /* `\b` của JavaScript chỉ biết chữ cái ASCII, nên `\b(ở|tại|…)` KHÔNG khớp
+     được từ tiếng Việt có dấu — dùng (^|\s) mới bắt đúng. Đã đo: thiếu chỗ này
+     thì "ở," vẫn nằm nguyên trong câu. */
+  return cau
+    // 1. bỏ biến không có cột nào cấp giá trị
+    .replace(/\{[a-z0-9]+\}/gi, '')
+    // 2. bỏ giới từ bị bỏ rơi ngay trước dấu câu ("… , ở , …")
+    .replace(/(^|\s)(ở|tại|của|cho|với|từ|đến|thuộc|là)\s*(?=[,.;:])/gi, '$1')
+    // 3. dồn dấu câu trùng — phải chạy SAU bước 2, vì chính bước 2 sinh ra chúng
+    .replace(/\s+([.,;:])/g, '$1')
+    .replace(/([,;:])[\s,;:]*(?=[,.;:])/g, '')
+    .replace(/[,;:\s]+\./g, '.')
+    // 4. dọn khoảng trắng và dấu câu thừa ở hai đầu
+    .replace(/\s{2,}/g, ' ')
+    .replace(/^[\s,;:]+/, '')
+    .trim();
+}
+
+function lanVaoDoanGhepVBG(doanGhep, cur, dsDong) {
+  const every = parseInt(cur.sauMoi || '20', 10) || 20;
+  dsDong.forEach((r, idx) => {
+    doanGhep.push(`${idx + 1}. ${ghepMotCauVBG(cur, r)}`);
+    const giua = cur.on && cur.on.giua && cur.T && cur.T.giua && cur.T.giua.trim();
+    if (giua && every > 0 && (idx + 1) % every === 0 && (idx + 1) < dsDong.length) {
+      doanGhep.push(cur.T.giua.trim());
+    }
+  });
+  return doanGhep;
+}
+
 async function napDuLieuVBGTuDong(force = false) {
   if (typeof duLieuVBG === 'undefined') return;
   const cur = duLieuVBG.maus && (duLieuVBG.maus[duLieuVBG.mauHienTai] || duLieuVBG.maus[0]);
@@ -1242,6 +1434,7 @@ async function napDuLieuVBGTuDong(force = false) {
       if (kq.rows && kq.rows.length > 0) {
         cur.cols = kq.cols;
         cur.rows = kq.rows;
+      cur.daTaiThat = true;   /* hết là dữ liệu mẫu — chấm trạng thái dựa vào cờ này */
         cur.tongSo = kq.tongSo;
       }
       if (kq.currentSheet) cur.sheet = kq.currentSheet;
@@ -1273,7 +1466,14 @@ async function napDuLieuVBGTuDong(force = false) {
       }
     }
   } catch (err) {
-    console.error('Lỗi tự động nạp bảng tính VBG:', err);
+    console.error('Lỗi nạp bảng tính VBG:', err);
+    /* Chạy nền mỗi 5 phút thì im lặng là đúng — không quấy người dùng vì một
+       lần mất mạng thoáng qua. Nhưng khi họ CHỦ ĐỘNG bấm (force) mà hỏng thì
+       phải nói: bản trước chỉ ghi console, người dùng bấm xong thấy màn hình y
+       nguyên dữ liệu cũ và không hiểu vì sao. */
+    if (force) {
+      moBao('Không tải được dữ liệu. Kiểm tra đường mạng hoặc quyền xem của bảng tính.');
+    }
   } finally {
     _vbgDangNap = false;
   }
@@ -1316,6 +1516,7 @@ async function dongBoDuLieuLive(btn) {
     if (kq && kq.thanhCong) {
       cur.cols = kq.cols;
       cur.rows = kq.rows;
+      cur.daTaiThat = true;   /* hết là dữ liệu mẫu — chấm trạng thái dựa vào cờ này */
       cur.tongSo = kq.tongSo;
       cur.sheet = kq.currentSheet;
       if (kq.sheets) cur.sheetOpts = kq.sheets;
@@ -1325,24 +1526,10 @@ async function dongBoDuLieuLive(btn) {
         cur.T.dau.trim().split(/\n+/).forEach(s => { if (s.trim()) doanGhep.push(s.trim()); });
       }
 
-      const rowsToProcess = cur.rows && cur.rows.length ? cur.rows : [];
-      const every = parseInt(cur.sauMoi || '20', 10) || 20;
-
-      rowsToProcess.forEach((r, idx) => {
-        let cau = (cur.T && cur.T.mau) || '';
-        cur.cols.forEach((c, cIdx) => {
-          const val = r && (r[c.letter] != null ? r[c.letter] : (Array.isArray(r) ? r[cIdx] : ''));
-          if (c.varName && val != null && val !== '') {
-            cau = cau.split(c.varName).join(val);
-          }
-        });
-        cau = cau.replace(/\{[a-z0-9]+\}/g, '').replace(/\s+([.,])/g, '$1').replace(/\s{2,}/g, ' ').trim();
-        doanGhep.push(`${idx + 1}. ${cau}`);
-
-        if (cur.on && cur.on.giua && cur.T && cur.T.giua && cur.T.giua.trim() && (idx + 1) % every === 0 && (idx + 1) < rowsToProcess.length) {
-          doanGhep.push(cur.T.giua.trim());
-        }
-      });
+      // Dùng CHUNG một hàm với đường "Áp dụng" bên dưới. Trước đây hai nơi chép
+      // lại cùng một đoạn ghép, nên vá một bên là bên kia vẫn hỏng.
+      const rowsToProcess = locDongTheoQuyTacVBG(cur);
+      lanVaoDoanGhepVBG(doanGhep, cur, rowsToProcess);
 
       if (cur.on && cur.on.cuoi && cur.T && cur.T.cuoi && cur.T.cuoi.trim()) {
         cur.T.cuoi.trim().split(/\n+/).forEach(s => { if (s.trim()) doanGhep.push(s.trim()); });
@@ -1423,12 +1610,12 @@ function guiChinhAm() {
      lộ ra — bộ kiểm cũ chỉ canh "có gọi sang Python", không canh GIÁ TRỊ gửi
      đi, nên nó xanh trong khi tính năng chết. */
   const c = h.chinh || {};
-  const khoa = `${c.tocDo}|${c.caoDo}|${c.amLuong}`;
+  const khoa = `${c.tocDo}|${c.caoDo}|${c.amLuong}|${c.khongGian || ''}`;
   if (khoa === chinhAmDaGui) return;
   chinhAmDaGui = khoa;
   if (coPython()) {
     api('moi_dat_chinh_am',
-        { tocDo: c.tocDo ?? 0, caoDo: c.caoDo ?? 0, amLuong: c.amLuong ?? 100 });
+        { tocDo: c.tocDo ?? 0, caoDo: c.caoDo ?? 0, amLuong: c.amLuong ?? 100, khongGian: c.khongGian || '' });
   }
 }
 
@@ -1781,6 +1968,7 @@ async function batDauPhat(tiepTuc = false) {
 }
 
 function dungPhat() {
+  if (S.dangNgheThu) dungNgheThu();
   clearInterval(dongHoPhat);
   pythonLai = false;
   daTamDung = false;
@@ -2147,6 +2335,55 @@ function veLopNoi() {
       };
     }
 
+    const inpStart = g('nbInpStart');
+    const inpEnd = g('nbInpEnd');
+    if (inpStart) {
+      inpStart.oninput = (e) => {
+        S.nhanBanWizard.startTrim = parseFloat(e.target.value) || 0;
+      };
+      inpStart.onchange = (e) => {
+        dat({ ...S, nhanBanWizard: { ...S.nhanBanWizard, startTrim: parseFloat(e.target.value) || 0 } });
+      };
+    }
+    if (inpEnd) {
+      inpEnd.oninput = (e) => {
+        S.nhanBanWizard.endTrim = parseFloat(e.target.value) || 8;
+      };
+      inpEnd.onchange = (e) => {
+        dat({ ...S, nhanBanWizard: { ...S.nhanBanWizard, endTrim: parseFloat(e.target.value) || 8 } });
+      };
+    }
+
+    const btnNgheDoanCat = g('nbNgheDoanCat');
+    if (btnNgheDoanCat) {
+      btnNgheDoanCat.onclick = async () => {
+        if (S.nhanBanWizard.fileDaChon && coPython()) {
+          btnNgheDoanCat.innerHTML = '🔊 Đang phát…';
+          await api('moi_nghe_thu_doan_cat', S.nhanBanWizard.fileDaChon, S.nhanBanWizard.startTrim, S.nhanBanWizard.endTrim);
+          setTimeout(() => {
+            if (btnNgheDoanCat) btnNgheDoanCat.innerHTML = '▶ Nghe đoạn đã chọn';
+          }, 3000);
+        }
+      };
+    }
+
+    const btnDungGolden = g('nbDungGolden');
+    if (btnDungGolden) {
+      btnDungGolden.onclick = () => {
+        if (S.nhanBanWizard && S.nhanBanWizard.phanTich && S.nhanBanWizard.phanTich.goldenWindow) {
+          const gw = S.nhanBanWizard.phanTich.goldenWindow;
+          dat({
+            ...S,
+            nhanBanWizard: {
+              ...S.nhanBanWizard,
+              startTrim: gw.start,
+              endTrim: gw.end
+            }
+          });
+        }
+      };
+    }
+
     if (btnChonTep) {
       btnChonTep.onclick = async () => {
         if (!coPython()) {
@@ -2155,11 +2392,16 @@ function veLopNoi() {
         }
         const tep = await api('chon_file_mau');
         if (tep) {
+          const pt = await api('moi_phan_tich_file_am_thanh', tep);
+          const gw = (pt && pt.goldenWindow) || { start: 0, end: 8 };
           dat({
             ...S,
             nhanBanWizard: {
               ...S.nhanBanWizard,
-              fileDaChon: tep
+              fileDaChon: tep,
+              phanTich: pt,
+              startTrim: gw.start,
+              endTrim: gw.end
             }
           });
         }
@@ -2178,9 +2420,20 @@ function veLopNoi() {
           moBao('Vui lòng đặt tên cho giọng mới.');
           return;
         }
-        dat({ ...S, nhanBanWizard: null, dangNhanBan: true, tienDoGiong: 'Đang chuẩn bị trích xuất đặc trưng âm sắc…' });
+        const sTrim = S.nhanBanWizard.startTrim;
+        const eTrim = S.nhanBanWizard.endTrim;
+        const daNgonNgu = !!S.nhanBanWizard.daNgonNgu;
+        const ngonNguGoc = S.nhanBanWizard.ngonNguGoc || 'vi';
+
+        dat({
+          ...S,
+          nhanBanWizard: { ...S.nhanBanWizard, buoc: 4, dangTao: true, tenGiong: ten },
+          dangNhanBan: true,
+          tienDoGiong: 'Đang chuẩn hóa DSP và trích xuất đặc trưng âm sắc…'
+        });
+
         if (coPython()) {
-          api('nhan_ban_giong', ten, fileDaChon);
+          api('nhan_ban_giong', ten, fileDaChon, sTrim, eTrim, daNgonNgu, ngonNguGoc);
         }
       };
     }
@@ -2495,12 +2748,13 @@ const LENH = {
   'Xuất file âm thanh': () => moHopXuat(),
   'Thu gọn phụ đề': () => dat({ ...S, phuDeThuGon: !S.phuDeThuGon }),
   'Ẩn phụ đề': () => dat({ ...S, anPhuDe: true }),
+  'Chuyển phụ đề': () => dat({ ...S, anPhuDe: !S.anPhuDe }),
   'Tạo hồ sơ mới': () => {
     const SO_MAU = [
       { ten: 'Bài viết & Tin tức', giong: 'ngoc-linh', chinh: { tocDo: 0, caoDo: 0, amLuong: 100 }, phongCach: 'Tự nhiên' },
-      { ten: 'Thông báo & Loa phường', giong: 'xuan-vinh', chinh: { tocDo: 10, caoDo: 1, amLuong: 100 }, phongCach: 'Tin tức - thông báo' },
+      { ten: 'Thông báo & Loa phường', giong: 'xuan-vinh', chinh: { tocDo: 10, caoDo: 1, amLuong: 100, khongGian: 'loaphuong' }, phongCach: 'Tin tức - thông báo' },
       { ten: 'Sách nói & Kể chuyện', giong: 'pham-tuyen', chinh: { tocDo: -8, caoDo: -1, amLuong: 95 }, phongCach: 'Kể chuyện' },
-      { ten: 'Công đức & Thiện nguyện', giong: 'minh-duc', chinh: { tocDo: 0, caoDo: 0, amLuong: 100 }, phongCach: 'Kể chuyện' },
+      { ten: 'Công đức & Thiện nguyện', giong: 'minh-duc', chinh: { tocDo: 0, caoDo: 0, amLuong: 100, khongGian: 'hoitruong' }, phongCach: 'Kể chuyện' },
       { ten: 'Doanh nghiệp & Bán hàng', giong: 'truc-ly', chinh: { tocDo: 10, caoDo: 0, amLuong: 100 }, phongCach: 'Tự nhiên' },
       { ten: 'Pháp quy & Hành chính', giong: 'xuan-vinh', chinh: { tocDo: 0, caoDo: 0, amLuong: 100 }, phongCach: 'Tin tức - thông báo' },
     ];
@@ -2564,6 +2818,7 @@ const LENH = {
   'Đặt lại mặc định': () => {
     let x = S;
     for (const k of ['tocDo', 'caoDo', 'amLuong']) x = datChinh(x, k, k === 'amLuong' ? 100 : 0);
+    x = datChinh(x, 'khongGian', '');
     dat(x);
   },
 
@@ -2579,9 +2834,12 @@ const LENH = {
   'Đổi giọng đọc': () => LENH['Thư viện giọng'](),
   'Nghe mẫu giọng': () => {
     const g = hoSoDangDung(S).giong;
-    dat(dongHetMenu(S));
+    if (S.dangNgheThu === g) return dungNgheThu();
+    dat({ ...dongHetMenu(S), dangNgheThu: g, mauDangPhat: true });
     if (coPython()) {
-      api('nghe_thu_giong', g);
+      api('nghe_thu_giong', g).then((res) => {
+        if (res && res.loi) { moBao(res.loi); dungNgheThu(); }
+      });
     } else {
       moBao('Cần chạy trong chương trình mới nghe được.');
     }
@@ -2834,8 +3092,12 @@ document.addEventListener('click', async (e) => {
     e.stopPropagation();                       // đừng chọn giọng, chỉ nghe thử
     const ma = n.dataset.nghegiong;
     if (S.dangNgheThu === ma) return dungNgheThu();   // bấm lần nữa = dừng
-    if (coPython()) api('nghe_thu_giong', ma);
-    return dat({ ...S, dangNgheThu: ma });
+    if (coPython()) {
+      api('nghe_thu_giong', ma).then((res) => {
+        if (res && res.loi) { moBao(res.loi); dungNgheThu(); }
+      });
+    }
+    return dat({ ...S, dangNgheThu: ma, mauDangPhat: true });
   }
   if (t('[data-vbg="quay_ve_chinh"]')) {
     luuTamVBG();
@@ -2856,7 +3118,13 @@ document.addEventListener('click', async (e) => {
   }
   if ((n = t('[data-vbgpreset]'))) {
     luuTamVBG();
-    duLieuVBG.mauHienTai = +n.dataset.vbgpreset;
+    /* Hai nơi dùng chung thuộc tính này với hai ý nghĩa: menu bên trái gắn CHỈ
+       SỐ (lặp thẳng trên duLieuVBG.maus), còn hộp chọn mẫu gắn ID vì hai danh
+       sách xếp khác thứ tự — trước đây nó gắn chỉ số nên bấm "Thông báo lịch
+       hẹn" lại nhảy sang mẫu "Bán hàng & Chốt đơn Livestream". */
+    const khoa = n.dataset.vbgpreset;
+    const theoId = duLieuVBG.maus.findIndex(m => m.id === khoa);
+    duLieuVBG.mauHienTai = theoId >= 0 ? theoId : (+khoa || 0);
     duLieuVBG.menuMauOpen = false;
     duLieuVBG.modalTaoMoi = false;
     napDuLieuVBGTuDong(true);
@@ -2946,6 +3214,7 @@ document.addEventListener('click', async (e) => {
     if (kq && kq.thanhCong) {
       cur.cols = kq.cols;
       cur.rows = kq.rows;
+      cur.daTaiThat = true;   /* hết là dữ liệu mẫu — chấm trạng thái dựa vào cờ này */
       cur.tongSo = kq.tongSo;
       cur.srcVal = kq.nguon;
       cur.sheet = kq.currentSheet;
@@ -2991,6 +3260,7 @@ document.addEventListener('click', async (e) => {
       if (kq && kq.thanhCong) {
         cur.cols = kq.cols;
         cur.rows = kq.rows;
+      cur.daTaiThat = true;   /* hết là dữ liệu mẫu — chấm trạng thái dựa vào cờ này */
         cur.tongSo = kq.tongSo;
         cur.sheet = kq.currentSheet;
         if (kq.sheets) cur.sheetOpts = kq.sheets;
@@ -3029,30 +3299,28 @@ document.addEventListener('click', async (e) => {
       cur.T.dau.trim().split(/\n+/).forEach(s => { if (s.trim()) doanGhep.push(s.trim()); });
     }
     
-    const rowsToProcess = cur.rows && cur.rows.length ? cur.rows : [
-      { A: 'Nguyễn Văn An', B: 'Tổ 5 Phường Yên Hoà', C: '500.000 đồng', D: '15/08/2026' },
-      { A: 'Trần Thị Mai', B: 'Khu tập thể Nam Đồng', C: '1.000.000 đồng', D: '18/08/2026' },
-      { A: 'Lê Hoàng Long', B: 'Số 12 phố Huế', C: '2.000.000 đồng', D: '20/08/2026' }
-    ];
+    /* Chưa có dòng nào thì DỪNG, đừng độn người vào.
+
+       Bản trước, khi danh sách rỗng, chỗ này nhét sẵn ba dòng "Nguyễn Văn An ·
+       500.000 đồng", "Trần Thị Mai · 1.000.000 đồng", "Lê Hoàng Long ·
+       2.000.000 đồng" rồi ghép luôn vào bài. Nghĩa là bấm "Áp dụng" lúc chưa
+       tải dữ liệu là máy đọc to tên ba người không có thật, kèm số tiền, giữa
+       buổi lễ ở chùa — và câu báo còn nói "Đã cập nhật danh sách (3 dòng)!"
+       nên không ai biết ba dòng ấy ở đâu ra. */
+    const rowsToProcess = (cur.rows && cur.rows.length) ? cur.rows : null;
+    if (!rowsToProcess) {
+      moBao('Chưa có dòng dữ liệu nào để ghép. Hãy bấm “Tải dữ liệu” '
+            + 'hoặc chọn tệp danh sách trước.');
+      return;
+    }
 
     
-    const every = parseInt(cur.sauMoi || '20', 10) || 20;
-    
-    rowsToProcess.forEach((r, idx) => {
-      let cau = cur.T.mau;
-      cur.cols.forEach((c, cIdx) => {
-        const val = r && (r[c.letter] != null ? r[c.letter] : (Array.isArray(r) ? r[cIdx] : ''));
-        if (c.varName && val != null && val !== '') {
-          cau = cau.split(c.varName).join(val);
-        }
-      });
-      cau = cau.replace(/\{[a-z0-9]+\}/g, '').replace(/\s+([.,])/g, '$1').replace(/\s{2,}/g, ' ').trim();
-      doanGhep.push(`${idx + 1}. ${cau}`);
-      
-      if (cur.on.giua && cur.T.giua.trim() && (idx + 1) % every === 0 && (idx + 1) < rowsToProcess.length) {
-        doanGhep.push(cur.T.giua.trim());
-      }
-    });
+    const dsDong = locDongTheoQuyTacVBG(cur);
+    if (!dsDong.length) {
+      moBao('Sau khi lọc thì không còn dòng nào. Hãy tắt bớt “Lọc & nhóm”.');
+      return;
+    }
+    lanVaoDoanGhepVBG(doanGhep, cur, dsDong);
     
     if (cur.on.cuoi && cur.T.cuoi.trim()) {
       cur.T.cuoi.trim().split(/\n+/).forEach(s => { if (s.trim()) doanGhep.push(s.trim()); });
@@ -3094,7 +3362,9 @@ document.addEventListener('click', async (e) => {
       });
       api('moi_dat_doan_giu_vi_tri', doanGui, giuPos);
     }
-    moBao(`Đã cập nhật danh sách (${rowsToProcess.length} dòng)${dangDoc ? ` · Tiếp tục đọc từ đoạn ${giuPos}` : ''}!`);
+    // Báo số dòng THẬT SỰ đã ghép, tức số sau khi lọc — không phải số dòng thô
+    // của bảng tính. Bật "Bỏ dòng thiếu" mà vẫn báo số cũ là nói sai.
+    moBao(`Đã cập nhật danh sách (${dsDong.length} dòng)${dangDoc ? ` · Tiếp tục đọc từ đoạn ${giuPos}` : ''}!`);
     return;
   }
   if ((n = t('[data-cdtheme]')))  return dat({ ...S, theme: n.dataset.cdtheme });
@@ -3134,18 +3404,44 @@ document.addEventListener('click', async (e) => {
     const h = hoSoDangDung(S);
     const curSrc = h.ngonNguNguon === 'auto' ? (S.ngonNguPhatHien || 'vi') : (h.ngonNguNguon || 'vi');
     const curTgt = h.ngonNgu || 'vi';
-    h.ngonNguNguon = curTgt;
-    h.ngonNgu = curSrc;
-    const ds = S.hoSoList || [];
-    const idx = S.profile || 0;
-    if (ds[idx]) {
-      ds[idx].ngonNguNguon = curTgt;
-      ds[idx].ngonNgu = curSrc;
+    const newTgt = curSrc;
+    const newSrc = curTgt;
+
+    const curGiong = h.giong || '';
+    const gTheoNN = { ...(h.giongTheoNgonNgu || {}) };
+    if (curGiong) {
+      gTheoNN[curTgt] = curGiong;
     }
+
+    let giongMoi = '';
+    if (newTgt === 'vi') {
+      giongMoi = gTheoNN['vi'] || 'ngan';
+    } else {
+      const daLuu = gTheoNN[newTgt];
+      const daLuuHopLe = daLuu && GIONG.some(g => (g.id || g.ma) === daLuu && ((g.ngonNgu || '').toLowerCase() === newTgt.toLowerCase() || (g.ngonNgu || '').toLowerCase().startsWith(newTgt.toLowerCase().split('-')[0])));
+      if (daLuuHopLe) {
+        giongMoi = daLuu;
+      } else {
+        const gioi = doanGioiTinhGiong(curGiong);
+        const mapNN = GIONG_BAN_XU_MAC_DINH[newTgt] || GIONG_BAN_XU_MAC_DINH[newTgt.split('-')[0]] || { nam: 'en-US-GuyNeural', nu: 'en-US-JennyNeural' };
+        giongMoi = (gioi === 'nu' ? mapNN.nu : mapNN.nam) || mapNN.nam || mapNN.nu || curGiong;
+        gTheoNN[newTgt] = giongMoi;
+      }
+    }
+
+    const newProfiles = S.profiles ? S.profiles.map((p, i) => i === S.profile ? {
+      ...p,
+      ngonNguNguon: newSrc,
+      ngonNgu: newTgt,
+      giong: giongMoi,
+      giongTheoNgonNgu: gTheoNN
+    } : p) : S.profiles;
+
     danhDauSua();
-    dat({ ...S });
+    dat({ ...S, profiles: newProfiles, anPhuDe: false });
+    dongBoGiongSangPython();
     if (coPython()) {
-      api('moi_dat_ngon_ngu', curTgt, curSrc);
+      api('moi_dat_ngon_ngu', newSrc, newTgt, S.pos || 1);
     }
     return;
   }
@@ -3166,26 +3462,65 @@ document.addEventListener('click', async (e) => {
     dat({ ...S, moMenuLangGiongId: S.moMenuLangGiongId === gId ? null : gId });
     return;
   }
-  if ((n = t('[data-chonlanggiong]'))) {
+  if ((n = t('[data-dongmenulang]'))) {
     e.stopPropagation();
-    const gId = n.dataset.chonlanggiong;
+    dat({ ...S, moMenuLangGiongId: null });
+    return;
+  }
+  if ((n = t('[data-checklang]'))) {
+    e.stopPropagation();
+    const gId = n.dataset.checklang;
     const langCode = n.dataset.langcode;
-    const laAll = langCode === 'all';
+    const checked = n.checked;
 
     if (duLieuGiong) {
       for (const nhom of ['cuaToi', 'coSan']) {
         const found = (duLieuGiong[nhom] || []).find((x) => x.id === gId);
         if (found) {
-          found.daNgonNgu = laAll;
-          found.ngonNgu = laAll ? 'all' : langCode;
+          let ds = Array.isArray(found.dsNgonNgu) && found.dsNgonNgu.length > 0
+            ? [...found.dsNgonNgu]
+            : (found.daNgonNgu ? DS_LOC_NGON_NGU.map((x) => x.ma) : [found.ngonNgu || 'vi']);
+
+          if (langCode === 'all') {
+            if (checked) {
+              found.daNgonNgu = true;
+              found.dsNgonNgu = DS_LOC_NGON_NGU.map((x) => x.ma);
+              found.ngonNgu = 'all';
+            } else {
+              found.daNgonNgu = false;
+              found.dsNgonNgu = ['vi'];
+              found.ngonNgu = 'vi';
+            }
+          } else {
+            if (found.daNgonNgu) {
+              found.daNgonNgu = false;
+              ds = DS_LOC_NGON_NGU.map((x) => x.ma).filter((x) => x !== langCode);
+            } else {
+              if (checked) {
+                if (!ds.includes(langCode)) ds.push(langCode);
+              } else {
+                ds = ds.filter((x) => x !== langCode);
+                if (ds.length === 0) ds = ['vi'];
+              }
+            }
+            if (ds.length >= DS_LOC_NGON_NGU.length) {
+              found.daNgonNgu = true;
+              found.dsNgonNgu = DS_LOC_NGON_NGU.map((x) => x.ma);
+              found.ngonNgu = 'all';
+            } else {
+              found.daNgonNgu = ds.length > 1;
+              found.dsNgonNgu = ds;
+              found.ngonNgu = ds.length === 1 ? ds[0] : (found.daNgonNgu ? 'all' : ds[0]);
+            }
+          }
           if (found.rieng && coPython()) {
-            api('moi_cap_nhat_da_ngu_giong', gId, found.daNgonNgu, found.ngonNgu);
+            api('moi_cap_nhat_da_ngu_giong', gId, found.daNgonNgu, found.ngonNgu, found.dsNgonNgu);
           }
           break;
         }
       }
     }
-    dat({ ...S, moMenuLangGiongId: null });
+    dat({ ...S });
     return;
   }
   if (S.moMenuLangGiongId && !t('.the-giong__menu-lang') && !t('[data-toggledangu]')) {
@@ -3242,7 +3577,7 @@ document.addEventListener('click', async (e) => {
       if (i !== S.profile) return p;
       return {
         ...p,
-        chinh: { ...preset.chinh },
+        chinh: { ...p.chinh, ...preset.chinh },
         phongCach: preset.phongCach
       };
     });
@@ -3346,6 +3681,7 @@ document.addEventListener('click', async (e) => {
   if ((n = t('[data-giongloc]')))  return dat({ ...S, giongLoc: n.dataset.giongloc });
   if ((n = t('[data-gionggioi]'))) return dat({ ...S, giongGioi: n.dataset.gionggioi });
   if ((n = t('[data-giong]')))  {
+    if (S.dangNgheThu) dungNgheThu();
     // Thẻ trong Thư viện giọng cũng dùng data-giong: chọn xong phải dời nhãn
     // "Đang dùng" sang thẻ mới, không thì hai thẻ cùng sáng.
     if (duLieuGiong) {
@@ -3413,7 +3749,11 @@ document.addEventListener('click', async (e) => {
     // không ra tiếng.
     const ma = hoSoDangDung(S).giong;
     if (S.dangNgheThu === ma) return dungNgheThu();
-    if (coPython()) api('nghe_thu_giong', ma);
+    if (coPython()) {
+      api('nghe_thu_giong', ma).then((res) => {
+        if (res && res.loi) { moBao(res.loi); dungNgheThu(); }
+      });
+    }
     return dat({ ...S, dangNgheThu: ma, mauDangPhat: true });
   }
   if ((n = t('[data-chuy]')))   {
@@ -3732,18 +4072,55 @@ document.addEventListener('change', (e) => {
   }
   if (e.target && e.target.id === 'oNgonNgu') {
     const maLang = e.target.value;
-    const newProfiles = S.profiles ? S.profiles.map((p, i) => i === S.profile ? { ...p, ngonNgu: maLang } : p) : S.profiles;
+    const curH = hoSoDangDung(S) || {};
+    const curGiong = curH.giong || '';
+    const curLang = curH.ngonNgu || 'vi';
+
+    const gTheoNN = { ...(curH.giongTheoNgonNgu || {}) };
+    if (curGiong) {
+      gTheoNN[curLang] = curGiong;
+    }
+
+    let giongMoi = '';
+
+    if (maLang === 'vi') {
+      giongMoi = gTheoNN['vi'] || 'ngan';
+    } else {
+      const daLuu = gTheoNN[maLang];
+      const daLuuHopLe = daLuu && GIONG.some(g => (g.id || g.ma) === daLuu && ((g.ngonNgu || '').toLowerCase() === maLang.toLowerCase() || (g.ngonNgu || '').toLowerCase().startsWith(maLang.toLowerCase().split('-')[0])));
+
+      if (daLuuHopLe) {
+        giongMoi = daLuu;
+      } else {
+        const gioi = doanGioiTinhGiong(curGiong);
+        const mapNN = GIONG_BAN_XU_MAC_DINH[maLang] || GIONG_BAN_XU_MAC_DINH[maLang.split('-')[0]] || { nam: 'en-US-GuyNeural', nu: 'en-US-JennyNeural' };
+        giongMoi = (gioi === 'nu' ? mapNN.nu : mapNN.nam) || mapNN.nam || mapNN.nu || curGiong;
+        gTheoNN[maLang] = giongMoi;
+      }
+    }
+
+    const newProfiles = S.profiles ? S.profiles.map((p, i) => i === S.profile ? {
+      ...p,
+      ngonNgu: maLang,
+      giong: giongMoi,
+      giongTheoNgonNgu: gTheoNN
+    } : p) : S.profiles;
+
     danhDauSua();
     const laDich = maLang && maLang !== 'vi';
     const tenLang = (typeof DS_LOC_NGON_NGU !== 'undefined' ? (DS_LOC_NGON_NGU.find(x => x.ma === maLang) || {}).ten : maLang) || maLang;
     dat({
       ...S,
       profiles: newProfiles,
+      anPhuDe: false,
       dangChuanBiDich: laDich,
       thongBaoDich: laDich ? `🌐 Đang chuẩn bị bản dịch sang [${tenLang}]…` : ''
     });
+
+    dongBoGiongSangPython();
+
     if (coPython()) {
-      api('moi_dat_ngon_ngu', (hoSoDangDung(S) || {}).ngonNguNguon || 'auto', maLang).then(() => {
+      api('moi_dat_ngon_ngu', (hoSoDangDung(S) || {}).ngonNguNguon || 'auto', maLang, S.pos || 1).then(() => {
         guiDoanSangPython(true);
         setTimeout(() => {
           dat({ ...S, dangChuanBiDich: false, thongBaoDich: '' });
@@ -3768,13 +4145,18 @@ document.addEventListener('change', (e) => {
         if (kq && kq.thanhCong) {
           cur.cols = kq.cols;
           cur.rows = kq.rows;
+          cur.daTaiThat = true;   /* hết là dữ liệu mẫu — chấm trạng thái dựa vào cờ này */
           cur.tongSo = kq.tongSo;
           cur.sheet = kq.currentSheet;
           if (kq.sheets) cur.sheetOpts = kq.sheets;
           cur.isSingleSheet = !!kq.isSingleSheet;
           ve();
+        } else {
+          /* Không có nhánh này thì ô chọn đã đổi chữ, dữ liệu thì không đổi, và
+             không một lời nào báo - người dùng tưởng đã đổi bảng xong. */
+          moBao((kq && kq.loi) || 'Không đọc được bảng vừa chọn. Dữ liệu giữ nguyên như cũ.');
         }
-      });
+      }).catch(() => moBao('Không đọc được bảng vừa chọn. Dữ liệu giữ nguyên như cũ.'));
     }
     return;
   }
@@ -3787,10 +4169,13 @@ document.addEventListener('change', (e) => {
         if (kq && kq.thanhCong) {
           cur.cols = kq.cols;
           cur.rows = kq.rows;
+          cur.daTaiThat = true;   /* hết là dữ liệu mẫu — chấm trạng thái dựa vào cờ này */
           cur.tongSo = kq.tongSo;
           ve();
+        } else {
+          moBao((kq && kq.loi) || 'Không đọc được với dòng tiêu đề vừa chọn. Dữ liệu giữ nguyên.');
         }
-      });
+      }).catch(() => moBao('Không đọc được với dòng tiêu đề vừa chọn. Dữ liệu giữ nguyên.'));
     }
     return;
   }
@@ -4636,6 +5021,7 @@ function phanCanLuu() {
       ngonNgu: h.ngonNgu || 'vi',
       ngonNguNguon: h.ngonNguNguon || 'auto',
       phongCach: h.phongCach || 'Tự nhiên',
+      giongTheoNgonNgu: h.giongTheoNgonNgu || {},
       tep: S.tabsByProfile[i] || [''],
       dangXem: S.activeByProfile[i] || 0,
     })),
@@ -4732,7 +5118,8 @@ async function napHoSoDaLuu() {
                                        chinh: h.chinh, tep: h.tep.slice(),
                                        ngonNgu: h.ngonNgu || 'vi',
                                        ngonNguNguon: h.ngonNguNguon || 'auto',
-                                       phongCach: h.phongCach || 'Tự nhiên' })),
+                                       phongCach: h.phongCach || 'Tự nhiên',
+                                       giongTheoNgonNgu: h.giongTheoNgonNgu || {} })),
         tabsByProfile: tabs,
         activeByProfile: dangXem,
         profile: Math.min(d.dangDung || 0, d.hoSo.length - 1),
@@ -4838,6 +5225,7 @@ function dongBoGiongSangPython() {
     phongCachDaGui = h.phongCach;
     api('moi_dat_phong_cach', h.phongCach);
   }
+  guiChinhAm();
 }
 
 // ---------------------------------------------------------------- màn soát
@@ -5026,10 +5414,20 @@ datKhiNhanBanGiong(
     }
   },
   async (ten) => {
+    /* Nạp lại DANH SÁCH GIỌNG, không chỉ thư viện. Hai thứ khác nhau:
+       moi_thu_vien_giong đổ vào duLieuGiong (màn Thư viện giọng), còn ô "Giọng
+       đọc" ở cột phải đọc từ GIONG - thứ chỉ datGiongThat mới đặt được. Thiếu
+       lượt này thì người dùng ngồi đợi máy học giọng con cháu mình mấy phút,
+       bấm "Dùng giọng này", rồi cột phải vẫn trơ tên giọng CŨ. */
+    datGiongThat(await api('moi_danh_sach_giong'));
     duLieuGiong = await api('moi_thu_vien_giong', hoSoDangDung(S).giong);
     const gMoi = (duLieuGiong && duLieuGiong.cuaToi || []).find((x) => x.ten === ten)
       || (duLieuGiong && duLieuGiong.cuaToi && duLieuGiong.cuaToi[duLieuGiong.cuaToi.length - 1]);
     const idMoi = gMoi ? gMoi.id : '';
+    /* null = Python không đo được độ khớp. Không bịa số thay: bản trước rơi về
+       98.6 nên màn hình lúc nào cũng khoe một con số đẹp, kể cả khi phép đo
+       chưa từng chạy. Không có số thì không nói gì về độ khớp. */
+    const doKhop = (gMoi && typeof gMoi.do_khop === 'number') ? gMoi.do_khop : null;
 
     if (S.nhanBanWizard && S.nhanBanWizard.dangTao) {
       dat({
@@ -5041,12 +5439,15 @@ datKhiNhanBanGiong(
           buoc: 5,
           dangTao: false,
           tenGiong: ten,
-          idMoi: idMoi
+          idMoi: idMoi,
+          doKhop: doKhop
         }
       });
     } else {
       dat({ ...S, dangNhanBan: false, tienDoGiong: '' });
-      moBao(`Đã tạo xong “${ten}”. Bấm Nghe thử để nghe.`);
+      moBao(doKhop === null
+        ? `Đã tạo xong “${ten}”. Bấm Nghe thử để nghe.`
+        : `Đã tạo xong “${ten}” (Độ khớp: ${doKhop}%). Bấm Nghe thử để nghe.`);
     }
   },
   (msg) => {
@@ -5180,11 +5581,12 @@ function dungNgheThu() {
 }
 
 datKhiNgheThuXong((ma) => {
-  // Chỉ hạ nút của ĐÚNG giọng vừa xong. Bấm giọng khác trong lúc giọng cũ còn
-  // đang tổng hợp thì tín hiệu về mang mã giọng cũ — hạ bừa là tắt mất nút của
-  // giọng mới vừa bấm, trong khi tiếng của nó sắp ra.
-  if (!ma || S.dangNgheThu === ma) dat({ ...S, dangNgheThu: '', mauDangPhat: false });
+  // Hạ cờ nghe thử khi mẫu phát xong (chỉ hạ nếu đúng mã giọng đang nghe hoặc ma rỗng)
+  if (!ma || !S.dangNgheThu || S.dangNgheThu === ma) {
+    dat({ ...S, dangNgheThu: '', mauDangPhat: false });
+  }
 });
+
 
 datKhiBaoLoi((tieuDe, chiTiet) => {
   // Lỗi lúc nghe thử: hạ nút rồi nói cho người dùng biết. Trước đây chỉ ghi vào
@@ -5193,14 +5595,57 @@ datKhiBaoLoi((tieuDe, chiTiet) => {
   moBao(chiTiet || tieuDe || 'Máy đọc gặp lỗi, chưa phát được.');
 });
 
-/* BẮT BUỘC gọi moi_khoi_dong: nó nạp danh sách giọng và BẬT MÔ HÌNH. Thiếu
+/* BẮT BUỘC gọi moi_khoi_dong hoặc moi_khoi_dong_toan_dien: nó nạp danh sách giọng và BẬT MÔ HÌNH. Thiếu
    dòng này thì mọi thứ vẽ ra vẫn đẹp mà bấm Nghe không ra tiếng, vì mô hình
    chưa bao giờ được khởi động. Đã vấp đúng lỗi này một lần. */
 async function khoiDong() {
   if (!coPython()) return;
-  // Hồ sơ đã lưu phải nạp TRƯỚC danh sách giọng: datGiongThat còn phải sửa lại
-  // hồ sơ nào trỏ vào giọng không còn trên máy, mà muốn sửa thì hồ sơ thật
-  // phải có mặt rồi.
+  try {
+    const startup = await api('moi_khoi_dong_toan_dien');
+    if (startup && startup.giong) {
+      if (startup.hoSo && startup.hoSo.hoSo && startup.hoSo.hoSo.length) {
+        const d = startup.hoSo;
+        const tabs = {}, dangXem = {};
+        d.hoSo.forEach((h, i) => { tabs[i] = h.tep.slice(); dangXem[i] = h.dangXem || 0; });
+        if (d.noiDung) {
+          Object.keys(d.noiDung).forEach((ten) => {
+            if (d.noiDung[ten] && (!TAI_LIEU[ten] || !TAI_LIEU[ten].doan || !TAI_LIEU[ten].doan.length)) {
+              TAI_LIEU[ten] = d.noiDung[ten];
+            }
+          });
+        }
+        S = { ...S,
+              profiles: d.hoSo.map((h) => ({ ma: h.ma, ten: h.ten, giong: h.giong,
+                                             chinh: h.chinh, tep: h.tep.slice(),
+                                             ngonNgu: h.ngonNgu || 'vi',
+                                             ngonNguNguon: h.ngonNguNguon || 'auto',
+                                             phongCach: h.phongCach || 'Tự nhiên',
+                                             giongTheoNgonNgu: h.giongTheoNgonNgu || {} })),
+              tabsByProfile: tabs,
+              activeByProfile: dangXem,
+              profile: Math.min(d.dangDung || 0, d.hoSo.length - 1),
+              theme: d.theme === 'toi' ? 'toi' : 'sang',
+              zoom: d.zoom || 100,
+              chips: d.the || {},
+              duongDanTep: d.duongDan || {},
+              loaiTep: d.loaiTep || {},
+              pos: 1, sel: 1, view: 'san_sang' };
+        chuKyDaLuu = JSON.stringify(phanCanLuu());
+        await moLaiTepDangXem();
+        const ten = tenTepDangXem(S);
+        if (ten && TAI_LIEU[ten] && TAI_LIEU[ten].doan) {
+          S = { ...S, ngonNguPhatHien: nhanDienNgonNguNhanh(TAI_LIEU[ten].doan) };
+        }
+      }
+      datGiongThat({ giong: startup.giong });
+      await guiDoanSangPython();
+      await capNhatNutCuaSo();
+      return;
+    }
+  } catch (e) {
+    // Fallback an toàn sang đường đọc tuần tự
+  }
+  // Fallback nếu startup không trả về gói toàn diện
   await napHoSoDaLuu();
   datGiongThat(await api('moi_khoi_dong'));
   await guiDoanSangPython();

@@ -59,15 +59,16 @@ const DAI_CANH_BAO = {
 
 /* Chấm và nhãn máy đọc ở góc phải thanh trạng thái. */
 const NHAN_MAY_DOC = {
-  binh_thuong:    { cham: 'ok',   nhan: 'VieNeu v3 Turbo · sẵn sàng' },
-  dang_tao:       { cham: 'acc',  nhan: 'VieNeu v3 Turbo · đang tạo âm thanh' },
+  binh_thuong:    { cham: 'ok',   nhan: 'Giọng Việt · sẵn sàng' },
+  dang_tao:       { cham: 'acc',  nhan: 'Giọng Việt · đang tạo âm thanh' },
   dang_xuat:      { cham: 'acc',  nhan: 'Đang xuất tệp âm thanh · 34%' },
-  mat_ket_noi:    { cham: 'err',  nhan: 'VieNeu v3 Turbo · mất kết nối' },
-  het_luot:       { cham: 'warn', nhan: 'VieNeu v3 Turbo · hết lượt tháng này' },
+  mat_ket_noi:    { cham: 'err',  nhan: 'Giọng Việt · mất kết nối' },
+  het_luot:       { cham: 'warn', nhan: 'Giọng Việt · hết lượt tháng này' },
   giong_dang_tai: { cham: 'warn', nhan: 'Đang tải {giong} · 62%' },
-  van_ban_qua_dai:{ cham: 'ok',   nhan: 'VieNeu v3 Turbo · sẵn sàng' },
-  am_thanh_cu:    { cham: 'ok',   nhan: 'VieNeu v3 Turbo · sẵn sàng' },
+  van_ban_qua_dai:{ cham: 'ok',   nhan: 'Giọng Việt · sẵn sàng' },
+  am_thanh_cu:    { cham: 'ok',   nhan: 'Giọng Việt · sẵn sàng' },
 };
+
 
 const TEN_TINH_HUONG = [
   ['binh_thuong',     'Bình thường'],

@@ -19,6 +19,7 @@ import csv
 import io
 import re
 import statistics
+import tempfile
 import threading
 import time
 import urllib.request
@@ -76,8 +77,8 @@ THE_CAM_XUC = ("[cười]", "[thở dài]", "[hắng giọng]")
 # kéo trung bình lệch hẳn, còn trung vị thì không nhúc nhích.
 SO_LAN_NHO_TRE = 5
 
-# Nạp trước mẩu đầu gần như ngay lập tức (50ms) để khi bấm đọc là có tiếng ngay lập tức.
-CHO_NAP_TRUOC_GIAY = 1.2
+# Nạp trước mẩu tiêu điểm siêu tốc (150ms) để khi bấm đọc là có tiếng ngay lập tức.
+CHO_NAP_TRUOC_GIAY = 0.15
 
 
 def _la_tieu_de(dong: str) -> bool:
@@ -136,8 +137,9 @@ class ApiMoi(Api):
         self._moc_phat = None
         self._tre_da_do = []
         self._tre_ms = TRE_PHAT_MAC_DINH_MS
-        # Hẹn giờ nạp trước mẩu đầu. Đổi tab lần nữa thì lượt hẹn cũ bị huỷ.
+        # Hẹn giờ nạp trước mẩu tiêu điểm. Đổi tab lần nữa thì lượt hẹn cũ bị huỷ.
         self._hen_nap_truoc = None
+        self._vi_tri_nap_truoc = None
         # Ba thanh chỉnh của hồ sơ, và chuỗi -af dựng từ chúng.
         self._chinh_am = {}
         self._loc_am = ""
@@ -193,40 +195,23 @@ class ApiMoi(Api):
                 if self._bo_doc.index + hop < len(self._playlist):
                     ke = self._playlist[self._bo_doc.index + hop]
                     if self._bo_doc.speaker is not None:
+                        from src.core.bo_doc import _dam_bao_da_dich
+                        _dam_bao_da_dich(ke, self._bo_doc.speaker.cfg if self._bo_doc.speaker else self._cfg)
                         self._bo_doc.speaker.prefetch(self._bo_doc.index + hop, ke["text"], ke.get("khuech_dai", 1.0))
         else:
             self._bo_doc.dat_playlist(self._playlist, self._cfg)
             if vi_tri_hien_tai and int(vi_tri_hien_tai) > 1:
                 self._bo_doc.index = min(int(vi_tri_hien_tai) - 1, len(self._playlist) - 1)
-            self._nap_truoc_mau_dau()
+            self._nap_truoc_mau_dau(vi_tri_hien_tai)
 
         return {"soMau": len(self._playlist), "soDoan": len(self._doan), "dangDoc": dang_doc, "pos": self._bo_doc.index + 1}
 
-    def _nap_truoc_mau_dau(self):
-        """Hẹn tổng hợp sẵn mẩu đầu, để bấm Nghe là có tiếng ngay.
-
-        Đo được: từ lúc bấm Nghe đến lúc có tiếng mất 5,9 giây với một câu ngắn
-        và 9,8 giây với một đoạn vừa - gần như toàn bộ là VieNeu dựng WAV, còn
-        ffplay chỉ chiếm 0,6-0,9 giây. Người dùng ngồi nhìn màn hình im lìm gần
-        chục giây, tưởng máy treo. Khoảng ấy tiêu được ngay lúc họ còn đang đọc
-        lướt văn bản vừa mở.
-
-        CHỐT DUY NHẤT: CHỜ MỘT NHỊP rồi mới làm. Lướt qua năm tab là năm lượt
-        tổng hợp, mà Speaker chỉ có MỘT worker nên chúng xếp hàng nối đuôi. Đo
-        thật lúc chưa có chốt này: bấm Nghe phải chờ 106 giây vì đứng sau cả
-        hàng; có chốt rồi còn 11 giây.
-
-        CỐ Ý KHÔNG huỷ lượt đã gửi vào pool. Muốn huỷ thì phải nắm cái future,
-        mà Speaker chỉ cất nó trong `_cache` - thuộc tính riêng của một lớp
-        thuộc engine dùng chung. Đã thử và trả giá: 15 lỗi AttributeError trong
-        GiongViet-loi.log, cộng một phép kiểm xanh giả vì vật giả trong bài kiểm
-        không có `_cache` nên biến luôn bằng None và phép so sánh thành vô
-        nghĩa. Đổi lại chỉ được ~1% lợi ích - xấu nhất là một lượt tổng hợp
-        thừa chạy nốt trong nền.
-        """
+    def _nap_truoc_mau_dau(self, vi_tri=None):
+        """Hẹn nạp trước mẩu tiêu điểm (đoạn đang chọn hoặc đoạn đầu) sau 150ms."""
         self._huy_hen_nap_truoc()
         if not self._playlist:
             return
+        self._vi_tri_nap_truoc = vi_tri
         self._hen_nap_truoc = threading.Timer(CHO_NAP_TRUOC_GIAY, self._chay_nap_truoc)
         self._hen_nap_truoc.daemon = True
         self._hen_nap_truoc.start()
@@ -242,11 +227,25 @@ class ApiMoi(Api):
         speaker = self._bo_doc.speaker
         if speaker is None or not self._playlist or not self._bo_mo_hinh.san_sang:
             return
-        seg = self._playlist[0]
-        try:
-            speaker.prefetch(0, seg["text"], seg.get("khuech_dai", 1.0))
-        except Exception as e:                      # noqa: BLE001
-            nhat_ky.ghi_loi("nạp trước mẩu đầu", e)
+        p_idx = self._bo_doc.index if self._bo_doc and 0 <= self._bo_doc.index < len(self._playlist) else 0
+        if getattr(self, "_vi_tri_nap_truoc", None) is not None:
+            try:
+                can_pos = int(self._vi_tri_nap_truoc) - 1
+                if 0 <= can_pos < len(self._playlist):
+                    p_idx = can_pos
+            except (ValueError, TypeError):
+                pass
+
+        if p_idx < len(self._playlist):
+            from src.core.bo_doc import _dam_bao_da_dich
+            cfg_spk = speaker.cfg if speaker else self._cfg
+            for i in range(p_idx, min(p_idx + 2, len(self._playlist))):
+                seg = self._playlist[i]
+                _dam_bao_da_dich(seg, cfg_spk)
+                try:
+                    speaker.prefetch(i, seg["text"], seg.get("khuech_dai", 1.0))
+                except Exception as e:                      # noqa: BLE001
+                    nhat_ky.ghi_loi(f"nạp trước mẩu {i}", e)
 
     def moi_chuan_bi_doan(self, so_doan):
         """Nạp trước đoạn người dùng vừa trỏ hoặc chọn để bấm phát là có tiếng tức thì."""
@@ -259,6 +258,8 @@ class ApiMoi(Api):
         playlist, _ = self._dung_playlist([n])
         if playlist:
             seg = playlist[0]
+            from src.core.bo_doc import _dam_bao_da_dich
+            _dam_bao_da_dich(seg, speaker.cfg if speaker else self._cfg)
             speaker.prefetch(f"doan_{n}", seg["text"], seg.get("khuech_dai", 1.0))
         return None
 
@@ -554,6 +555,16 @@ class ApiMoi(Api):
                                str(cau), self._loc_am)
         return None
 
+    def _nghe_thu(self, ma):
+        """Nghe thử mẫu giọng với đầy đủ bộ lọc âm thanh đang thiết lập."""
+        if not self._bo_mo_hinh.san_sang:
+            msg = "Mô hình giọng đọc đang khởi động, vui lòng chờ vài giây rồi thử lại."
+            self._goi_js("window.gd.baoLoi", "Chưa sẵn sàng", msg)
+            return {"loi": msg}
+        self._bo_doc.tam_dung()
+        self._bo_nghe_thu.phat(self._cfg, ma, loc=self._loc_am)
+        return None
+
     def moi_dat_chinh_am(self, chinh):
         """Ba thanh Tốc độ · Cao độ · Âm lượng của hồ sơ đang dùng.
 
@@ -571,7 +582,7 @@ class ApiMoi(Api):
         self._bo_doc.loc_am = self._loc_am
         return {"loc": self._loc_am, "moTa": am_thanh_loc.mo_ta(self._chinh_am)}
 
-    def moi_dat_ngon_ngu(self, nguon="auto", dich="vi"):
+    def moi_dat_ngon_ngu(self, nguon="auto", dich="vi", vi_tri=None):
         """Cập nhật cấu hình ngôn ngữ nguồn và ngôn ngữ đích để tự động dịch và đọc."""
         s_nguon = str(nguon or "auto")
         s_dich = str(dich or "vi")
@@ -583,16 +594,16 @@ class ApiMoi(Api):
         self._cfg["tuDongDich"] = True
 
         self._bo_doc.cap_nhat_cfg(self._cfg)
-        # Xóa sạch toàn bộ cache âm thanh cũ để tránh đọc lại tiếng cũ khi THỰC SỰ đổi ngôn ngữ
+        # Dừng phát nếu đang chạy, nhưng BẢO TOÀN L1 RAM & L2 SSD cache (không xóa kho)
         self._bo_doc.dung(giu_vi_tri=False)
         self._trong_so_cache.clear()
-        if self._bo_doc.speaker is not None:
-            self._bo_doc.speaker.clear_cache()
-            self._bo_doc.speaker.xoa_kho(xoa_dia=False)
 
-        # Dựng lại toàn bộ playlist với bản dịch mới
+        # Dựng lại toàn bộ playlist với bản dịch mới và tự động nạp trước tiêu điểm
         if self._doan:
-            self.moi_dat_doan(self._doan)
+            if vi_tri:
+                self.moi_dat_doan_giu_vi_tri(self._doan, vi_tri)
+            else:
+                self.moi_dat_doan(self._doan)
         return {"nguon": self._cfg["ngonNguNguon"], "dich": self._cfg["ngonNgu"]}
 
     def moi_thong_tin_cache(self):
@@ -618,7 +629,7 @@ class ApiMoi(Api):
             self._cfg["phong_cach"] = ten_phong_cach
             self._bo_doc.cap_nhat_cfg(self._cfg)
             if self._doan:
-                self.moi_dat_doan(self._doan)
+                self.moi_dat_doan_giu_vi_tri(self._doan)
         return {"phongCach": ten_phong_cach}
 
     def moi_dung_nghe_thu(self):
@@ -633,6 +644,20 @@ class ApiMoi(Api):
         return None
 
     # ------------------------------------------------------------ khởi động
+
+    def moi_khoi_dong_toan_dien(self):
+        """Khởi động toàn diện siêu tốc 1-roundtrip: nạp nhanh giọng, hồ sơ, và trạng thái."""
+        self._nap_giong_nhanh()
+        if not self._bo_mo_hinh.san_sang and not self._bo_mo_hinh.loi:
+            self._bo_mo_hinh.bat_dau()
+        ds_giong = self.moi_danh_sach_giong()
+        ho_so_data = ho_so_v2.doc()
+        return {
+            "giong": ds_giong.get("giong", []),
+            "hoSo": ho_so_data,
+            "vung": self._vung,
+            "sanSang": self._bo_mo_hinh.san_sang
+        }
 
     def moi_khoi_dong(self):
         self._nap_giong_nhanh()
@@ -795,7 +820,10 @@ class ApiMoi(Api):
         else:
             tep_path = nguon_str
             if not tep_path or not Path(tep_path).exists():
-                mac_dinh_excel = Path("c:/Projects/DocCongDuc/data/mau_google_sheets/Mau_Du_Lieu_Giong_Viet.xlsx")
+                # Tính từ thư mục chương trình, KHÔNG viết cứng: kho đã lên
+                # GitHub và bản .exe cài ở đâu cũng được, viết cứng là máy nào
+                # khác cũng trỏ vào chỗ không có gì.
+                mac_dinh_excel = engine.BASE_DIR / "data" / "mau_google_sheets" / "Mau_Du_Lieu_Giong_Viet.xlsx"
                 if mac_dinh_excel.exists():
                     tep_path = str(mac_dinh_excel)
                 else:
@@ -1360,7 +1388,13 @@ class ApiMoi(Api):
         None KHÔNG phải lỗi: lần chạy đầu tiên thì giao diện dựng bốn hồ sơ
         mẫu như trước.
         """
-        return ho_so_v2.doc()
+        kq = ho_so_v2.doc()
+        if kq and isinstance(kq, dict) and "hoSo" in kq:
+            idx = kq.get("dangDung", 0)
+            if isinstance(kq["hoSo"], list) and 0 <= idx < len(kq["hoSo"]):
+                chinh = (kq["hoSo"][idx] or {}).get("chinh") or {}
+                self.moi_dat_chinh_am(chinh)
+        return kq
 
     def moi_luu_ho_so(self, du_lieu):
         """Ghi hồ sơ, tab, ba thanh điều chỉnh và thẻ cảm xúc xuống đĩa.
@@ -1636,16 +1670,96 @@ class ApiMoi(Api):
         except Exception as e:
             return {"soDoan": 0, "doanDich": [], "loi": str(e)}
 
-    def moi_cap_nhat_da_ngu_giong(self, g_id, da_ngon_ngu, ngon_ngu="vi"):
-        """Bật/tắt cờ đa ngôn ngữ hoặc gán ngôn ngữ cho giọng riêng."""
+    def moi_cap_nhat_da_ngu_giong(self, g_id, da_ngon_ngu, ngon_ngu="vi", ds_ngon_ngu=None):
+        """Bật/tắt cờ đa ngôn ngữ hoặc gán danh sách ngôn ngữ cho giọng riêng."""
         try:
             ds = engine.doc_ds_giong_rieng()
             for g in ds:
                 if g.get("id") == g_id:
                     g["da_ngon_ngu"] = bool(da_ngon_ngu)
                     g["ngon_ngu"] = str(ngon_ngu or "vi")
+                    if ds_ngon_ngu is not None:
+                        g["ds_ngon_ngu"] = list(ds_ngon_ngu)
                     break
             engine.luu_ds_giong_rieng(ds)
             return {"thanhCong": True, "id": g_id, "daNgonNgu": bool(da_ngon_ngu), "ngonNgu": str(ngon_ngu or "vi")}
         except Exception as e:
             return {"thanhCong": False, "loi": str(e)}
+
+    def moi_phan_tich_file_am_thanh(self, duong_dan):
+        """Phân tích chất lượng âm thanh, SNR, VAD, Golden Window và waveform peaks cho Studio."""
+        from src.core.chuan_hoa_am_thanh import phan_tich_chat_luong_am_thanh
+        try:
+            p = Path(duong_dan)
+            if not p.exists():
+                return {"thanhCong": False, "loi": f"Không tìm thấy tệp: {duong_dan}"}
+            return phan_tich_chat_luong_am_thanh(p)
+        except Exception as e:
+            return {"thanhCong": False, "loi": str(e)}
+
+    def moi_nghe_thu_doan_cat(self, duong_dan, start_sec, end_sec):
+        """Cắt thử một đoạn âm thanh và phát nghe thử tức thì."""
+        from src.core.chuan_hoa_am_thanh import cat_va_chuan_hoa_wav
+        try:
+            p = Path(duong_dan)
+            if not p.exists():
+                return {"thanhCong": False, "loi": "Không tìm thấy tệp"}
+            # Tệp tạm phải nằm ở chỗ CHẮC CHẮN ghi được. Thư mục chương trình
+            # không phải chỗ đó: bản .exe cài trong Program Files là chỉ-đọc.
+            temp_wav = Path(tempfile.gettempdir()) / "giongviet_nghe_thu_doan_cat.wav"
+            cat_va_chuan_hoa_wav(p, temp_wav, float(start_sec or 0), float(end_sec or 8))
+            self._bo_nghe_thu.dung()
+            cfg_nghe = dict(self._cfg)
+            speaker = engine.Speaker(cfg_nghe)
+            self._bo_nghe_thu._speaker = speaker
+
+            # Đường dừng thật là _bo_nghe_thu.dung() -> speaker.stop(), và nó
+            # với tới được speaker nhờ dòng gán ngay trên. play() vẫn cần một
+            # Event để giữ đúng chữ ký, nhưng không ai set nó cả - đừng cất giữ
+            # rồi tưởng là có thêm một đường dừng nữa.
+            #
+            # shutdown() trong finally: trước đây mỗi lần bấm nút này bỏ lại hai
+            # luồng nạp trước cùng một kho âm, không bao giờ được thu hồi.
+            du_lieu = temp_wav.read_bytes()
+
+            def _phat():
+                try:
+                    speaker.play(du_lieu, threading.Event())
+                finally:
+                    speaker.shutdown()
+
+            threading.Thread(target=_phat, daemon=True).start()
+            return {"thanhCong": True}
+        except Exception as e:
+            return {"thanhCong": False, "loi": str(e)}
+
+    def nhan_ban_giong(self, ten, duong_dan, start_sec=None, end_sec=None, da_ngon_ngu=False, ngon_ngu="vi"):
+        """Khởi chạy quy trình nhân bản giọng riêng Studio ngầm với đoạn cắt tối ưu."""
+        if self._dang_nhan_ban:
+            return None
+        self._dang_nhan_ban = True
+        threading.Thread(
+            target=self._nhan_ban_nen_studio,
+            args=(ten, duong_dan, start_sec, end_sec, da_ngon_ngu, ngon_ngu),
+            daemon=True
+        ).start()
+        return None
+
+    def _nhan_ban_nen_studio(self, ten, duong_dan, start_sec, end_sec, da_ngon_ngu, ngon_ngu):
+        try:
+            engine.tao_giong_rieng(
+                ten, duong_dan,
+                bao_tien_do=lambda m: self._goi_js("window.gd.tienDoGiong", str(m)),
+                start_sec=float(start_sec) if start_sec is not None else None,
+                end_sec=float(end_sec) if end_sec is not None else None,
+                da_ngon_ngu=bool(da_ngon_ngu),
+                ngon_ngu=str(ngon_ngu or "vi")
+            )
+        except Exception as e:
+            self._goi_js("window.gd.giongLoi", str(e))
+            return
+        finally:
+            self._dang_nhan_ban = False
+        self._nap_giong()
+        self._day({"thuVien": self._du_lieu_thu_vien()})
+        self._goi_js("window.gd.giongXong", ten)

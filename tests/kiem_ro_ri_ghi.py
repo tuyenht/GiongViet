@@ -53,10 +53,31 @@ MIEN_TRU = {
     ("giaodien.nhat_ky", "ghi"),
     ("giaodien.nhat_ky", "ghi_loi"),
     ("giaodien.nhat_ky", "bat_loi_toan_cuc"),
+
+    # lay_danh_sach_giong_day_du -> lay_danh_sach_giong_vieneu ->
+    # dam_bao_vieneu_san_sang, va ham cuoi ghi giong_rieng/.voice_cache.json
+    # (DocCongDuc.py, trong dam_bao_vieneu_san_sang).
+    #
+    # Mien tru chu KHONG khoa, vi ba le do:
+    #   1. Do la CACHE DAN XUAT - vector dac trung tinh lai duoc tu chinh cac
+    #      tep .wav mau. Xoa di chi mat thoi gian nap, khong mat du lieu nao.
+    #   2. Khoa cua ra nay nghia la dam_bao_vieneu_san_sang tra ve gia - ma no
+    #      tra ve doi tuong mo hinh TTS. Tra gia la vo ca duong doc.
+    #   3. Duong nay chay khi NAP MO HINH, khong phai khi nguoi dung bam Luu.
+    #
+    # Cai can canh la bai kiem nao goi toi day phai tro GIONG_RIENG_DIR sang
+    # thu muc tam truoc, dung de no ghi vao kho that.
+    ("DocCongDuc", "lay_danh_sach_giong_day_du"),
+    ("DocCongDuc", "lay_danh_sach_giong_vieneu"),
+    ("DocCongDuc", "dam_bao_vieneu_san_sang"),
 }
 
 # Cua ra da khoa, dang "mo_dun.ham".
-DA_KHOA = {f"{m.__name__}.{t}" for m, t, _, _ in khoa_du_lieu.CUA_RA_GHI} | {f"{m.__name__.replace('src.core.', 'giaodien.')}.{t}" for m, t, _, _ in khoa_du_lieu.CUA_RA_GHI}
+DA_KHOA = ({f"{m.__name__}.{t}" for m, t, _, _ in khoa_du_lieu.CUA_RA_GHI}
+           | {f"{m.__name__.replace('src.core.', 'giaodien.')}.{t}"
+              for m, t, _, _ in khoa_du_lieu.CUA_RA_GHI}
+           | {f"{m.__name__.replace('src.app.', 'giaodien_moi.')}.{t}"
+              for m, t, _, _ in khoa_du_lieu.CUA_RA_GHI})
 
 loi = 0
 
@@ -178,6 +199,62 @@ ok(not ro, "khong con duong ghi nao ho trong cau_noi.py", ro or "kin")
 ok(len(dung) >= 3, f"co {len(dung)} cua ra da khoa dang duoc goi that",
    sorted(dung))
 
+print("\n--- B2. Loi goi ham ghi trong cau_noi_moi.py phai nam trong CUA_RA_GHI ---")
+# Phan B chi soi cau_noi.py - lop Api CU. Nhung lop dang chay that trong
+# GiongViet.py la ApiMoi (src/app/cau_noi_moi.py), va no co cua ra ghi RIENG:
+# ho_so_v2.luu ghi hoso-v2.json, luu_tep.luu ghi van ban nguoi dung.
+#
+# Thieu phan nay thi luoi canh chi soi lop cu: ai them mot ham ghi moi roi goi
+# tu ApiMoi ma quen khoa, khong phep nao do len. Ba cua ra hien co deu CO CHU Y
+# khong khoa - xem MIEN_TRU_MOI ngay duoi - nen phan nay canh cho TUONG LAI.
+G_APP = (GOC / "src" / "app") if (GOC / "src" / "app").exists() else (GOC / "giaodien_moi")
+ban_do_moi = dict(ban_do)
+for p_app in sorted(G_APP.glob("*.py")):
+    if p_app.stem in ("__init__", "cau_noi_moi", "khoa_du_lieu"):
+        continue
+    ban_do_moi[p_app.stem] = (f"giaodien_moi.{p_app.stem}",
+                              quet_mo_dun(p_app, f"giaodien_moi.{p_app.stem}"))
+
+# Ba cua ra duoi day CO Y khong khoa. Khong phai bo sot - da co hai bai kiem
+# doc lap khang dinh dieu nguoc lai:
+#   tests/kiem_khoa_du_lieu.py  muc G  "van luu duoc hoso-v2.json khi da khoa"
+#   tests/kiem_bam_loan.py      muc F  "moi_luu_ho_so ghi duoc khi da khoa"
+#
+# Ly do: tang MOI chan bang cach DOI DICH GHI, khong bang cach khoa ham.
+# Bai kiem tro ho_so_v2.TEP (va duong luu van ban) sang thu muc tam roi moi
+# chay; khoa ham lai thi chinh hai bai tren do ngay.
+#
+# Ranh gioi phai giu: bai kiem nao dung ba ham nay MA QUEN doi dich ghi thi
+# no cham vao du lieu that. Canh chuyen do KHONG phai viec cua tep nay ma la
+# cua tung bai: lay van tay (mtime + noi dung) sau tep du lieu that truoc khi
+# chay roi so lai sau khi chay - xem tests/kiem_bam_loan.py muc D.
+MIEN_TRU_MOI = {
+    "giaodien_moi.ho_so_v2.luu",
+    "giaodien_moi.luu_tep.luu",
+    "DocCongDuc.ghi_tep_cau_hinh",
+}
+
+cnm_path = G_APP / "cau_noi_moi.py"
+ok(cnm_path.exists(), "tim thay cau_noi_moi.py de soi", cnm_path.name)
+ro_moi = []
+if cnm_path.exists():
+    for n in ast.walk(ast.parse(cnm_path.read_text(encoding="utf-8"))):
+        if not isinstance(n, ast.Call):
+            continue
+        ten = _ten_ham_goi(n)
+        if "." not in ten:
+            continue
+        alias, ham = ten.split(".", 1)
+        muc = ban_do_moi.get(alias)
+        if not muc or ham not in muc[1]:
+            continue
+        day_du = f"{muc[0]}.{ham}"
+        if day_du not in DA_KHOA and day_du not in MIEN_TRU_MOI:
+            ro_moi.append(f"{day_du} (dong {n.lineno})")
+
+ok(not ro_moi, "khong con duong ghi nao ho trong cau_noi_moi.py", ro_moi or "kin")
+
+
 print("\n--- C. Moi muc trong CUA_RA_GHI deu con ton tai that ---")
 for m, t, _, tep in khoa_du_lieu.CUA_RA_GHI:
     ok(hasattr(m, t), f"{m.__name__}.{t} van ton tai  ({tep})")
@@ -212,7 +289,12 @@ print("\n--- F. Khong tep nao trong kiem/ viet cung duong dan may nay ---")
 # Ghep chuoi de chinh tep nay khong tu bao lech: viet thang "C:\\Projects" vao
 # day thi dong kiem tro thanh cai ma no dang di tim.
 _O_DIA = "C" + ":"
-for p in sorted(list((GOC / "kiem").glob("*.py")) + list((GOC / "kiem").glob("*.mjs"))):
+# Dung G_KIEM (dong 207) chu khong viet cung "kiem": thu muc da doi ten thanh
+# tests/, nen vong nay tung chay tren tap RONG va muc F luon bao dat ma khong
+# kiem gi ca - dung cai loi ma chinh no sinh ra de canh.
+_ds_quet = sorted(list(G_KIEM.glob("*.py")) + list(G_KIEM.glob("*.mjs")))
+ok(len(_ds_quet) > 0, f"quet duoc tep trong {G_KIEM.name}/", f"{len(_ds_quet)} tep")
+for p in _ds_quet:
     nguon = p.read_text(encoding="utf-8", errors="replace")
     ok(_O_DIA + "\\Projects" not in nguon and _O_DIA + "/Projects" not in nguon,
        f"{p.name} khong viet cung duong dan")

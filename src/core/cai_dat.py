@@ -68,7 +68,10 @@ def _duong_dan(khoa, nhan, goi_y, gia_tri) -> dict:
 
 def du_lieu(cfg: dict, tuy_chon: dict, loai_ho_so: str = "",
             ten_ho_so: str = "") -> dict:
-    thu_muc_mo_hinh = engine.BASE_DIR / "vieneu_models"
+    # engine đã dò sẵn (models/vieneu, lùi về vieneu_models nếu là bố cục cũ).
+    # Gõ cứng một đường là màn Cài đặt báo "Chiếm chưa có" kèm lời cảnh báo
+    # "xoá là phải tải lại vài trăm MB" trỏ vào một thư mục rỗng.
+    thu_muc_mo_hinh = engine.MODELS_DIR
     co_chu = int(tuy_chon.get("zoom", 100))
 
     nhom = [

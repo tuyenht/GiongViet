@@ -52,8 +52,12 @@ def _chu(gt, dai_toi_da=200) -> str:
 
 def _lam_sach_chinh(chinh) -> dict:
     chinh = chinh if isinstance(chinh, dict) else {}
-    return {k: _so_nguyen(chinh.get(k), t, c, MAC_DINH_CHINH[k])
-            for k, (t, c) in GIOI_HAN_CHINH.items()}
+    res = {k: _so_nguyen(chinh.get(k), t, c, MAC_DINH_CHINH[k])
+           for k, (t, c) in GIOI_HAN_CHINH.items()}
+    kg = str(chinh.get("khongGian") or "").strip().lower()
+    if kg in ("podcast", "hoitruong", "loaphuong", "radio"):
+        res["khongGian"] = kg
+    return res
 
 
 def _lam_sach_ho_so(h) -> dict:
@@ -63,10 +67,21 @@ def _lam_sach_ho_so(h) -> dict:
     if not tep:
         # Hồ sơ luôn có ít nhất một tab; rỗng nghĩa là tab "Chưa đặt tên".
         tep = [""]
+
+    g_theo_nn = {}
+    if isinstance(h.get("giongTheoNgonNgu"), dict):
+        for k_nn, v_g in h["giongTheoNgonNgu"].items():
+            if isinstance(k_nn, str) and isinstance(v_g, str):
+                g_theo_nn[_chu(k_nn, 30)] = _chu(v_g, 120)
+
     return {
         "ma": _chu(h.get("ma"), 64) or "hs",
         "ten": _chu(h.get("ten"), 120) or "Hồ sơ",
         "giong": _chu(h.get("giong"), 120),
+        "ngonNgu": _chu(h.get("ngonNgu"), 30) or "vi",
+        "ngonNguNguon": _chu(h.get("ngonNguNguon"), 30) or "auto",
+        "phongCach": _chu(h.get("phongCach"), 60) or "Tự nhiên",
+        "giongTheoNgonNgu": g_theo_nn,
         "chinh": _lam_sach_chinh(h.get("chinh")),
         "tep": tep,
         "dangXem": _so_nguyen(h.get("dangXem"), 0, len(tep) - 1, 0),

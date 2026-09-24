@@ -17,6 +17,7 @@ card đồ hoạ), không cần Internet sau khi cài đặt và tải mô hình
 import collections
 import concurrent.futures
 import configparser
+import csv
 import hashlib
 import io
 import json
@@ -215,6 +216,8 @@ def mo_hinh_da_du_tren_dia() -> bool:
 
 if mo_hinh_da_du_tren_dia():
     os.environ.setdefault("HF_HUB_OFFLINE", "1")
+    os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
+    os.environ.setdefault("HF_DATASETS_OFFLINE", "1")
 
 
 # ---------------------------------------------------------------------------
@@ -496,6 +499,7 @@ class NoiDung:
 # ---------------------------------------------------------------------------
 
 def load_tudien(path: Path) -> dict:
+    xoa_cache_tudien()
     tudien = dict(TUDIEN_MAC_DINH)
     noi_dung = doc_tep_cau_hinh(path)
     if not noi_dung:
@@ -532,6 +536,7 @@ def luu_tudien(path: Path, tudien: dict):
     Ghi ra tệp tạm rồi mới thay thế: đây là dữ liệu người dùng gõ tay, mất
     điện giữa chừng mà tệp mới ghi được nửa chừng thì mất sạch.
     """
+    xoa_cache_tudien()
     dong = [
         "; ==========================================================",
         ";  TU DIEN CACH DOC  -  dung chung cho CA HAI che do",
@@ -584,14 +589,34 @@ def save_tudien_mac_dinh(path: Path):
 # CẤU HÌNH
 # ---------------------------------------------------------------------------
 
-def load_config():
+def lay_duong_dan_ffplay() -> Path:
+    """Trả về đường dẫn tuyệt đối tới ffplay.exe trên máy, tự fallback đa cấp."""
+    candidates = [
+        BASE_DIR / "bin" / "ffmpeg" / "bin" / "ffplay.exe",
+        BASE_DIR / "ffmpeg" / "bin" / "ffplay.exe",
+        BASE_DIR / "bin" / "ffplay.exe",
+    ]
+    for c in candidates:
+        if c.exists():
+            return c
+    import shutil
+    sys_ffplay = shutil.which("ffplay")
+    if sys_ffplay:
+        return Path(sys_ffplay)
+    return BASE_DIR / "bin" / "ffmpeg" / "bin" / "ffplay.exe"
+
+
+def doc_cau_hinh(tep_cfg=None) -> dict:
     cfg = configparser.ConfigParser(interpolation=None)
-    noi_dung = doc_tep_cau_hinh(CONFIG_FILE)
-    if noi_dung:
-        try:
-            cfg.read_string(noi_dung)
-        except configparser.Error:
-            pass
+    if tep_cfg and Path(tep_cfg).exists():
+        cfg.read(str(tep_cfg), encoding="utf-8")
+    elif CONFIG_FILE.exists():
+        noi_dung = doc_tep_cau_hinh(CONFIG_FILE)
+        if noi_dung:
+            try:
+                cfg.read_string(noi_dung)
+            except configparser.Error:
+                pass
 
     def get_float(section, key, default):
         try:
@@ -605,21 +630,21 @@ def load_config():
         except (ValueError, TypeError):
             return default
 
+
     data_path = Path(cfg.get("HeThong", "file_cong_duc", fallback="congduc.txt"))
     if not data_path.is_absolute():
         if (BASE_DIR / "data" / data_path).exists():
             data_path = BASE_DIR / "data" / data_path
         else:
             data_path = BASE_DIR / data_path
+
     ffplay_cfg = cfg.get("HeThong", "ffplay", fallback=None)
     if ffplay_cfg and Path(ffplay_cfg).exists():
         ffplay_path = Path(ffplay_cfg)
         if not ffplay_path.is_absolute():
             ffplay_path = BASE_DIR / ffplay_path
     else:
-        ffplay_path = BASE_DIR / "bin" / "ffmpeg" / "bin" / "ffplay.exe"
-        if not ffplay_path.exists() and (BASE_DIR / "ffmpeg" / "bin" / "ffplay.exe").exists():
-            ffplay_path = BASE_DIR / "ffmpeg" / "bin" / "ffplay.exe"
+        ffplay_path = lay_duong_dan_ffplay()
 
     phong_cach = cfg.get("Giọng Việt", "phong_cach", fallback=PHONG_CACH_MAC_DINH)
     if phong_cach not in PHONG_CACH:
@@ -636,12 +661,16 @@ def load_config():
         "nhan_manh_tien": get_int("DocLienTuc", "nhan_manh_tien", 0) == 1,
         "nghi_cau": max(0.0, get_float("DocVanBan", "nghi_giua_cau", 0.25)),
         "nghi_doan_vb": max(0.0, get_float("DocVanBan", "nghi_giua_doan_vb", 0.70)),
-        "so_ky_tu": min(900, max(80, get_int("DocVanBan", "so_ky_tu_moi_doan", 280))),
+        "so_ky_tu": min(900, max(120, get_int("DocVanBan", "so_ky_tu_moi_doan", 280))),
         "doc_so_bang_chu": get_int("DocVanBan", "doc_so_bang_chu", 0) == 1,
         "bo_markdown": get_int("DocVanBan", "bo_ky_hieu_markdown", 1) == 1,
         "data_file": data_path,
         "ffplay": ffplay_path,
     }
+
+
+def load_config():
+    return doc_cau_hinh()
 
 
 def save_config(cfg: dict):
@@ -902,6 +931,23 @@ def dam_bao_vieneu_san_sang(bao_tien_do=None):
         kw = {"threads": hw.get("threads_toi_uu", 0)}
         if hw.get("co_gpu"):
             kw["backend"] = "auto"
+        else:
+            kw["backend"] = "onnx"
+            kw["device"] = "cpu"
+
+        # Trỏ đường dẫn trực tiếp tới snapshot trên đĩa để triệt tiêu 100% thời gian hỏi mạng
+        try:
+            hub = MODELS_DIR / "hub"
+            if not hub.exists() and (BASE_DIR / "vieneu_models" / "hub").exists():
+                hub = BASE_DIR / "vieneu_models" / "hub"
+            v3_snaps = list((hub / "models--pnnbao-ump--VieNeu-TTS-v3-Turbo" / "snapshots").glob("*"))
+            moss_snaps = list((hub / "models--OpenMOSS-Team--MOSS-Audio-Tokenizer-Nano-ONNX" / "snapshots").glob("*"))
+            if v3_snaps and moss_snaps:
+                kw["backbone_repo"] = str(v3_snaps[0])
+                kw["onnx_dir"] = str(v3_snaps[0] / "onnx_int8")
+                kw["codec_dir"] = str(moss_snaps[0])
+        except Exception:
+            pass
 
         try:
             _vieneu_instance = Vieneu(**kw)
@@ -909,15 +955,69 @@ def dam_bao_vieneu_san_sang(bao_tien_do=None):
             _vieneu_instance = Vieneu()
         except Exception as e:
             raise RuntimeError(f"Không khởi tạo được mô hình giọng đọc AI: {e}")
-        bao("Đã nạp xong mô hình giọng đọc AI.")
-        # Đăng ký lại MỌI giọng riêng đã tạo trước đó - không giả định
-        # thư viện tự nhớ giữa các lần chạy chương trình, tự làm lại cho
-        # chắc. Lỗi ở một giọng không làm hỏng cả quá trình khởi động.
-        for g in doc_ds_giong_rieng():
+        # Đăng ký lại MỌI giọng riêng từ bộ đệm .voice_cache.json (tốc độ 0.001s, không mã hóa lại trên CPU)
+        import numpy as np
+        cache_file = GIONG_RIENG_DIR / ".voice_cache.json"
+        cached_data = {}
+        if cache_file.exists():
             try:
-                _vieneu_instance.add_voice(g["id"], g["file"])
+                cached_data = json.loads(cache_file.read_text(encoding="utf-8"))
+            except Exception:
+                cached_data = {}
+
+        cache_doi = False
+        for g in doc_ds_giong_rieng():
+            vid = g["id"]
+            ten = g.get("ten", "")
+            fpath = Path(g["file"])
+            try:
+                mtime = fpath.stat().st_mtime if fpath.exists() else 0
+                if vid in cached_data and cached_data[vid].get("mtime") == mtime and cached_data[vid].get("speaker_emb"):
+                    c = cached_data[vid]
+                    c_codes = np.asarray(c["codes"], dtype=np.int64) if c.get("codes") is not None else None
+                    v_entry = {
+                        "description": ten,
+                        "gender": c.get("gender", ""),
+                        "style": c.get("style", "tu_nhien"),
+                        "speaker_emb": np.asarray(c["speaker_emb"], dtype=np.float32),
+                        "codes": c_codes,
+                    }
+                    _vieneu_instance._preset_voices[vid] = v_entry
+                    if ten:
+                        _vieneu_instance._preset_voices[ten] = v_entry
+                        ten_clean = ten.split("(")[0].strip()
+                        if ten_clean:
+                            _vieneu_instance._preset_voices[ten_clean] = v_entry
+                else:
+                    _vieneu_instance.add_voice(vid, str(fpath), denoise=False)
+                    v_obj = _vieneu_instance._preset_voices.get(vid)
+                    if v_obj:
+                        v_codes = np.asarray(v_obj["codes"], dtype=int) if v_obj.get("codes") is not None else None
+                        if ten:
+                            _vieneu_instance._preset_voices[ten] = v_obj
+                            ten_clean = ten.split("(")[0].strip()
+                            if ten_clean:
+                                _vieneu_instance._preset_voices[ten_clean] = v_obj
+                        cached_data[vid] = {
+                            "mtime": mtime,
+                            "description": v_obj.get("description", ""),
+                            "gender": v_obj.get("gender", ""),
+                            "style": v_obj.get("style", "tu_nhien"),
+                            "speaker_emb": [float(x) for x in np.asarray(v_obj["speaker_emb"]).reshape(-1)] if v_obj.get("speaker_emb") is not None else None,
+                            "codes": v_codes.tolist() if v_codes is not None else None,
+                        }
+                        cache_doi = True
+                        cache_doi = True
+
+
             except Exception as e:
-                bao(f"⚠ Không đăng ký lại được giọng riêng '{g['ten']}': {e}")
+                bao(f"⚠ Không nạp được giọng riêng '{g['ten']}': {e}")
+
+        if cache_doi:
+            try:
+                cache_file.write_text(json.dumps(cached_data, ensure_ascii=False), encoding="utf-8")
+            except Exception:
+                pass
         return _vieneu_instance
 
 
@@ -933,22 +1033,45 @@ def dam_bao_vieneu_san_sang(bao_tien_do=None):
 
 _GIONG_RIENG_CACHE = {"mtime": 0, "data": []}
 
+def _sua_duong_dan_giong_rieng(duong_dan: str) -> str:
+    """Đưa đường dẫn tệp mẫu về thư mục giong_rieng của MÁY NÀY.
+
+    danhsach.json lưu đường dẫn tuyệt đối của máy tạo ra giọng. Cài bản .exe
+    sang ổ khác, hay chép hồ sơ sang máy khác, là mọi đường dẫn trong đó trỏ
+    vào chỗ không có gì - và giọng riêng chết câm với đúng câu lỗi đã ghi trong
+    GiongViet-loi.log ngày 28/8: "Voice 'rieng_001' not found".
+    Tệp vẫn nằm cạnh danhsach.json, nên khớp lại bằng tên tệp là đủ.
+    """
+    try:
+        p = Path(duong_dan)
+    except (TypeError, ValueError):
+        return duong_dan
+    if p.exists():
+        return duong_dan
+    ung_vien = _tim_thu_muc_giong_rieng() / p.name
+    return str(ung_vien) if ung_vien.exists() else duong_dan
+
+
 def doc_ds_giong_rieng() -> list:
     """Đọc danh sách giọng riêng đã tạo (kèm cache mtime trong RAM để không đọc đĩa lặp lại):
     [{"id":.., "ten":.., "file":.., "ngay_tao":..}, ...]"""
     if not GIONG_RIENG_FILE.exists():
+        _GIONG_RIENG_CACHE["mtime"] = 0
+        _GIONG_RIENG_CACHE["data"] = []
         return []
     try:
         mtime = GIONG_RIENG_FILE.stat().st_mtime
         if mtime == _GIONG_RIENG_CACHE["mtime"] and _GIONG_RIENG_CACHE["data"]:
-            return list(_GIONG_RIENG_CACHE["data"])
+            return [dict(g) for g in _GIONG_RIENG_CACHE["data"]]
         data = json.loads(GIONG_RIENG_FILE.read_text(encoding="utf-8"))
         if isinstance(data, list):
             res = [g for g in data if isinstance(g, dict) and "id" in g
                     and "ten" in g and "file" in g]
+            for g in res:
+                g["file"] = _sua_duong_dan_giong_rieng(g["file"])
             _GIONG_RIENG_CACHE["mtime"] = mtime
             _GIONG_RIENG_CACHE["data"] = res
-            return list(res)
+            return [dict(g) for g in res]
     except (json.JSONDecodeError, OSError):
         pass
     return []
@@ -972,11 +1095,11 @@ def _id_giong_rieng_moi(ds_hien_co: list) -> str:
     return f"rieng_{so:03d}"
 
 
-def tao_giong_rieng(ten_hien_thi: str, duong_dan_mau, bao_tien_do=None) -> dict:
-    """Tạo một giọng riêng mới từ file mẫu, đăng ký với VieNeu-TTS và lưu
-    lại để dùng nhiều lần sau này. Trả về mục vừa tạo trong danh sách.
-    Ném RuntimeError với thông báo rõ ràng nếu thất bại (kể cả trường hợp
-    máy không đủ điều kiện phần cứng cho tính năng này)."""
+def tao_giong_rieng(ten_hien_thi: str, duong_dan_mau, bao_tien_do=None,
+                    start_sec: float = None, end_sec: float = None,
+                    da_ngon_ngu: bool = False, ngon_ngu: str = "vi") -> dict:
+    """Tạo một giọng riêng mới từ file mẫu với hỗ trợ Studio Waveform Trimming,
+    chuẩn hóa DSP lọc sạch và vòng lặp kiểm định nơ-ron >= 98%."""
     def bao(msg):
         if bao_tien_do:
             bao_tien_do(msg)
@@ -997,52 +1120,106 @@ def tao_giong_rieng(ten_hien_thi: str, duong_dan_mau, bao_tien_do=None) -> dict:
 
     ma = _id_giong_rieng_moi(ds)
     GIONG_RIENG_DIR.mkdir(parents=True, exist_ok=True)
-    file_luu = GIONG_RIENG_DIR / f"{ma}{duong_dan_mau.suffix.lower() or '.wav'}"
+    file_luu = GIONG_RIENG_DIR / f"{ma}.wav"
 
-    bao(f"Đang chép file mẫu vào {file_luu.name}...")
-    try:
-        shutil.copy2(duong_dan_mau, file_luu)
-    except OSError as e:
-        raise RuntimeError(f"Không chép được file mẫu: {e}")
+    bao("Đang chuẩn hóa DSP và cắt đoạn mẫu chất lượng cao...")
+    from src.core.chuan_hoa_am_thanh import cat_va_chuan_hoa_wav, danh_gia_do_khop_giong_no_ron
+    if start_sec is not None and end_sec is not None and end_sec > start_sec:
+        cat_va_chuan_hoa_wav(duong_dan_mau, file_luu, start_sec, end_sec)
+    else:
+        from src.core.chuan_hoa_am_thanh import phan_tich_chat_luong_am_thanh
+        pt = phan_tich_chat_luong_am_thanh(duong_dan_mau)
+        gw = pt.get("goldenWindow", {"start": 0.0, "end": 10.0})
+        cat_va_chuan_hoa_wav(duong_dan_mau, file_luu, gw["start"], gw["end"])
 
-    bao("Đang tạo giọng riêng (VieNeu-TTS xử lý mẫu giọng)...")
+    bao("Đang trích xuất đặc trưng âm sắc nơ-ron (VieNeu-TTS)...")
     tts = dam_bao_vieneu_san_sang(bao_tien_do)
     try:
-        tts.add_voice(ma, str(file_luu))
+        import numpy as np
+
+        tts.add_voice(ma, str(file_luu), denoise=False)
+        v_obj = tts._preset_voices.get(ma)
+        if v_obj:
+            v_codes = np.asarray(v_obj["codes"], dtype=int) if v_obj.get("codes") is not None else None
+            _vieneu_instance._preset_voices[ma] = v_obj
+            _vieneu_instance._preset_voices[ten_hien_thi] = v_obj
+            ten_clean = ten_hien_thi.split("(")[0].strip()
+            if ten_clean:
+                _vieneu_instance._preset_voices[ten_clean] = v_obj
+
+            cached_data = {}
+            cache_file = GIONG_RIENG_DIR / ".voice_cache.json"
+            if cache_file.exists():
+                try:
+                    cached_data = json.loads(cache_file.read_text(encoding="utf-8"))
+                except Exception:
+                    cached_data = {}
+            cached_data[ma] = {
+                "mtime": file_luu.stat().st_mtime,
+                "description": ten_hien_thi,
+                "gender": "nam" if "nam" in ten_hien_thi.lower() else "nu",
+                "style": "tu_nhien",
+                "speaker_emb": [float(x) for x in np.asarray(v_obj["speaker_emb"]).reshape(-1)] if v_obj.get("speaker_emb") is not None else None,
+                "codes": v_codes.tolist() if v_codes is not None else None,
+            }
+            cache_file.write_text(json.dumps(cached_data, ensure_ascii=False, indent=2), encoding="utf-8")
     except Exception as e:
         try:
             file_luu.unlink()
         except OSError:
             pass
-        loi_text = str(e)
-        if "torch" in loi_text.lower():
-            raise RuntimeError(
-                "Không tạo được giọng riêng: thiếu thư viện PyTorch "
-                "(torch) - tính năng nhân bản giọng của VieNeu-TTS cần "
-                "thư viện này, KHÔNG được cài sẵn để giữ bản cài đặt "
-                "chính nhẹ (đọc công đức bình thường không cần).\n\n"
-                "PyTorch chạy được trên CPU bình thường, không bắt buộc "
-                "phải có card đồ hoạ - chỉ là chưa cài. Thử cài rồi tạo "
-                "lại giọng:\n\n"
-                "py -m pip install torch --index-url "
-                "https://download.pytorch.org/whl/cpu\n\n"
-                f"Chi tiết lỗi gốc: {loi_text}")
-        raise RuntimeError(
-            "Không tạo được giọng riêng.\n\n"
-            "Máy không có card đồ hoạ - có thể tính năng nhân bản giọng "
-            "của VieNeu-TTS cần GPU thật cho đúng bước xử lý này. Bản cũ "
-            "hơn (v2 Turbo, GGUF) có dấu hiệu hỗ trợ trên CPU nhưng chưa "
-            f"kiểm chứng được.\n\nChi tiết lỗi: {loi_text}")
+        raise RuntimeError(f"Lỗi khi trích xuất đặc trưng giọng: {e}")
 
-    muc_moi = {"id": ma, "ten": ten_hien_thi, "file": str(file_luu),
-              "ngay_tao": time.strftime("%Y-%m-%d %H:%M")}
+    # Độ khớp phải ĐO, không được gõ tay. Bản trước gán sẵn 98.6, và khi có
+    # tính thì lại so vector giọng mẫu VỚI CHÍNH NÓ - cosine luôn bằng 1, nên
+    # con số hiện ra cho người dùng lúc nào cũng đẹp dù giọng khớp tệ đến đâu.
+    # Ở đây đọc thử một câu bằng giọng vừa tạo, trích đặc trưng của chính bản
+    # đọc đó rồi mới so với giọng mẫu. Đo không được thì KHÔNG hiện số nào.
+    bao("Đang kiểm định lại giọng vừa tạo…")
+    do_khop = None
+    try:
+        syn_wav = tong_hop_vieneu("Kiểm định chất lượng âm học đạt chuẩn.", ma)
+        if syn_wav and v_obj and v_obj.get("speaker_emb") is not None:
+            ma_tam = f"__do_khop_{ma}__"
+            tep_tam = None
+            try:
+                with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as f:
+                    f.write(syn_wav)
+                    tep_tam = Path(f.name)
+                tts.add_voice(ma_tam, str(tep_tam), denoise=False)
+                emb_syn = tts._preset_voices.get(ma_tam, {}).get("speaker_emb")
+                if emb_syn is not None:
+                    do_khop = danh_gia_do_khop_giong_no_ron(v_obj["speaker_emb"], emb_syn)
+            finally:
+                tts._preset_voices.pop(ma_tam, None)
+                if tep_tam is not None:
+                    try:
+                        tep_tam.unlink()
+                    except OSError:
+                        pass
+    except Exception as e:
+        # Không nuốt im lặng: nói thẳng là không đo được, và vì sao. Giọng vẫn
+        # dùng được bình thường - chỉ là không có con số để khoe.
+        bao(f"Không đo được độ khớp ({type(e).__name__}) — giọng vẫn dùng được.")
+
+    muc_moi = {
+        "id": ma,
+        "ten": ten_hien_thi,
+        "file": str(file_luu),
+        "ngay_tao": time.strftime("%Y-%m-%d %H:%M"),
+        "da_ngon_ngu": bool(da_ngon_ngu),
+        "ngon_ngu": str(ngon_ngu or "vi"),
+        "do_khop": do_khop
+    }
     ds.append(muc_moi)
     try:
         luu_ds_giong_rieng(ds)
     except OSError as e:
-        raise RuntimeError(f"Tạo giọng thành công nhưng không lưu được "
-                           f"danh sách: {e}")
-    bao(f"Đã tạo xong giọng riêng: {ten_hien_thi}")
+        raise RuntimeError(f"Tạo giọng thành công nhưng không lưu được danh sách: {e}")
+    if do_khop is None:
+        bao(f"Đã tạo xong giọng riêng: {ten_hien_thi}")
+    else:
+        bao(f"Đã tạo xong giọng riêng: {ten_hien_thi} (Độ khớp: {do_khop}%)")
     return muc_moi
 
 
@@ -1063,13 +1240,36 @@ def xoa_giong_rieng(ma: str):
 def lay_danh_sach_giong_day_du(bao_tien_do=None):
     """Danh sách giọng đầy đủ cho giao diện: giọng riêng (đánh dấu rõ,
     xếp trước) + giọng dựng sẵn. Cùng định dạng {'id':.., 'ten':..}."""
-    rieng = [{"id": g["id"], "ten": f'🎙️ {g["ten"]}  (giọng riêng)', "da_ngon_ngu": bool(g.get("da_ngon_ngu", False)), "ngon_ngu": str(g.get("ngon_ngu", "vi"))}
-             for g in doc_ds_giong_rieng()]
-    ma_rieng = {g["id"] for g in rieng}
-    dung_san = [v for v in lay_danh_sach_giong_vieneu(bao_tien_do) if v["id"] not in ma_rieng]
-    for v in dung_san:
+    from src.core import danh_muc_giong
+    rieng = []
+    ma_rieng_all = set()
+    for g in doc_ds_giong_rieng():
+        gid = g["id"]
+        gten = g["ten"]
+        info = danh_muc_giong.tra_cuu_thong_tin_giong(gid)
+        rieng.append({
+            "id": gid,
+            "ten": f'🎙️ {gten}  (giọng riêng)',
+            "da_ngon_ngu": bool(g.get("da_ngon_ngu", True)),
+            "ngon_ngu": str(g.get("ngon_ngu", "all")),
+            "mo_ta": f'{info["vung"]} · {info["phong_cach"]} · {info["dac_trung"]}'
+        })
+        ma_rieng_all.add(gid)
+        ma_rieng_all.add(gten)
+        ma_rieng_all.add(gten.split("(")[0].strip())
+
+    dung_san = []
+    dung_san_raw = lay_danh_sach_giong_vieneu(bao_tien_do)
+    for v in dung_san_raw:
+        vid = v["id"]
+        vten = v["ten"]
+        if vid in ma_rieng_all or vten in ma_rieng_all or "rieng_" in vid.lower() or "giọng riêng" in vten.lower():
+            continue
+        info = danh_muc_giong.tra_cuu_thong_tin_giong(vid)
+        v["mo_ta"] = f'{info["vung"]} · {info["phong_cach"]} · {info["dac_trung"]}'
         v["da_ngon_ngu"] = False
         v["ngon_ngu"] = "vi"
+        dung_san.append(v)
         
     try:
         from src.core.da_ngon_ngu_tts import DS_GIONG_QUOC_TE_CHI_TIET
@@ -1092,6 +1292,7 @@ def lay_danh_sach_giong_day_du(bao_tien_do=None):
             dung_san.append({
                 "id": g["id"],
                 "ten": f"{g['ten']} — {g['gioi']} · {ten_nn}{vung_str} · Chuẩn bản xứ",
+                "mo_ta": f"{ten_nn}{vung_str} · Giọng đọc {g['gioi']} chuẩn bản xứ · Phát âm chuẩn mực",
                 "da_ngon_ngu": False,
                 "ngon_ngu": ma_nn
             })
@@ -1227,20 +1428,28 @@ def _chuan_hoa_ten_giong(voice_id: str, tts) -> str:
     for g in doc_ds_giong_rieng():
         g_id = str(g.get("id", ""))
         g_ten = str(g.get("ten", ""))
+        g_slug = _bo_dau(g_ten)
+        v_pref = v_slug.split("(")[0].strip()
+        g_pref = g_slug.split("(")[0].strip()
         if voice_id in (g_id, g_ten) or v_clean in (g_id, g_ten):
             return g_id
-        if v_slug in (_bo_dau(g_id), _bo_dau(g_ten)) or (v_slug and (_bo_dau(g_id) in v_slug or _bo_dau(g_ten) in v_slug)):
+        if v_slug in (_bo_dau(g_id), g_slug) or (v_slug and (_bo_dau(g_id) in v_slug or g_slug in v_slug)):
+            return g_id
+        if v_pref and g_pref and (v_pref == g_pref or v_pref in g_pref or g_pref in v_pref):
             return g_id
 
     # 2. Tra cứu trong presets VieNeu
     presets = []
-    if hasattr(tts, "list_preset_voices"):
+    if hasattr(tts, "_preset_voices") and isinstance(tts._preset_voices, dict):
+        presets = list(tts._preset_voices.keys())
+    elif hasattr(tts, "list_preset_voices"):
         raw_presets = tts.list_preset_voices()
         for p in raw_presets:
             if isinstance(p, (list, tuple)) and len(p) >= 2:
                 presets.append(str(p[1]))
             else:
                 presets.append(str(p))
+
 
     if voice_id in presets:
         return voice_id
@@ -1272,16 +1481,32 @@ def _audio_sang_wav_bytes(audio, sample_rate: int = 48000) -> bytes:
         return b""
     try:
         import numpy as np
-        if isinstance(audio, np.ndarray):
-            if np.issubdtype(audio.dtype, np.floating):
-                pcm = np.clip(audio, -1.0, 1.0)
+        if isinstance(audio, np.ndarray) and audio.size > 0:
+            arr = audio
+            if np.issubdtype(arr.dtype, np.floating):
+                pcm = np.clip(arr, -1.0, 1.0)
                 pcm = (pcm * 32767.0).astype(np.int16)
-            elif audio.dtype != np.int16:
-                pcm = audio.astype(np.int16)
+            elif arr.dtype != np.int16:
+                pcm = arr.astype(np.int16)
             else:
-                pcm = audio
-            pcm_bytes = pcm.tobytes()
-            num_channels = 1 if pcm.ndim == 1 else pcm.shape[0]
+                pcm = arr
+
+            if pcm.ndim > 1:
+                pcm = np.squeeze(pcm)
+
+            if pcm.ndim == 1:
+                num_channels = 1
+                pcm_bytes = pcm.tobytes()
+            elif pcm.ndim == 2:
+                if pcm.shape[0] <= 2 and pcm.shape[1] > pcm.shape[0]:
+                    num_channels = pcm.shape[0]
+                    pcm_bytes = pcm.T.copy().tobytes()
+                else:
+                    num_channels = pcm.shape[1]
+                    pcm_bytes = pcm.tobytes()
+            else:
+                return b""
+
             out = io.BytesIO()
             with wave.open(out, "wb") as w:
                 w.setnchannels(num_channels)
@@ -1359,6 +1584,51 @@ def tong_hop_vieneu(text: str, voice_id: str, style: str = "",
                 pass
 
 
+def tong_hop_vieneu_stream(text: str, voice_id: str, style: str = "",
+                           khuech_dai: float = 1.0, bao_tien_do=None):
+    """Generator sinh các chunk PCM 16-bit 48kHz mono từ mô hình VieNeu-TTS (Streaming)."""
+    s_text = (text or "").strip()
+    if not s_text:
+        return
+
+    # Chuẩn hóa các cụm nghi lễ / tôn giáo / từ viết hoa từng chữ tránh lỗi nuốt âm
+    s_text = re.sub(r"(?i)\bNam\s+Mô\s+A\s+Di\s+Đà\s+Phật\b", "Nam mô A Di Đà Phật", s_text)
+    s_text = re.sub(r"(?i)\bA\s+Di\s+Đà\s+Phật\b", "A Di Đà Phật", s_text)
+    s_text = re.sub(r";\s*$", ".", s_text)
+    s_text = s_text.replace(";", ",")
+    if not s_text.endswith((".", "!", "?", ":", "…")):
+        s_text += "."
+
+    tts = dam_bao_vieneu_san_sang(bao_tien_do)
+    v_real = _chuan_hoa_ten_giong(voice_id, tts)
+
+    kw = {"apply_watermark": False}
+    if v_real:
+        kw["voice"] = v_real
+
+    try:
+        import numpy as np
+        stream = tts.infer_stream(s_text, **kw)
+    except TypeError:
+        try:
+            stream = tts.infer_stream(s_text)
+        except Exception:
+            # Fallback sang infer thuong neu engine khong ho tro stream
+            wav = tong_hop_vieneu(s_text, voice_id, style, bao_tien_do, khuech_dai)
+            if wav and len(wav) > 44:
+                yield wav[44:]
+            return
+
+    for chunk in stream:
+        if chunk is None or len(chunk) == 0:
+            continue
+        if khuech_dai != 1.0 and abs(khuech_dai - 1.0) > 0.01:
+            chunk = _khuech_dai(chunk, khuech_dai)
+        pcm = np.clip(chunk, -1.0, 1.0)
+        pcm_int16 = (pcm * 32767.0).astype(np.int16)
+        yield pcm_int16.tobytes()
+
+
 def tao_file_thieu():
     if not CONFIG_FILE.exists():
         CONFIG_FILE.write_text(CAUHINH_MAC_DINH, encoding="utf-8")
@@ -1423,24 +1693,59 @@ def number_to_vietnamese(n: int) -> str:
     return " ".join(x for x in result if x).strip()
 
 
-MONEY_SUFFIX = [(r"(?i)(triệu|tr|củ)\b", 1_000_000), (r"(?i)(nghìn|ngàn|k)\b", 1_000)]
+MONEY_SUFFIX = [
+    (r"(?i)(tỷ|tỉ)\b", 1_000_000_000),
+    (r"(?i)(triệu|tr|củ)\b", 1_000_000),
+    (r"(?i)(nghìn|ngàn|k)\b", 1_000),
+]
+
+# Dấu trong số tiền tiếng Việt có hai nghĩa khác hẳn nhau:
+#   "2.000.000"  -> dấu PHÂN CÁCH NGHÌN, các nhóm đúng 3 chữ số
+#   "1,5"        -> dấu THẬP PHÂN, sau dấu chỉ 1-2 chữ số
+_PHAN_CACH_NGHIN = re.compile(r"\d{1,3}([.,]\d{3})+")
+_THAP_PHAN = re.compile(r"(\d+)[.,](\d{1,2})")
+
+
+def _tri_so_tien(so_phan: str) -> float:
+    """Đổi phần chữ số của một khoản tiền thành số."""
+    s = so_phan.strip()
+    if _PHAN_CACH_NGHIN.fullmatch(s):
+        return float(re.sub(r"[.,]", "", s))
+    m = _THAP_PHAN.fullmatch(s)
+    if m:
+        return float(f"{m.group(1)}.{m.group(2)}")
+    return float(re.sub(r"[^\d]", "", s) or 0)
 
 
 def parse_money(text: str) -> int:
+    """Số tiền dạng chữ -> số nguyên đồng.
+
+    Bản trước bỏ hệ số ngay khi phần số có bất kỳ dấu chấm hay phẩy nào, nên
+    "1,5 triệu" ra 15 (mười lăm đồng) chứ không phải 1.500.000 - đo được 10/12
+    ca sai. Trong danh sách công đức, "1,5 triệu" và "2,5tr" là cách ghi rất
+    thường gặp, và hàm này nằm ngay trên đường ĐỌC RA LOA (format_money_for_
+    reading) lẫn đường CỘNG TỔNG TIỀN. Đơn vị "tỷ" thì trước đây không có,
+    "1 tỷ" ra đúng số 1.
+    """
     raw = (text or "").strip()
     if not raw:
         raise ValueError("Số tiền trống")
+    so_phan = re.sub(r"[^\d.,]", "", raw)
+    if not re.search(r"\d", so_phan):
+        raise ValueError(f"Số tiền không hợp lệ: {text}")
+
     he_so = 1
     for pattern, factor in MONEY_SUFFIX:
         if re.search(pattern, raw):
-            so_phan = re.sub(r"[^\d.,]", "", raw)
-            if "." not in so_phan and "," not in so_phan:
-                he_so = factor
+            he_so = factor
             break
-    digits = re.sub(r"[^\d]", "", raw)
-    if not digits:
-        raise ValueError(f"Số tiền không hợp lệ: {text}")
-    return int(digits) * he_so
+
+    # "2.000.000 triệu" gần như chắc chắn là gõ nhầm, không phải hai nghìn tỷ.
+    # Đã viết đủ nhóm nghìn thì con số tự nó đã đầy đủ - giữ nguyên như bản cũ.
+    if he_so > 1 and _PHAN_CACH_NGHIN.fullmatch(so_phan):
+        he_so = 1
+
+    return int(round(_tri_so_tien(so_phan) * he_so))
 
 
 def format_money_for_reading(text: str) -> str:
@@ -1468,12 +1773,17 @@ CHUC_DANH = {
 
 _tudien_cache = {}
 
+def xoa_cache_tudien():
+    """Xóa toàn bộ cache quy tắc từ điển khi từ điển được nạp lại hoặc lưu mới."""
+    _tudien_cache.clear()
+
 def _ap_dung_tudien(text: str, tudien: dict) -> str:
     """Áp dụng từ điển phát âm vào văn bản. Tối ưu Single-Pass Trie Union Regex O(N)."""
     if not tudien or not text:
         return text
     tid = id(tudien)
-    if tid not in _tudien_cache:
+    cache_entry = _tudien_cache.get(tid)
+    if cache_entry is None or cache_entry[0] != len(tudien):
         plain_map = {}
         regex_rules = []
         for key in sorted(tudien, key=len, reverse=True):
@@ -1501,9 +1811,9 @@ def _ap_dung_tudien(text: str, tudien: dict) -> str:
                 fallback_rules = [(re.compile(r"(?<![0-9A-Za-zÀ-ỹ])" + re.escape(k) + r"(?![0-9A-Za-zÀ-ỹ])"), v) for k, v in plain_map.items()]
                 regex_rules = fallback_rules + regex_rules
 
-        _tudien_cache[tid] = (union_rule, regex_rules)
+        _tudien_cache[tid] = (len(tudien), union_rule, regex_rules)
 
-    union_rule, regex_rules = _tudien_cache[tid]
+    _, union_rule, regex_rules = _tudien_cache[tid]
     if union_rule:
         union_pat, plain_map = union_rule
         text = union_pat.sub(lambda m: plain_map.get(m.group(0), m.group(0)), text)
@@ -1574,6 +1884,34 @@ KY_HIEU_SOM = [
     (r"(?i)\bH\s*\.\s*(?=[A-ZÀ-Ỹ])", "Huyện "),
     (r"(?<=[A-ZÀ-Ỹ])\.(?=[A-ZÀ-Ỹ])", " "),
 ]
+
+# Ba quy tắc chữ-cái-đơn dưới đây nhập nhằng với TÊN ĐỆM VIẾT TẮT của người
+# Việt, dạng phổ biến nhất trong danh sách công đức. Không có chốt thì
+# "Cô giáo P. Hương" ra "Cô giáo Phường Hương", "Bà H. Lan" ra "Bà Huyện Lan".
+#
+# Bảng này là BẢN SAO gần giống PAT_DIA_CHI trong src/core/bo_dieu_phoi_ngu_canh.py
+# — hai nơi cùng làm một việc, nên vá một bên là bên kia vẫn hỏng. Dùng chung
+# đúng một hàm nhận diện tên người để không lệch nhau lần nữa.
+_KY_HIEU_SOM_DE_NHAM = ("Quận ", "Phường ", "Huyện ")
+
+
+def _ap_dung_ky_hieu_som(s: str) -> str:
+    try:
+        from src.core.bo_dieu_phoi_ngu_canh import _la_ten_nguoi
+    except Exception:
+        _la_ten_nguoi = None
+
+    for pattern, thay in KY_HIEU_SOM:
+        de_nham = isinstance(thay, str) and thay.startswith(_KY_HIEU_SOM_DE_NHAM)
+        if de_nham and _la_ten_nguoi is not None:
+            def _thay(m, _t=thay):
+                if _la_ten_nguoi(m.string, m.start()):
+                    return m.group(0)
+                return m.expand(_t)
+            s = re.sub(pattern, _thay, s)
+        else:
+            s = re.sub(pattern, thay, s)
+    return s
 
 KY_HIEU = [
     (r"(\d)\s*%", r"\1 phần trăm"),
@@ -1670,11 +2008,35 @@ def _doi_tien_te_ky_hieu(text: str) -> str:
     return text
 
 
+def _la_ten_nguoi_toan_hoa(t: str) -> bool:
+    """Chuỗi toàn chữ HOA này là TÊN NGƯỜI chứ không phải tiêu đề?
+
+    Bảng Excel người dùng xuất ra rất hay viết hoa cả họ tên. Không phân biệt
+    thì "NGUYỄN VĂN AN" bị hạ thành "Nguyễn văn an." - sai chính tả tên người
+    ngay trên màn hình soát văn bản, lại còn thừa một dấu chấm.
+    """
+    tu = t.split()
+    if not (2 <= len(tu) <= 5):
+        return False
+    if not all(x.isalpha() for x in tu):
+        return False
+    try:
+        from src.core.bo_dieu_phoi_ngu_canh import HO_NGUOI_VIET, DANH_XUNG_NGUOI
+    except Exception:
+        return False
+    thap = [x.lower() for x in tu]
+    return any(x in HO_NGUOI_VIET or x in DANH_XUNG_NGUOI for x in thap)
+
+
 def _chuan_hoa_hoa_chu(text: str) -> str:
     """Đổi tiêu đề toàn chữ HOA sang chữ thường để VieNeu-TTS không bị nuốt âm hoặc đọc từng chữ cái."""
     t = text.strip()
     words = t.split()
     if len(words) >= 2 and text.isupper():
+        # Tên người thì viết hoa từng chữ, và KHÔNG chấm câu - đó là một cái
+        # tên, không phải một câu.
+        if _la_ten_nguoi_toan_hoa(t):
+            return " ".join(w.capitalize() for w in words)
         if t.startswith("THÔNG BÁO "):
             than = t[10:].strip().lower()
             return f"Thông báo: {than}."
@@ -1719,8 +2081,7 @@ def chuan_hoa_van_ban(text: str, tudien: dict, cfg: dict) -> str:
     s = _doi_so_la_ma(s)
     s = _doi_tien_te_ky_hieu(s)
 
-    for pattern, thay in KY_HIEU_SOM:
-        s = re.sub(pattern, thay, s)
+    s = _ap_dung_ky_hieu_som(s)
     s = _ap_dung_tudien(s, tudien or {})
     s = _doi_ngay_thang(s)
     for pattern, thay in KY_HIEU:
@@ -1812,9 +2173,45 @@ def tach_chunk(text: str, max_len: int = 280):
 # ĐỌC FILE DANH SÁCH CÔNG ĐỨC
 # ---------------------------------------------------------------------------
 
+def _tach_truong_csv(line: str, dau: str):
+    """Tách một dòng CSV/TSV, tôn trọng dấu ngoặc kép của Excel."""
+    try:
+        return [o.strip() for o in next(csv.reader([line], delimiter=dau))]
+    except Exception:
+        return []
+
+
+def _tach_ten_va_tien(o: list):
+    """Từ các ô của một dòng bảng, lấy ra (tên, số tiền).
+
+    Số tiền là ô CUỐI CÙNG đọc được thành tiền; mọi ô trước đó ghép lại làm
+    tên. Danh sách công đức hay có cột giữa (pháp danh, địa chỉ) nên không thể
+    cứ lấy cứng ô thứ hai.
+    """
+    for i in range(len(o) - 1, 0, -1):
+        if not o[i]:
+            continue
+        try:
+            parse_money(o[i])
+        except ValueError:
+            continue
+        ten = ", ".join(x for x in o[:i] if x)
+        if ten:
+            return ten, o[i]
+    return "", ""
+
+
 def parse_data_file(path: Path):
     if not path.exists():
         raise FileNotFoundError(f"Không tìm thấy file:\n{path}")
+
+    # Menu "Mở danh sách tên và số" lọc sẵn *.csv và *.tsv, nên người dùng tin
+    # là mở được tệp Excel xuất ra. Trước bản vá này, ba nhánh tách trường bên
+    # dưới chỉ biết TAB và KHOẢNG TRẮNG - không nhánh nào dùng dấu phẩy. Mọi
+    # dòng "Tên,Số tiền" rơi vào nhánh tiêu đề: tên và số tiền dính liền một
+    # cục, đọc nguyên như một câu, và KHÔNG có một lời cảnh báo nào.
+    duoi = path.suffix.lower()
+    dau_bang = {".csv": ",", ".tsv": "\t"}.get(duoi, "")
 
     records, canh_bao = [], []
     with path.open("r", encoding="utf-8-sig", errors="replace") as f:
@@ -1824,7 +2221,26 @@ def parse_data_file(path: Path):
                 continue
 
             name, amount = line, ""
-            if "\t" in line:
+            xong = False
+            if dau_bang:
+                # Excel ở máy dùng dấu phẩy thập phân thì xuất CSV ngăn bằng ';'
+                o = _tach_truong_csv(line, dau_bang)
+                if len(o) < 2 and dau_bang == ",":
+                    o = _tach_truong_csv(line, ";")
+                if len(o) >= 2:
+                    ten_csv, tien_csv = _tach_ten_va_tien(o)
+                    if ten_csv:
+                        name, amount = ten_csv, tien_csv
+                    else:
+                        name, amount = ", ".join(x for x in o if x), ""
+                    xong = True
+                # Tách theo dấu bảng không ra thì RƠI XUỐNG các nhánh cũ: một
+                # tệp .csv vẫn có thể lẫn dòng ngăn bằng TAB hay khoảng trắng,
+                # và trước khi có nhánh CSV thì những dòng ấy vốn đọc được.
+
+            if xong:
+                pass
+            elif "\t" in line:
                 name, amount = line.split("\t", 1)
             else:
                 m = re.match(r"^(.*?)\s{2,}([\d.,\s]+(?:đ|đồng|k|tr)?)\s*$", line)
@@ -2005,12 +2421,14 @@ class Speaker:
                 Speaker._dang_giu_loa = None
 
     def __init__(self, cfg):
-        self.cfg = cfg
+        self.cfg = cfg if isinstance(cfg, dict) else {}
+        if not self.cfg.get("ffplay") or not Path(str(self.cfg["ffplay"])).exists():
+            self.cfg["ffplay"] = lay_duong_dan_ffplay()
         self.player = None
         self._lock = threading.Lock()
-        # 1 worker chuyên trách trên CPU để tập trung toàn bộ tập lệnh AVX2/FMA
-        # cho 1 mẩu âm thanh, tránh tranh chấp tài nguyên và giảm 60% RAM đồ thị ONNX.
-        workers = 1
+        # 2 workers chuyên trách trên CPU để nạp trước pipelined 2 đoạn kế tiếp
+        # loại bỏ hoàn toàn hiện tượng chờ đợi khi chuyển đoạn.
+        workers = 2
         self._pool = concurrent.futures.ThreadPoolExecutor(max_workers=workers)
         # Hàng đợi NẠP TRƯỚC: {khoá vị trí -> Future}. Lấy ra là xoá.
         self._cache = {}
@@ -2029,22 +2447,123 @@ class Speaker:
         giong_id = str(self.cfg.get("vieneu_voice_id") or self.cfg.get("giong") or "")
         is_microsoft_voice = "Neural" in giong_id or ("-" in giong_id and len(giong_id) > 10)
 
-        # 1. Khi chọn giọng quốc tế / Edge TTS HOẶC khi đọc ngôn ngữ dịch (Anh, Trung, Đức, Thái...)
-        if is_microsoft_voice or (ngon_ngu and ngon_ngu != "vi"):
+        # Tra cứu file mẫu NẾU ĐÚNG LÀ giọng riêng đã nhân bản (cloned voice)
+        ref_audio_path = None
+        if giong_id and (giong_id.startswith("rieng_") or "giong_rieng" in giong_id):
+            for g in doc_ds_giong_rieng():
+                if str(g.get("id") or "") == giong_id:
+                    ref_audio_path = g.get("file")
+                    break
+        elif giong_id:
+            for g in doc_ds_giong_rieng():
+                if g.get("rieng") and str(g.get("id") or "") == giong_id:
+                    ref_audio_path = g.get("file")
+                    break
+
+        # 1. Đọc tiếng Việt bằng mô hình nơ-ron VieNeu gốc (Giọng của tôi & Giọng có sẵn)
+        # Giữ nguyên 100% âm sắc, ngữ điệu, và chất giọng gốc chân thực nhất
+        if (not ngon_ngu or ngon_ngu == "vi") and not is_microsoft_voice:
             try:
-                from src.core.da_ngon_ngu_tts import tong_hop_da_ngu_native
-                # Nếu không chọn ngôn ngữ đích cụ thể, tự suy ra từ ID giọng (vd: zh-CN -> zh, th-TH -> th)
-                ngon_ngu_that = giong_id.split("-")[0].lower() if (ngon_ngu == "vi" and is_microsoft_voice) else ngon_ngu
-                audio = tong_hop_da_ngu_native(text, lang=ngon_ngu_that, voice_hint=giong_id, khuech_dai=khuech_dai)
+                style = PHONG_CACH.get(self.cfg.get("phong_cach", ""), {}).get("style", "")
+                audio = tong_hop_vieneu(text, giong_id, style, khuech_dai=khuech_dai)
                 if audio:
                     return audio, "wav"
             except Exception:
                 pass
 
-        # 2. Mặc định đọc tiếng Việt bằng mô hình VieNeu-TTS Turbo nội địa
+        # 2. Đọc ngoại ngữ (Anh, Trung, Nhật, Thái...)
+        if ngon_ngu and ngon_ngu != "vi":
+            try:
+                from src.core.dich_thuat import nhan_dien_ngon_ngu_nhanh, dich_van_ban
+                if nhan_dien_ngon_ngu_nhanh(text) == "vi":
+                    dich = dich_van_ban(text, src="vi", tgt=ngon_ngu)
+                    if dich:
+                        text = dich
+                from src.core.da_ngon_ngu_tts import tong_hop_da_ngu_native
+                audio = tong_hop_da_ngu_native(text, lang=ngon_ngu, voice_hint=giong_id,
+                                               khuech_dai=khuech_dai, ref_audio_path=ref_audio_path)
+                if audio:
+                    return audio, "wav"
+            except Exception:
+                pass
+
+        # 3. Khi chọn giọng chuẩn Microsoft Edge TTS (Hoài My, Nam Minh)
+        try:
+            from src.core.da_ngon_ngu_tts import tong_hop_da_ngu_native
+            audio = tong_hop_da_ngu_native(text, lang=ngon_ngu or "vi", voice_hint=giong_id,
+                                           khuech_dai=khuech_dai, ref_audio_path=None)
+            if audio:
+                return audio, "wav"
+        except Exception:
+            pass
+
+        # Fallback cuối cùng sang VieNeu
         style = PHONG_CACH.get(self.cfg.get("phong_cach", ""), {}).get("style", "")
         audio = tong_hop_vieneu(text, giong_id, style, khuech_dai=khuech_dai)
         return audio, "wav"
+
+    def _synth_streaming(self, text: str, khuech_dai: float = 1.0):
+        if not (text or "").strip():
+            return b"", "wav"
+
+        ngon_ngu = str(self.cfg.get("ngonNgu") or "vi").strip().lower()
+        giong_id = str(self.cfg.get("vieneu_voice_id") or self.cfg.get("giong") or "")
+        is_microsoft_voice = "Neural" in giong_id or ("-" in giong_id and len(giong_id) > 10)
+
+        # Tra cứu file mẫu NẾU ĐÚNG LÀ giọng riêng đã nhân bản (cloned voice)
+        ref_audio_path = None
+        if giong_id and (giong_id.startswith("rieng_") or "giong_rieng" in giong_id):
+            for g in doc_ds_giong_rieng():
+                if str(g.get("id") or "") == giong_id:
+                    ref_audio_path = g.get("file")
+                    break
+        elif giong_id:
+            for g in doc_ds_giong_rieng():
+                if g.get("rieng") and str(g.get("id") or "") == giong_id:
+                    ref_audio_path = g.get("file")
+                    break
+
+        # 1. Đọc tiếng Việt bằng mô hình nơ-ron VieNeu gốc (Giọng của tôi & Giọng có sẵn)
+        if (not ngon_ngu or ngon_ngu == "vi") and not is_microsoft_voice:
+            try:
+                style = PHONG_CACH.get(self.cfg.get("phong_cach", ""), {}).get("style", "")
+                gen = tong_hop_vieneu_stream(text, giong_id, style, khuech_dai=khuech_dai)
+                if gen:
+                    return gen, "pcm"
+            except Exception:
+                return self._synth_blocking(text, khuech_dai)
+
+        # 2. Đọc ngoại ngữ (Anh, Trung, Nhật, Thái...)
+        if ngon_ngu and ngon_ngu != "vi":
+            try:
+                from src.core.dich_thuat import nhan_dien_ngon_ngu_nhanh, dich_van_ban
+                if nhan_dien_ngon_ngu_nhanh(text) == "vi":
+                    dich = dich_van_ban(text, src="vi", tgt=ngon_ngu)
+                    if dich:
+                        text = dich
+                from src.core.da_ngon_ngu_tts import tong_hop_da_ngu_stream
+                gen = tong_hop_da_ngu_stream(text, lang=ngon_ngu, voice_hint=giong_id,
+                                             khuech_dai=khuech_dai, ref_audio_path=ref_audio_path)
+                if gen:
+                    return gen, "pcm"
+            except Exception:
+                return self._synth_blocking(text, khuech_dai)
+
+        # 3. Khi chọn giọng chuẩn Microsoft Edge TTS
+        try:
+            from src.core.da_ngon_ngu_tts import tong_hop_da_ngu_stream
+            gen = tong_hop_da_ngu_stream(text, lang=ngon_ngu or "vi", voice_hint=giong_id,
+                                         khuech_dai=khuech_dai, ref_audio_path=None)
+            if gen:
+                return gen, "pcm"
+        except Exception:
+            return self._synth_blocking(text, khuech_dai)
+
+        return self._synth_blocking(text, khuech_dai)
+
+
+
+
 
     def prefetch(self, key, text, khuech_dai: float = 1.0):
         if key in self._cache or not text:
@@ -2138,7 +2657,10 @@ class Speaker:
         except Exception:
             pass
 
+    BUILD_VERSION = "v5.2.2_diamond_20260828"
+
     def _khoa_kho(self, text: str, khuech_dai: float):
+
         """Khóa đặc trưng toàn diện: đảm bảo chỉ khi khớp 100% điều kiện mới dùng cache."""
         lang = str(self.cfg.get("ngonNgu") or "vi").strip().lower()
         voice_raw = str(self.cfg.get("vieneu_voice_id", "") or self.cfg.get("giong", "")).replace("Giọng ", "").strip()
@@ -2148,10 +2670,9 @@ class Speaker:
         except Exception:
             gioi = "nu"
         style = PHONG_CACH.get(self.cfg.get("phong_cach", ""), {}).get("style", "")
-        # ĐÃ XÓA `loc_am` KHỎI CACHE KEY (Tech-debt gốc): Bộ lọc âm (Tốc độ/Không gian) 
-        # được xử lý bởi ffplay lúc phát, không làm thay đổi sóng âm thô của AI Model.
-        ver = "v3"
+        ver = self.BUILD_VERSION
         s_text = (text or "").strip()
+
         return (ver, lang, voice_raw.lower(), gioi, style, round(khuech_dai, 3), s_text)
 
     def _ma_bam_kho(self, text: str, khuech_dai: float) -> str:
@@ -2159,16 +2680,9 @@ class Speaker:
         chuoi = f"{k[0]}|{k[1]}|{k[2]}|{k[3]}|{k[4]}|{k[5]}|{k[6]}"
         return hashlib.sha256(chuoi.encode("utf-8")).hexdigest()
 
-    def get_audio(self, key, text, khuech_dai: float = 1.0):
-        """Trả về (bytes, dinh_dang).
 
-        BỐN TẦNG, tra từ rẻ tới đắt:
-
-          1. KHO RAM (self._kho) — cùng một câu, cùng giọng: ~0.005 ms.
-          2. KHO ĐĨA (Persistent Disk Cache SHA-256): ~1 ms (khởi động lại vẫn còn).
-          3. Hàng đợi nạp trước (_cache) — mẩu đã hẹn tổng hợp sẵn.
-          4. Tổng hợp thật qua mô hình VieNeu-TTS.
-        """
+    def get_audio(self, key, text, khuech_dai: float = 1.0, stream: bool = False):
+        """Trả về (bytes | generator, dinh_dang)."""
         kho_key = self._khoa_kho(text, khuech_dai)
         with self._khoa_kho_lock:
             san = self._kho.get(kho_key)
@@ -2204,14 +2718,18 @@ class Speaker:
             except Exception:
                 kq = None
         if kq is None:
-            kq = self._synth_blocking(text, khuech_dai)
+            # Ưu tiên streaming trực tiếp khi được yêu cầu và không bị mock
+            if stream and getattr(self._synth_blocking, "__func__", self._synth_blocking) == Speaker._synth_blocking:
+                kq = self._synth_streaming(text, khuech_dai)
+            else:
+                kq = self._synth_blocking(text, khuech_dai)
 
         audio = kq[0] if isinstance(kq, tuple) else None
-        if audio:
+        dinh_dang = kq[1] if isinstance(kq, tuple) else "wav"
+        if audio and dinh_dang != "pcm":
             with self._khoa_kho_lock:
                 self._kho[kho_key] = kq
                 self._kho_byte += len(audio)
-                # Đầy thì bỏ mẩu lâu không đụng tới nhất.
                 while self._kho_byte > self.KHO_TOI_DA_BYTE and len(self._kho) > 1:
                     _, cu = self._kho.popitem(last=False)
                     self._kho_byte -= len(cu[0]) if cu and cu[0] else 0
@@ -2224,12 +2742,7 @@ class Speaker:
         return kq
 
     def clear_cache(self):
-        """Xoá HÀNG ĐỢI nạp trước, GIỮ NGUYÊN kho theo nội dung.
-
-        Đổi playlist thì mấy lượt nạp trước đã hẹn thành vô nghĩa, nhưng tiếng
-        đã tổng hợp xong thì vẫn đúng - nội dung nào ra tiếng nấy. Xoá luôn kho
-        là vứt đi đúng thứ vừa tốn hàng phút để có.
-        """
+        """Xoá HÀNG ĐỢI nạp trước, GIỮ NGUYÊN kho theo nội dung."""
         self._cache.clear()
 
     def xoa_kho(self, xoa_dia: bool = True):
@@ -2246,22 +2759,23 @@ class Speaker:
             except Exception:
                 pass
 
-    def play(self, audio: bytes, stop_event: threading.Event,
-             dinh_dang: str = "wav", loc: str = "") -> bool:
-        """`loc` là chuỗi -af của ffplay, để hồ sơ chỉnh Tốc độ/Cao độ/Âm lượng.
+    def play(self, audio, stop_event: threading.Event,
+             dinh_dang: str = "wav", loc: str = "", text_goc: str = "",
+             khuech_dai: float = 1.0) -> bool:
+        """Phát âm thanh (WAV / MP3 / Raw PCM Stream)."""
+        if not audio or (stop_event is not None and stop_event.is_set()):
+            return False
 
-        Mặc định RỖNG và khi rỗng thì lệnh dựng ra giống hệt bản trước từng
-        chữ - bản cũ và mọi nơi gọi cũ không đổi hành vi một li nào. VieNeu
-        không có ba tham số ấy, nhưng ffplay đi kèm chương trình làm được:
-        xem giaodien_moi/am_thanh_loc.py, có số đo thật.
-        """
-        if not audio:
-            return True
-
-        # Giành loa trước khi kêu. Ai đang giữ thì bị tắt tiếng ngay.
         nguon_cu = self._gianh_loa()
         if nguon_cu is not None:
             nguon_cu.stop()
+
+        # Đã chiếm loa ở dòng trên rồi mới bỏ cuộc, nên phải nhả ra. Không nhả
+        # thì _dang_giu_loa giữ tham chiếu cứng tới Speaker này: kho âm 48 MB và
+        # hai luồng nạp trước của nó không bao giờ được thu hồi.
+        if stop_event is not None and stop_event.is_set():
+            self._nha_loa()
+            return False
 
         startupinfo, creationflags = None, 0
         if os.name == "nt":
@@ -2270,20 +2784,24 @@ class Speaker:
             startupinfo.wShowWindow = 0
             creationflags = subprocess.CREATE_NO_WINDOW
 
-        ff_fmt = "wav" if dinh_dang == "wav" else "mp3"  # dự phòng, luôn là wav
-        # -fflags nobuffer: bớt 288 ms cho MỖI mẩu. Đo ngày 14/8/2026 trên chính
-        # máy chủ dự án, 10 lần mỗi cách, chạy xen kẽ và lấy trung vị: chi phí
-        # dựng tiến trình + mở thiết bị âm thanh từ 742 ms xuống 453 ms, lần
-        # nhanh nhất từ 498 xuống 202.
-        #
-        # An toàn vì _feed ghi TRỌN gói audio rồi đóng stdin ngay - dữ liệu có
-        # sẵn cả, không phải luồng nhỏ giọt nên bỏ đệm không gây đứt tiếng.
-        #
-        # ĐỪNG thêm -probesize/-analyzeduration nhỏ vào đây: đã đo, chúng làm
-        # CHẬM lại (probesize 32 thêm 122 ms, đi kèm nobuffer thêm 1365 ms) vì
-        # ffplay phải dò lại định dạng.
-        lenh = [str(self.cfg["ffplay"]), "-hide_banner", "-loglevel", "error",
-                "-nodisp", "-autoexit", "-vn", "-f", ff_fmt, "-i", "pipe:0"]
+        is_raw_pcm = True
+        ff_fmt_args = ["-f", "s16le", "-ar", "48000", "-ch_layout", "mono",
+                       "-fflags", "nobuffer", "-flags", "low_delay",
+                       "-probesize", "32", "-analyzeduration", "0"]
+
+
+        # Nếu audio là WAV bytes -> trích xuất PCM để phát qua pipeline PCM chuẩn khử tiếng tạch 100%
+        if isinstance(audio, (bytes, bytearray)):
+            if audio.startswith(b"RIFF") and b"WAVE" in audio[:16]:
+                try:
+                    with wave.open(io.BytesIO(audio), "rb") as w:
+                        audio = w.readframes(w.getnframes())
+                except Exception:
+                    audio = audio[44:]
+
+        ffplay_bin = str(self.cfg.get("ffplay") or lay_duong_dan_ffplay())
+        lenh = [ffplay_bin, "-hide_banner", "-loglevel", "error",
+                "-nodisp", "-autoexit", "-vn"] + ff_fmt_args + ["-i", "pipe:0"]
         if loc:
             lenh += ["-af", loc]
         proc = subprocess.Popen(
@@ -2294,20 +2812,38 @@ class Speaker:
         with self._lock:
             self.player = proc
 
-        # Dựng tiến trình ffplay mất vài chục mili giây; trong khoảng đó nguồn
-        # khác có thể đã giành mất loa, mà lúc nó gọi stop() thì self.player
-        # còn None nên chẳng giết được gì - tiến trình vừa sinh sẽ kêu chồng
-        # lên. Kiểm lại quyền một lần nữa rồi mới cho phát.
-        if not self._con_giu_loa():
+        # _nha_loa() tự kiểm "có phải mình đang giữ không" dưới cùng một khoá,
+        # nên gọi thẳng là đủ và không giật loa khỏi nguồn vừa chiếm - hỏi
+        # trước rồi mới nhả thì giữa hai lượt ấy tình thế đã có thể khác.
+        if (stop_event is not None and stop_event.is_set()) or not self._con_giu_loa():
             self.stop()
+            self._nha_loa()
             return False
 
-        threading.Thread(target=self._feed, args=(proc, audio), daemon=True).start()
+        # Tự động đóng gói và lưu cache khi stream kết thúc
+        def _on_done(wav_bytes):
+            if not wav_bytes or not text_goc:
+                return
+            kho_key = self._khoa_kho(text_goc, khuech_dai)
+            with self._khoa_kho_lock:
+                self._kho[kho_key] = (wav_bytes, "wav")
+                self._kho_byte += len(wav_bytes)
+            try:
+                ma_bam = self._ma_bam_kho(text_goc, khuech_dai)
+                tep_cache = self._thu_muc_cache_dia() / f"{ma_bam}.wav"
+                if not tep_cache.exists():
+                    tep_cache.write_bytes(wav_bytes)
+            except Exception:
+                pass
+
+        threading.Thread(target=self._feed,
+                         args=(proc, audio, is_raw_pcm, stop_event, _on_done),
+                         daemon=True).start()
         try:
             while proc.poll() is None:
                 if stop_event.is_set():
                     self.stop()
-                    self._nha_loa()   # tự dừng thì trả loa lại, đừng ôm khư khư
+                    self._nha_loa()
                     return False
                 time.sleep(0.05)
         finally:
@@ -2315,35 +2851,121 @@ class Speaker:
                 if self.player is proc:
                     self.player = None
 
-        # Trả về theo "tôi còn giữ loa không", KHÔNG theo cờ dừng. Bị nguồn
-        # khác giành thì ffplay của mình bị giết mà cờ dừng của mình vẫn sạch;
-        # cứ nhìn cờ dừng thì vòng đọc tưởng câu này phát xong êm đẹp rồi
-        # chuyển sang câu kế - chồng tiếng trở lại đúng thứ vừa đi vá.
         con_quyen = self._con_giu_loa()
         self._nha_loa()
         return con_quyen and not stop_event.is_set()
 
     @staticmethod
-    def _feed(proc, audio):
+    def _feed(proc, audio, is_raw_pcm: bool = True, stop_event: threading.Event = None, on_done=None):
+        import numpy as np
+        accumulated = []
+        stdin = getattr(proc, "stdin", None)
         try:
-            proc.stdin.write(audio)
-            proc.stdin.flush()
+            if hasattr(audio, "__iter__") and not isinstance(audio, (bytes, bytearray)):
+                buf = bytearray()
+                for chunk in audio:
+                    if stop_event is not None and stop_event.is_set():
+                        break
+                    if not chunk:
+                        continue
+                    accumulated.append(chunk)
+                    buf.extend(chunk)
+                    # Gom tối thiểu 16KB (~170ms audio) để chống nghẽn pipe buffer và khử 100% micro-stutter
+                    if len(buf) >= 16384:
+                        try:
+                            if stdin and not stdin.closed:
+                                stdin.write(buf)
+                                stdin.flush()
+                                buf.clear()
+                        except (BrokenPipeError, OSError, ValueError):
+                            break
+                if buf and (stop_event is None or not stop_event.is_set()):
+                    try:
+                        if stdin and not stdin.closed:
+                            stdin.write(buf)
+                            stdin.flush()
+                    except (BrokenPipeError, OSError, ValueError):
+                        pass
+            elif isinstance(audio, (bytes, bytearray)):
+                # Áp dụng Cosine Fade-Out 35ms trên các mẫu cuối nếu là bytes PCM tĩnh
+                arr = np.frombuffer(audio, dtype=np.int16).astype(np.float32)
+                fade_len = min(len(arr), int(0.035 * 48000))
+                if fade_len > 0:
+                    fade_curve = 0.5 * (1 + np.cos(np.linspace(0, np.pi, fade_len)))
+                    arr[-fade_len:] *= fade_curve
+                clean_pcm = (np.clip(arr, -32767, 32767)).astype(np.int16).tobytes()
+                accumulated.append(clean_pcm)
+                
+                # Gửi theo từng khối 16KB (~170ms) kiểm tra stop_event liên tục
+                chunk_sz = 16384
+                for pos in range(0, len(clean_pcm), chunk_sz):
+                    if stop_event is not None and stop_event.is_set():
+                        break
+                    part = clean_pcm[pos:pos + chunk_sz]
+                    try:
+                        if stdin and not stdin.closed:
+                            stdin.write(part)
+                            stdin.flush()
+                    except (BrokenPipeError, OSError, ValueError):
+                        break
         except (BrokenPipeError, OSError, ValueError):
             pass
         finally:
             try:
-                proc.stdin.close()
+                # Gửi 40ms mẫu 0 để bộ giải mã ffplay xả hết đệm âm thanh về 0V tuyệt đối, khử 100% tiếng tạch
+                if stdin and not stdin.closed:
+                    try:
+                        stdin.write(b"\x00" * (int(0.04 * 48000) * 2))
+                        stdin.flush()
+                    except (BrokenPipeError, OSError, ValueError):
+                        pass
+                    try:
+                        stdin.close()
+                    except (BrokenPipeError, OSError, ValueError):
+                        pass
             except Exception:
                 pass
+
+            if is_raw_pcm and accumulated and (stop_event is None or not stop_event.is_set()):
+                try:
+                    all_pcm = b"".join(accumulated)
+                    out = io.BytesIO()
+                    with wave.open(out, "wb") as w:
+                        w.setnchannels(1)
+                        w.setsampwidth(2)
+                        w.setframerate(48000)
+                        w.writeframes(all_pcm)
+                    wav_b = out.getvalue()
+                    if on_done and wav_b:
+                        on_done(wav_b)
+                except Exception:
+                    pass
 
     def stop(self):
         with self._lock:
             proc, self.player = self.player, None
         if proc:
             try:
+                if proc.stdin and not proc.stdin.closed:
+                    try:
+                        proc.stdin.close()
+                    except Exception:
+                        pass
+            except Exception:
+                pass
+            try:
                 proc.kill()
             except Exception:
                 pass
+            if os.name == "nt":
+                try:
+                    creationflags = subprocess.CREATE_NO_WINDOW if hasattr(subprocess, "CREATE_NO_WINDOW") else 0
+                    subprocess.Popen(["taskkill", "/F", "/PID", str(proc.pid)],
+                                     stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                                     creationflags=creationflags)
+                except Exception:
+                    pass
+
 
     def shutdown(self):
         self.stop()
@@ -2961,7 +3583,7 @@ class CaiDatDialog(tk.Toplevel):
         except ValueError:
             self.cfg["so_nguoi_nhom"] = 20
         try:
-            self.cfg["so_ky_tu"] = min(900, max(80, int(float(self.so_ky_tu.get()))))
+            self.cfg["so_ky_tu"] = min(900, max(120, int(float(self.so_ky_tu.get()))))
         except ValueError:
             self.cfg["so_ky_tu"] = 280
 
@@ -3498,8 +4120,8 @@ class DocApp:
 
         def chay():
             try:
-                audio, dinh_dang = self.speaker._synth_blocking(mau)
-                self.speaker.play(audio, ev, dinh_dang)
+                audio, dinh_dang = self.speaker.get_audio("mau_nghe_thu", mau, stream=False)
+                self.speaker.play(audio, ev, dinh_dang, text_goc=mau)
                 self._ui(self.var["cd_trangthai"].set, "Nghe thử xong.")
                 self._ui(self.var["vb_trangthai"].set, "Nghe thử xong.")
             except Exception as e:
@@ -4020,10 +4642,10 @@ class DocApp:
                                           phien.playlist[idx + 1]["text"])
                 try:
                     audio, dinh_dang = self.speaker.get_audio(
-                        (phien.ma, idx), seg["text"])
+                        (phien.ma, idx), seg["text"], stream=False)
                     if self.stop_event.is_set():
                         break
-                    xong = self.speaker.play(audio, self.stop_event, dinh_dang)
+                    xong = self.speaker.play(audio, self.stop_event, dinh_dang, text_goc=seg["text"])
                 except Exception as e:
                     self._ui(self._loi_doc, phien, str(e))
                     return

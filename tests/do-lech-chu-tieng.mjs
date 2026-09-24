@@ -19,7 +19,7 @@ import { createContext, runInContext } from 'vm';
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 // Bộ kiểm nằm trong kiem/, mã nguồn giao diện ở ui-moi/ bên cạnh.
-const UI = join(DIR, '..', 'ui-moi');
+const UI = join(DIR, '..', 'src', 'web');
 
 /* Chỉ cần hai hàm thuần: chiaTu (trang-thai.js) và trangThaiChu
    (giao-dien.js). Nạp cả giao-dien.js thì kéo theo DOM, nên bốc riêng hàm ra. */
@@ -93,7 +93,9 @@ function hoiEngine(doan) {
     '# -*- coding: utf-8 -*-',
     'import sys, json, io',
     'sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")',
-    'sys.path.insert(0, r"C:\\Projects\\DocCongDuc")',
+    // Gốc dự án tính từ vị trí tệp này, KHÔNG viết cứng: kho đã lên GitHub,
+    // ai tải về chỗ khác mà gặp đường dẫn cứng là bài vỡ im lặng.
+    `sys.path.insert(0, r"${join(DIR, '..')}")`,
     'from giaodien_moi.cau_noi_moi import ApiMoi',
     'api = ApiMoi()',
     'cau = json.loads(sys.argv[1])',

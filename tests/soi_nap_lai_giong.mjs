@@ -10,9 +10,13 @@
 
 import { readFileSync } from 'fs';
 import { createContext, runInContext } from 'vm';
-import { join } from 'path';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
 
-const UI = process.argv[2];
+// Khong truyen tham so thi lay thu muc giao dien cua chinh du an.
+// Truoc day bo trong la join() nhan undefined roi bai vo ngay dong dau.
+const DIR = dirname(fileURLToPath(import.meta.url));
+const UI = process.argv[2] || join(DIR, '..', 'src', 'web');
 let HTML = '';
 const batSuKien = {};
 

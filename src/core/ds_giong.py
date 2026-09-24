@@ -53,7 +53,7 @@ def doc_preset() -> list:
 def doc_nhanh() -> list:
     """Giọng riêng trước, giọng dựng sẵn sau, kèm toàn bộ giọng quốc tế - đúng thứ tự của
     engine.lay_danh_sach_giong_day_du()."""
-    rieng = [{"id": g["id"], "ten": f'🎙️ {g["ten"]}  (giọng riêng)', "da_ngon_ngu": bool(g.get("da_ngon_ngu", False)), "ngon_ngu": str(g.get("ngon_ngu", "vi"))}
+    rieng = [{"id": g["id"], "ten": f'🎙️ {g["ten"]}  (giọng riêng · 28+ ngôn ngữ)', "da_ngon_ngu": True, "ngon_ngu": "all"}
              for g in engine.doc_ds_giong_rieng()]
     ma_rieng = {g["id"] for g in rieng}
     preset = [v for v in doc_preset() if v["id"] not in ma_rieng]

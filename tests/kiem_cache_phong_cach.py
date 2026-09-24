@@ -26,6 +26,7 @@ def ok(dk, nhan, them=""):
 print("--- Kiểm tra: Đổi phong cách đọc -> phải tổng hợp mới, không dùng nhầm kho cũ ---")
 cfg = {"vieneu_voice_id": "giong-a", "phong_cach": "Kể chuyện"}
 sp = engine.Speaker(cfg)
+sp.xoa_kho(xoa_dia=True)
 so_lan = 0
 da_goi = []
 

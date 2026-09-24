@@ -57,6 +57,7 @@ for cau, mong in [("UBND TP.HCM", {"UBND", "TP", "HCM"}),
 
 khoa_du_lieu.khoa()          # BAT BUOC: ApiMoi khong tu khoa nua
 api = ApiMoi()
+api._cfg["doc_so_bang_chu"] = True
 # "XKLĐ" va "TĐC" cố ý chọn thứ CHƯA có trong từ điển người dùng - UBND, TP,
 # HCM, TNHH đều đã có sẵn (43 mục), mà đã dạy rồi thì soát không báo nữa, và
 # đó mới là hành vi đúng.

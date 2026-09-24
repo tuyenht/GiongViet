@@ -268,11 +268,59 @@ PAT_DIA_CHI = [
 ]
 
 
+# Dấu hiệu cụm đang nói về NGƯỜI chứ không phải địa chỉ. Đây là ca dùng gốc của
+# chương trình: danh sách công đức đọc ở chùa đầy tên người, mà tên đệm viết tắt
+# một chữ cái là dạng phổ biến nhất. Không có chốt này thì:
+#     "Cô giáo P. Hương"   -> "Cô giáo Phường Hương"
+#     "Bà H. Lan"          -> "Bà Huyện Lan"
+#     "Lê Q. Anh"          -> "Lê Quận Anh"
+#     "Bà Lê Thị Q 12"     -> "Bà Lê Thị Quận 12"
+# Máy đọc to tên người sai giữa buổi lễ, và không ai tắt được.
+DANH_XUNG_NGUOI = (
+    "ông", "bà", "cô", "chú", "bác", "anh", "chị", "em", "cụ", "cháu", "con",
+    "mẹ", "bố", "ba", "má", "thầy", "cô giáo", "thầy giáo", "gia đình",
+    "vợ chồng", "đạo hữu", "phật tử", "sư cô", "sư thầy", "ni sư", "đại đức",
+    "thượng toạ", "thượng tọa", "hoà thượng", "hòa thượng",
+)
+HO_NGUOI_VIET = (
+    "nguyễn", "trần", "lê", "phạm", "hoàng", "huỳnh", "phan", "vũ", "võ",
+    "đặng", "bùi", "đỗ", "hồ", "ngô", "dương", "lý", "đinh", "đào", "đoàn",
+    "trịnh", "mai", "cao", "chu", "tô", "tạ", "lưu", "trương", "hà", "quách",
+    "thái", "từ", "vương", "lâm", "tăng", "kiều", "ninh",
+)
+# Chỉ ba quy tắc chữ-cái-đơn này mới nhập nhằng với tên đệm. "TP.", "TX.", "TT."
+# hai chữ trở lên thì không ai đặt tên như vậy, cứ chuyển bình thường.
+_PAT_DE_NHAM = {"Quận ", "Phường ", "Huyện "}
+
+
+def _cum_ngay_truoc(s: str, vi_tri: int) -> str:
+    """Đoạn văn từ dấu ngắt câu gần nhất tới vị trí đang xét, viết thường."""
+    dau = max(s.rfind(c, 0, vi_tri) for c in (",", ".", ";", ":", "\n", "(", "-"))
+    return s[dau + 1:vi_tri].lower()
+
+
+def _la_ten_nguoi(s: str, vi_tri: int) -> bool:
+    """Cụm ngay trước vị trí này đang gọi tên một người?"""
+    cum = _cum_ngay_truoc(s, vi_tri)
+    if not cum.strip():
+        return False
+    tu = cum.split()
+    return any(t in DANH_XUNG_NGUOI or t in HO_NGUOI_VIET for t in tu) \
+        or any(cum.strip().endswith(d) for d in DANH_XUNG_NGUOI)
+
+
 def _chuan_hoa_dia_chi(text: str) -> str:
     """Chuẩn hóa viết tắt địa danh hành chính (Quận, Phường, Thị xã, Tỉnh/Thành phố)."""
     s = text or ""
     for pat, repl in PAT_DIA_CHI:
-        s = pat.sub(repl, s)
+        if repl in _PAT_DE_NHAM or (isinstance(repl, str) and repl.startswith(("Quận", "Phường", "Huyện"))):
+            def thay(m, _repl=repl):
+                if _la_ten_nguoi(m.string, m.start()):
+                    return m.group(0)
+                return m.expand(_repl)
+            s = pat.sub(thay, s)
+        else:
+            s = pat.sub(repl, s)
     return s
 
 

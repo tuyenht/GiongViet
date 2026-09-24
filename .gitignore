@@ -19,6 +19,15 @@ data/giong_rieng/
 *-loi.log
 *.log
 
+# Âm thanh tạm do bộ kiểm và nút "nghe thử đoạn cắt" sinh ra. Đo được 4,8 MB
+# tệp .wav nằm sẵn trong đó, và không mục nào ở trên chặn — thiếu dòng này thì
+# một lệnh `git add -A` là chúng vào kho.
+data/cache_am/
+
+# Thư mục nháp khi thử nghiệm: đã đo 56 MB .wav/.mp3. Không phải mã nguồn.
+scratch/
+_cuu_dulieu/
+
 # ─── MÔ HÌNH VÀ CÔNG CỤ NẶNG ────────────────────────────────────────────────
 # Tổng ~1,4 GB, và có tệp vượt 100 MB nên GitHub chặn cứng:
 #   torch_cpu.dll 305 MB · llvmlite.dll 120 MB · mô hình VieNeu 104 MB

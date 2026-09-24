@@ -91,8 +91,19 @@ for p, vi_sao in [
 # ffmpeg.exe: thieu no thi ba muc MP3 320 / MP3 128 / WAV 24 bit trong hop
 # thoai xuat thanh nut bam khong ra gi. ffplay.exe co khong dam bao ffmpeg.exe
 # cung co - hai tep khac nhau trong cung mot thu muc.
-for p in ("ffmpeg/bin/ffplay.exe", "ffmpeg/bin/ffmpeg.exe", "vieneu_models"):
-    ok((THU_MUC / p).exists(), f"{p} (noi qua junction)")
+#
+# Chap nhan CA HAI cach bo tri, dung nhu DongGoi.bat va src/paths.py van lam:
+#   moi: bin\\ffmpeg\\... va models\\vieneu    (bo cuc sau khi don thu muc goc)
+#   cu : ffmpeg\\...      va vieneu_models
+# Chot cung mot duong la bai do sai cho roi bao thieu tep, trong khi ban dong
+# goi day du - da vap dung vay ngay lan chay dau tren bo cuc moi.
+for nhan, ung_vien in (
+    ("ffplay.exe", ("bin/ffmpeg/bin/ffplay.exe", "ffmpeg/bin/ffplay.exe")),
+    ("ffmpeg.exe", ("bin/ffmpeg/bin/ffmpeg.exe", "ffmpeg/bin/ffmpeg.exe")),
+    ("mo hinh VieNeu", ("models/vieneu", "vieneu_models")),
+):
+    thay = next((p for p in ung_vien if (THU_MUC / p).exists()), None)
+    ok(thay is not None, f"{nhan} (noi qua junction)", thay or " | ".join(ung_vien))
 
 if loi:
     print("\nBan dong goi thieu tep - dung lai, khong chay thu.")

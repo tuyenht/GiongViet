@@ -377,7 +377,8 @@ ok(!/data-lenh="Từ điển phát âm"[^]*trai__chan/.test(HTML), 'Từ điển
 
 console.log('\n--- F. Thanh trạng thái ---');
 ok(/Đoạn \d+/.test(HTML), 'Đoạn N, Cột 1');
-ok(co('VieNeu v3 Turbo · sẵn sàng'), 'nhãn máy đọc');
+ok(co('Giọng Việt · sẵn sàng'), 'nhãn máy đọc');
+
 /* Trước đây chỗ này canh đúng chuỗi "Đã lưu 14:02" in cứng — tức canh chính một
    lời hứa suông: thanh trạng thái nói ĐÃ LƯU kể cả khi chưa lưu gì, và luôn là
    14:02. Bản mẫu ghi 14:02 chỉ để MINH HOẠ trạng thái "đã lưu lúc mấy giờ";

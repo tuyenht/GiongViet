@@ -14,7 +14,7 @@ import { dirname, join } from 'path';
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 // Bộ kiểm nằm trong kiem/, mã nguồn giao diện ở ui-moi/ bên cạnh.
-const UI = join(DIR, '..', 'ui-moi');
+const UI = join(DIR, '..', 'src', 'web');
 
 const dem = { byteHTML: 0, soNode: 0 };
 

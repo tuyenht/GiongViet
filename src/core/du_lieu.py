@@ -228,19 +228,39 @@ def danh_sach_giong(ds: list) -> list:
     riêng có tiền tố 🎙️ và hậu tố '(giọng riêng)' - bỏ đi cho gọn vì giao
     diện đã có nhóm riêng và huy hiệu 'Nhân bản'."""
     ket_qua = []
-    ma_rieng = {g["id"] for g in engine.doc_ds_giong_rieng()}
+    ds_rieng_dict = {g["id"]: g for g in engine.doc_ds_giong_rieng()}
     for g in ds:
         nhan = g.get("ten", g.get("nhan", g["id"]))
-        rieng = g["id"] in ma_rieng
+        rieng = g["id"] in ds_rieng_dict or str(g["id"]).startswith("rieng_")
         if rieng:
-            nhan = nhan.replace("🎙️", "").replace("(giọng riêng)", "").strip()
-        ten, mo_ta = _tach_nhan_giong(nhan)
+            rg = ds_rieng_dict.get(g["id"], g)
+            raw_ten = rg.get("ten", nhan)
+            import re
+            m = re.match(r"^(.*?)\s*\(([^)]+)\)\s*$", raw_ten)
+            if m:
+                ten_goc = m.group(1).strip()
+                chi_tiet = m.group(2).strip()
+                if " - " in chi_tiet:
+                    gioi_phan, dac_trung = chi_tiet.split(" - ", 1)
+                    gioi_str = "Nam" if "nam" in gioi_phan.lower() else ("Nữ" if ("nữ" in gioi_phan.lower() or "nu" in gioi_phan.lower()) else "")
+                    ten = f"{ten_goc} ({gioi_str})" if gioi_str else ten_goc
+                    mo_ta = f"{dac_trung} · 28+ thứ tiếng · Nhân bản"
+                else:
+                    ten = raw_ten
+                    mo_ta = "Giọng riêng · 28+ thứ tiếng"
+            else:
+                ten = re.sub(r"🎙️|\(giọng riêng[^)]*\)", "", raw_ten).strip()
+                mo_ta = "Giọng riêng · 28+ thứ tiếng"
+        else:
+            ten, mo_ta = _tach_nhan_giong(nhan)
+
         ket_qua.append({
             "id": g["id"], 
             "ten": ten, 
             "mo_ta": mo_ta,
             "rieng": rieng,
-            "ngon_ngu": g.get("ngon_ngu", "vi"),
-            "da_ngon_ngu": bool(g.get("da_ngon_ngu", False))
+            "ngon_ngu": g.get("ngon_ngu", "all" if rieng else "vi"),
+            "da_ngon_ngu": bool(g.get("da_ngon_ngu", True if rieng else False))
         })
     return ket_qua
+
