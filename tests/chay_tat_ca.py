@@ -39,6 +39,11 @@ sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
 
 # Cac bai MO CUA SO THAT hoac PHAT TIENG THAT. CLAUDE.md cam chiem foreground
 # cua chu du an khi ho dang lam viec, nen mac dinh bo qua.
+#
+# Rieng NghiemThu.py con la bai BAN THU CONG: no dung lai cho NGUOI bam nut
+# (vi du "bam Huy Xuat khi phan tram dang chay") roi dem nguoc. Chay tu dong
+# thi no dem het gio roi bo qua muc do - khong phai hong, nhung cung khong
+# chung minh duoc gi. Muon dung no thi phai ngoi truoc may.
 CHIEM_MAN_HINH = {
     "KiemBanExe.py", "NghiemThu.py", "TuKiemGiaoDien.py", "chay_thu_tieng.py",
     "do_cach_phat.py", "do_tre_phat.py", "do_phan_ra_tre.py",

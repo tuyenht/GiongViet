@@ -130,9 +130,23 @@ def moc_du_lieu():
 
 
 def tep_trong(thu_muc):
+    """Ten tep -> (kich thuoc, duong dan day du).
+
+    Hai cho ban truoc lam sai, deu do chi giu p.name:
+
+    1. rglob quet ca thu muc con (Export/), nhung mo lai bang THU_MUC_XUAT/ten
+       thi tep nam sau mot cap thu muc deu bao "khong tim thay". Do duoc: bai
+       vua bao "co noi dung 1,142,862 byte" roi ngay dong sau bao "KHONG doc
+       duoc: No such file or directory" cho CUNG mot tep.
+
+    2. .cache_am_thanh la KHO AM THANH tren dia, khong phai san pham nguoi dung
+       bam Xuat ra. Ke no vao thi bai bao "xuat ra 3 tep moi" trong khi nguoi
+       dung khong xuat gi - va ba tep ay mang ten bam SHA-256, nhin la biet
+       khong phai thu ai dat ten."""
     if not thu_muc.exists():
         return {}
-    return {p.name: p.stat().st_size for p in thu_muc.rglob("*") if p.is_file()}
+    return {p.name: (p.stat().st_size, p) for p in thu_muc.rglob("*")
+            if p.is_file() and ".cache_am_thanh" not in p.parts}
 
 
 # ═══════════════════════════════════════════════════════ A. TU DONG HOAN TOAN
@@ -239,14 +253,14 @@ cho("Bấm Xuất file âm thanh → chọn MP3 128 kbps → Bắt đầu xuất
 sau_xuat = tep_trong(THU_MUC_XUAT)
 moi = {k: v for k, v in sau_xuat.items() if k not in truoc_xuat}
 ok(bool(moi), "co tep MOI trong thu muc xuat", list(moi)[:3] or "khong co tep nao")
-for ten, co in list(moi.items())[:3]:
+for ten, (co, duong) in list(moi.items())[:3]:
     ok(co > 1000, f"  {ten} co noi dung", f"{co:,} byte")
     if ten.lower().endswith(".mp3"):
-        dau = (THU_MUC_XUAT / ten).read_bytes()[:3]
+        dau = duong.read_bytes()[:3]
         ok(dau in (b"ID3", b"\xff\xfb", b"\xff\xf3"), f"  {ten} dung dinh dang MP3")
     if ten.lower().endswith(".wav"):
         try:
-            with wave.open(str(THU_MUC_XUAT / ten), "rb") as w:
+            with wave.open(str(duong), "rb") as w:
                 ok(w.getnframes() > 0, f"  {ten} la WAV hop le",
                    f"{w.getnframes() / w.getframerate():.1f} giay")
         except Exception as e:
