@@ -95,29 +95,69 @@ def ok(dk, nhan, them=""):
         loi += 1
 
 
+# Cay thu muc da doi (giaodien -> src/core, giaodien_moi -> src/app,
+# ui-moi -> src/web, kiem -> tests). Shim import va duoc duong IMPORT, nhung
+# KHONG va duoc duong doc tep tho - va bai nay doc tep tho. Giu NHAN logic cu
+# trong thong bao: phep khang dinh o duoi soi chuoi "ui-moi/", doi nhan la no
+# thanh luon-dung mot cach mu quang.
+_DOI_THU_MUC = {"giaodien": "src/core", "giaodien_moi": "src/app",
+                "ui-moi": "src/web", "kiem": "tests"}
+
+
+def _tep_that(ten):
+    """Doi ten thu muc cu sang vi tri that tren dia."""
+    phan = str(ten).replace("\\", "/").strip("/").split("/")
+    if phan[0] in _DOI_THU_MUC:
+        moi = _GOC.joinpath(*_DOI_THU_MUC[phan[0]].split("/"), *phan[1:])
+        if moi.exists():
+            return moi
+    return _GOC.joinpath(*phan)
+
+
 def _dong(tep: str, tu: int, den: int) -> str:
     """Trich nguyen van dong tu..den (dem tu 1) cua mot tep trong kho."""
-    d = (_GOC / tep).read_text(encoding="utf-8").splitlines()
+    d = _tep_that(tep).read_text(encoding="utf-8").splitlines()
     return "\n".join(f"    {i:>4} | {d[i - 1]}" for i in range(tu, den + 1))
 
 
 # =============================================================================
 print("=== A. TRICH NGUYEN VAN MA NGUON — doi chieu voi so dong bao cao neu ===")
 # =============================================================================
-print("\n  [1] DocCongDuc.py:1502-1504 — cho chen nghi dai")
-print(_dong("DocCongDuc.py", 1502, 1504))
 nguon_engine = (_GOC / "DocCongDuc.py").read_text(encoding="utf-8").splitlines()
-ok('if cfg["so_nguoi_nhom"] and stt % cfg["so_nguoi_nhom"] == 0:'
-   in nguon_engine[1502], "dong 1503 dung la cho quyet dinh nghi dai")
-ok('nghi = cfg["nghi_nhom"]' in nguon_engine[1503], "dong 1504 gan nghi_nhom")
 
-print("\n  [2] DocCongDuc.py:546 — cho nap gia tri, mac dinh 20")
-print(_dong("DocCongDuc.py", 546, 546))
-ok('so_nguoi_moi_nhom", 20' in nguon_engine[545], "dong 546 mac dinh dung la 20")
+
+def _tim(manh: str):
+    """Tim dong dau tien chua manh. Tra ve (so dong dem tu 1, noi dung).
+
+    Truoc day ba phep duoi neo CUNG vao so dong 1503 / 1504 / 546. Engine lon
+    them thi cac moc ay troi - do duoc: 546 -> 659 va 1503 -> 2311. Bai bao
+    LECH ba cho trong khi ma nguon khong he sai, con nguoi doc bao cao thi
+    tuong san pham hong. Neo theo NOI DUNG thi khong troi nua - dung bai hoc
+    ma chinh tep nay da ghi o phep [C5] ben duoi.
+    """
+    for i, dong in enumerate(nguon_engine):
+        if manh in dong:
+            return i + 1, dong
+    return 0, ""
+
+
+print("\n  [1] DocCongDuc.py - cho chen nghi dai (tim theo noi dung)")
+_d1, _l1 = _tim('if cfg["so_nguoi_nhom"] and stt % cfg["so_nguoi_nhom"] == 0:')
+_d2, _l2 = _tim('nghi = cfg["nghi_nhom"]')
+print(f"    {_d1:>4} | {_l1}")
+print(f"    {_d2:>4} | {_l2}")
+ok(_d1 > 0, "co cho quyet dinh nghi dai theo so_nguoi_nhom",
+   f"DocCongDuc.py:{_d1}")
+ok(_d2 > _d1, "ngay sau no la cho gan nghi_nhom", f"DocCongDuc.py:{_d2}")
+
+print("\n  [2] DocCongDuc.py - cho nap gia tri, mac dinh 20")
+_d3, _l3 = _tim('so_nguoi_moi_nhom", 20')
+print(f"    {_d3:>4} | {_l3}")
+ok(_d3 > 0, "mac dinh dung la 20", f"DocCongDuc.py:{_d3}")
 
 print("\n  [3] giaodien/du_lieu.py:126-134 — cho DUY NHAT bay khoa nay ra")
 print(_dong("giaodien/du_lieu.py", 126, 134))
-nguon_dl = (_GOC / "giaodien" / "du_lieu.py").read_text(encoding="utf-8").splitlines()
+nguon_dl = _tep_that("giaodien/du_lieu.py").read_text(encoding="utf-8").splitlines()
 ok('"so_nguoi_nhom"' in nguon_dl[131], "dong 132 nam trong bang THANH_TRUOT")
 
 print("\n  [4] giaodien/du_lieu.py:156 va :173 — hai cho doc bang THANH_TRUOT")
@@ -127,7 +167,7 @@ print(_dong("giaodien/du_lieu.py", 171, 173))
 print("\n  [5] Ai goi thanh_truot / ep_gia_tri? (quet toan bo ma dang chay)")
 nguoi_goi = []
 for thu_muc in ("giaodien", "giaodien_moi", "ui-moi"):
-    for p in sorted((_GOC / thu_muc).glob("*")):
+    for p in sorted(_tep_that(thu_muc).glob("*")):
         if p.suffix not in (".py", ".js", ".html"):
             continue
         t = p.read_text(encoding="utf-8", errors="replace")
@@ -207,7 +247,7 @@ ok(abs(lang5 - lang20) > 1.0,
 ok(len(pl20) == len(pl5) == 45, "so mau khong doi, CHI khoang nghi doi")
 
 print("\n  [B4] Duong nay CO nam trong ban moi khong?")
-nguon_moi = (_GOC / "giaodien_moi" / "cau_noi_moi.py").read_text(encoding="utf-8")
+nguon_moi = _tep_that("giaodien_moi/cau_noi_moi.py").read_text(encoding="utf-8")
 vi_tri = [nguon_moi[:m.start()].count("\n") + 1
           for m in re.finditer(r"build_playlist_congduc", nguon_moi)]
 print(f"      giaodien_moi/cau_noi_moi.py gọi build_playlist_congduc tại dòng {vi_tri}")
@@ -264,7 +304,7 @@ ok("so_nguoi_nhom" not in (chap_nhan or set()),
 
 print("\n  [C4] Giao dien web co cho nao nhac den khoa nay khong?")
 tim = []
-for p in sorted((_GOC / "ui-moi").glob("*")):
+for p in sorted(_tep_that("ui-moi").glob("*")):
     if p.suffix not in (".js", ".html", ".css"):
         continue
     t = p.read_text(encoding="utf-8", errors="replace")
@@ -277,7 +317,7 @@ ok(not any("so_nguoi" in x or "soNguoiNhom" in x or "thong_so" in x for x in tim
 
 print("\n  [C5] Ba thanh truot ban moi thuc su bay ra (ui-moi/giao-dien.js:365-369)")
 print(_dong("ui-moi/giao-dien.js", 365, 369))
-_js = (_GOC / "ui-moi" / "giao-dien.js").read_text(encoding="utf-8").splitlines()
+_js = _tep_that("ui-moi/giao-dien.js").read_text(encoding="utf-8").splitlines()
 # Cắt khối TRUOT theo NỘI DUNG chứ không theo số dòng: thêm bớt vài dòng ở chỗ
 # khác trong tệp là lát cắt cứng trỏ nhầm, rồi phép kiểm đỏ lên vô cớ.
 _i = next((k for k, d in enumerate(_js) if d.startswith("const TRUOT")), -1)
@@ -303,18 +343,45 @@ ok(any(b["khoa"] == "so_nguoi_nhom" for b in bang),
 # =============================================================================
 print("\n=== D. GIA TRI THAT trong cau hinh nguoi dung (CHI DOC) ===")
 # =============================================================================
-that = _GOC / "cauhinh.ini"
-if that.is_file():
-    noi_dung = that.read_text(encoding="utf-8-sig")
-    m = re.search(r"^\s*so_nguoi_moi_nhom\s*=\s*(\S+)", noi_dung, re.M)
+# Cau hinh nay KHONG con la tep roi: no da gom vao data/giongviet.db. Ban cu
+# cua khoi nay chi tim cauhinh.ini ngoai o cung, khong thay thi ok(False) -
+# bao LECH trong khi khong co gi hong ca, chi la tep da doi cho.
+#
+# Doc CA HAI nguon: tep roi truoc (may nao chua gom thi van con), roi den kho.
+# Muon gio goc kho ve du an that trong choc lat, xong tra lai ngay - bai nay
+# da tro goc kho sang thu muc tam de khoi cham du lieu nguoi dung.
+def _doc_cau_hinh_that():
+    """Tra ve (nguon, noi_dung) cua cauhinh that, hoac (None, None)."""
+    tep_roi = _GOC / "cauhinh.ini"
+    if tep_roi.is_file():
+        return tep_roi.name, tep_roi.read_text(encoding="utf-8-sig")
+    try:
+        import kho_cau_hinh as _kho
+        goc_cu = _kho.goc()
+        try:
+            _kho.dat_goc(_GOC)
+            nd = _kho.doc("cauhinh.ini")
+        finally:
+            if goc_cu is not None:
+                _kho.dat_goc(goc_cu)
+        if nd:
+            return "giongviet.db (cauhinh.ini)", nd
+    except Exception:
+        pass
+    return None, None
+
+
+_nguon_ch, _nd_ch = _doc_cau_hinh_that()
+if _nd_ch is not None:
+    m = re.search(r"^\s*so_nguoi_moi_nhom\s*=\s*(\S+)", _nd_ch, re.M)
     gt = m.group(1) if m else "(khong co dong nay)"
-    print(f"      {that.name}: so_nguoi_moi_nhom = {gt}")
+    print(f"      {_nguon_ch}: so_nguoi_moi_nhom = {gt}")
     ok(True, "doc duoc gia tri that", gt)
     ok(gt == "20",
-       "gia tri that DUNG BANG mac dinh 20 → chua ai tung dat khac roi bi ket",
+       "gia tri that DUNG BANG mac dinh 20 -> chua ai tung dat khac roi bi ket",
        gt)
 else:
-    ok(False, "khong thay cauhinh.ini that")
+    ok(False, "khong thay cau hinh that o ca tep roi lan kho giongviet.db")
 
 hs = _GOC / "hoso.json"
 if hs.is_file():

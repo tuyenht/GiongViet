@@ -147,15 +147,27 @@ ok(EXE.exists(), "co GiongViet.exe",
 if not EXE.exists():
     print("\nChua co ban .exe. Chay truoc:  set GIONGDOC_TU_DONG=1 && DongGoi.bat")
     sys.exit(1)
-for p, vi_sao in [
-    ("_internal/ui-moi/index.html", "thieu thi cua so mo ra trang tron"),
-    ("_internal/sea_g2p/sea_g2p.bin", "thieu thi 'os error 2' luc bam doc"),
-    ("_internal/vieneu/assets/voices_v3_turbo.json", "thieu thi danh sach giong rong"),
-    ("ffmpeg/bin/ffplay.exe", "thieu thi khong phat duoc tieng"),
-    ("ffmpeg/bin/ffmpeg.exe", "thieu thi hong MP3, WAV 24 bit va ba thanh chinh"),
-    ("vieneu_models", "thieu thi khong tong hop duoc"),
+# Moi muc la MOT BO ung vien: bay duoc thi dat. Sau lan doi cay thu muc
+# (ui-moi -> src/web, ffmpeg -> bin/ffmpeg, vieneu_models -> models/vieneu),
+# ban cu cua bai nay chi tim ten CU nen bao thieu ffplay/ffmpeg/vieneu_models
+# trong khi DongGoi.bat noi junction dung ten MOI - bao dong gia o muc
+# "rat cao", suyt lam ca doi di chua mot loi khong ton tai.
+for ung_vien, vi_sao in [
+    (("_internal/ui-moi/index.html", "_internal/web/index.html"),
+     "thieu thi cua so mo ra trang tron"),
+    (("_internal/sea_g2p/sea_g2p.bin",),
+     "thieu thi 'os error 2' luc bam doc"),
+    (("_internal/vieneu/assets/voices_v3_turbo.json",),
+     "thieu thi danh sach giong rong"),
+    (("bin/ffmpeg/bin/ffplay.exe", "ffmpeg/bin/ffplay.exe"),
+     "thieu thi khong phat duoc tieng"),
+    (("bin/ffmpeg/bin/ffmpeg.exe", "ffmpeg/bin/ffmpeg.exe"),
+     "thieu thi hong MP3, WAV 24 bit va ba thanh chinh"),
+    (("models/vieneu", "vieneu_models"),
+     "thieu thi khong tong hop duoc"),
 ]:
-    ok((THU_MUC / p).exists(), f"{p}", vi_sao if not (THU_MUC / p).exists() else "")
+    thay = next((u for u in ung_vien if (THU_MUC / u).exists()), None)
+    ok(thay is not None, " | ".join(ung_vien), thay or vi_sao)
 
 moc = moc_du_lieu()
 truoc_ffplay = dem("ffplay.exe")
