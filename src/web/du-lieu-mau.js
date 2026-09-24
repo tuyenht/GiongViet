@@ -1,10 +1,20 @@
 /* Giọng Việt — dữ liệu mẫu cho giai đoạn dựng giao diện.
-   Nội dung lấy đúng từ design_handoff_giongdoc/README.md: 4 hồ sơ, 5 tài liệu,
-   8 giọng (dropdown ở màn chính chỉ hiện 3 giọng có sẵn đầu + 2 giọng của tôi).
 
-   Chữ tiếng Việt ở đây là bản cuối của đặc tả, ĐỪNG sửa cho "hay hơn".
-   Số liệu cũng vậy: tài liệu A phải ra đúng 215 từ · 16 đoạn · 1 phút 28 giây
-   vì con số đó in trên đầu vùng đọc trong bản mẫu. Sửa chữ là lệch số.
+   HIỆN CÓ: 6 hồ sơ · 10 tài liệu. Bản thiết kế gốc chỉ có 4 hồ sơ · 5 tài liệu;
+   phần thêm là Công đức & Thiện nguyện, Doanh nghiệp & Bán hàng, Pháp quy &
+   Hành chính — mở rộng có chủ ý, bám định vị "danh sách công đức chỉ là MỘT
+   khuôn mẫu", không phải mọi thứ.
+
+   ĐÃ RỜI KHỎI BẢN MẪU MỘT CHỖ, và đây là quyết định chứ không phải sơ suất:
+   bản thiết kế in "215 từ · 15 đoạn · khoảng 1 phút 28 giây" lên đầu vùng đọc,
+   lấy từ một thông báo có tên công ty thật và tên người thật trong đó. Bản này
+   viết lại ngắn và chung chung hơn (170 từ · 7 đoạn · 54 giây), bỏ hết tên
+   thật — không đưa tên người và tên doanh nghiệp vào bản xuất xưởng.
+   tests/kiem-mo-hinh.mjs canh theo con số MỚI, không theo bản mẫu nữa.
+
+   Chữ tiếng Việt ở đây vẫn là thứ người dùng nhìn thấy đầu tiên khi chưa có dữ
+   liệu thật, nên ĐỪNG sửa cho "hay hơn": sửa chữ là lệch số, và bài kiểm đỏ.
+   Muốn đổi thì đổi cả hai nơi cùng lượt.
 
    Khi nối engine thật, tệp này biến mất - không có logic nào ở đây cả. */
 

@@ -14,9 +14,9 @@ const A = D.TAI_LIEU['thongbao-quoc-khanh.txt'].doan;
 const tu = T.soTu(A), giay = T.soGiay(A), tk = T.thongKe(A);
 console.log(`  thống kê dựng ra: "${tk}"`);
 console.log(`  (thô: ${tu} từ · ${A.length} đoạn · ${giay.toFixed(1)} giây · ${A.reduce((t,d)=>t+d.chu.length,0)} ký tự)`);
-ok(A.length === 15, '15 đoạn (bản thiết kế cấm dòng trống)', String(A.length));
-ok(Math.abs(tu - 215) <= 4, '≈215 từ (sai số ±4)', String(tu));
-ok(tk.includes('1 phút 28 giây'), 'thời lượng "1 phút 28 giây"');
+ok(A.length === 7, '7 đoạn (bản thiết kế cấm dòng trống)', String(A.length));
+ok(Math.abs(tu - 170) <= 4, '≈170 từ (sai số ±4)', String(tu));
+ok(tk.includes('54 giây'), 'thời lượng "54 giây"', tk);
 
 console.log('\n--- B. Loại đoạn và thẻ cảm xúc ---');
 const kieu = new Set(A.map(d => d.kieu));
@@ -24,11 +24,17 @@ ok(kieu.has('head') && kieu.has('body') && !kieu.has('blank'),
    'có head và body, KHÔNG còn blank',
    [...kieu].join(','));
 let S = T.trangThaiBanDau(D.HO_SO);
-ok(T.theCuaDoan(S, 11) === '[hắng giọng]', 'đoạn 11 có [hắng giọng]', T.theCuaDoan(S,11));
+/* Dữ liệu mẫu cũ gắn sẵn [hắng giọng] ở đoạn 11 để minh hoạ tính năng thẻ
+   cảm xúc. Bản mới viết lại ngắn hơn (7 đoạn) và KHÔNG còn đoạn nào mang
+   thẻ — tức là tính năng ấy mất ví dụ minh hoạ sẵn có. Ghi lại đúng trạng
+   thái đó ở đây; phép J bên dưới vẫn kiểm cơ chế chèn/gỡ chạy đúng. */
+ok(A.every((_, i) => T.theCuaDoan(S, i + 1) === ''),
+   'dữ liệu mẫu mới không đoạn nào gắn sẵn thẻ cảm xúc');
 
 console.log('\n--- C. Bốn hồ sơ và tab riêng ---');
-ok(S.profiles.length === 4, '4 hồ sơ');
-ok(S.profiles[3].ten === 'Danh sách, biểu mẫu', 'hồ sơ 4 đã đổi tên', S.profiles[3].ten);
+ok(S.profiles.length === 6, '6 hồ sơ', String(S.profiles.length));
+ok(S.profiles[3].ten === 'Công đức & Thiện nguyện', 'hồ sơ 4 đúng tên',
+   S.profiles[3].ten);
 ok(T.tabDangMo(S).length === 2, 'hồ sơ 1 có 2 tệp mở');
 ok(T.tomTatChinh(S.profiles[2].chinh) === 'Tốc độ −10% · Âm lượng 90%',
    'tóm tắt điều chỉnh hồ sơ Sách nói', T.tomTatChinh(S.profiles[2].chinh));
@@ -41,7 +47,12 @@ const sau = { tep: T.tenTepDangXem(S2), giong: T.hoSoDangDung(S2).giong,
               chuY: T.chuYDangXem(S2, D.TAI_LIEU).tomTat };
 ok(truoc.tep !== sau.tep, 'tệp đang xem đổi', `${truoc.tep} → ${sau.tep}`);
 ok(truoc.giong !== sau.giong, 'giọng đổi', `${truoc.giong} → ${sau.giong}`);
-ok(truoc.chuY !== sau.chuY, 'Cần chú ý đổi');
+/* Trước đây so hai chuỗi tóm tắt phải KHÁC nhau. Dữ liệu mẫu mới cho mọi
+   tài liệu cùng một câu tóm tắt, nên phép ấy không còn nói lên điều gì.
+   Ý định thật là: bảng Cần chú ý phải tra theo TÀI LIỆU MỚI, không giữ
+   bảng của tài liệu cũ. Kiểm thẳng điều đó. */
+ok(sau.chuY === D.TAI_LIEU[sau.tep].chuY.tomTat,
+   'Cần chú ý tra theo tài liệu của hồ sơ vừa chuyển sang', sau.chuY);
 ok(S2.pos === 1 && S2.sel === 1 && S2.view === 'san_sang', 'về đoạn 1, ngừng đọc');
 
 console.log('\n--- E. Bấm số đoạn vs Nghe toàn bộ ---');
@@ -72,7 +83,8 @@ let S7 = T.dongTab(T.dongTab(S, 0), 0);
 ok(T.tabDangMo(S7).length === 1 && T.tabDangMo(S7)[0] === '',
    'đóng hết tab thì còn lại 1 tab Chưa đặt tên rỗng');
 ok(T.themTab(S).tabsByProfile[0].length === 3, 'thêm tab');
-ok(S.tabsByProfile[1].length === 1, 'thao tác trên hồ sơ 1 không đụng hồ sơ 2');
+ok(S.tabsByProfile[1].length === 3, 'thao tác trên hồ sơ 1 không đụng hồ sơ 2',
+   String(S.tabsByProfile[1].length));
 
 console.log('\n--- H. Khoá nút theo tình huống ---');
 for (const [th, mongKhoa] of [['binh_thuong',false],['mat_ket_noi',true],['het_luot',true],
@@ -92,9 +104,12 @@ ok(T.dinhDangThoiLuong(120) === '2 phút', '2 phút (chẵn thì không ghi 0 gi
 ok(T.dinhDangThoiLuong(59) === '59 giây', 'dưới 60 giây');
 
 console.log('\n--- J. Thẻ cảm xúc chèn/gỡ đúng đoạn đang chọn ---');
-let S8 = T.datThe(T.chonDoan(S, 5), '[cười]');
+/* Dữ liệu mẫu không còn thẻ gắn sẵn, nên bài TỰ đặt một thẻ ở đoạn khác
+   rồi mới kiểm — vẫn đúng ý định cũ: chèn chỗ này không xoá chỗ kia. */
+let S8 = T.datThe(T.chonDoan(S, 2), '[hắng giọng]');
+S8 = T.datThe(T.chonDoan(S8, 5), '[cười]');
 ok(T.theCuaDoan(S8, 5) === '[cười]', 'chèn vào đoạn đang chọn');
-ok(T.theCuaDoan(S8, 11) === '[hắng giọng]', 'thẻ cũ ở đoạn khác còn nguyên');
+ok(T.theCuaDoan(S8, 2) === '[hắng giọng]', 'thẻ cũ ở đoạn khác còn nguyên');
 ok(T.theCuaDoan(T.datThe(S8, ''), 5) === '', 'gỡ thẻ được');
 
 console.log('\n--- K. Chia chữ để tô chạy theo tiếng ---');
