@@ -68,3 +68,6 @@ Thumbs.db
 
 # Bo nho lam viec cua agent - khong phai ma nguon, khong bao gio commit.
 .claude/
+
+# Ban dong goi de giao - san pham cua DongGoi_Giao.bat, 1,3 GB.
+_giao/
