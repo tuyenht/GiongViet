@@ -2763,8 +2763,17 @@ class Speaker:
              dinh_dang: str = "wav", loc: str = "", text_goc: str = "",
              khuech_dai: float = 1.0) -> bool:
         """Phát âm thanh (WAV / MP3 / Raw PCM Stream)."""
-        if not audio or (stop_event is not None and stop_event.is_set()):
+        if stop_event is not None and stop_event.is_set():
             return False
+        # Mẩu RỖNG không phải lỗi: dòng chỉ có dấu câu, dòng gạch ngang trong
+        # danh sách công đức - tổng hợp ra b"" là chuyện thường. Trả True để bộ
+        # đọc BỎ QUA và đọc tiếp.
+        #
+        # Gộp chung vào if trên là đổi hành vi cũ (bản trước trả True ở đây):
+        # bo_doc.py `if not self.speaker.play(...): return` hiểu False là "bị
+        # giành loa" và DỪNG HẲN cả danh sách giữa chừng, không một lời báo.
+        if not audio:
+            return True
 
         nguon_cu = self._gianh_loa()
         if nguon_cu is not None:

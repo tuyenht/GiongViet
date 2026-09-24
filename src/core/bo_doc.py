@@ -266,6 +266,16 @@ class BoDoc:
                 if not self.speaker.play(audio, self._stop, dinh_dang, self.loc_am,
                                          text_goc=seg.get("text", ""),
                                          khuech_dai=seg.get("khuech_dai", 1.0)):
+                    # play() trả False vì HAI lẽ khác nhau:
+                    #   · chính ta vừa bị bảo dừng -> dung()/tam_dung() đã đẩy
+                    #     trạng thái rồi, đẩy nữa là ghi đè mất
+                    #   · bị nguồn khác GIÀNH LOA -> chưa ai đẩy gì cả
+                    # Vế thứ hai là chỗ hở: vòng đọc thoát im lặng, khối finally
+                    # dưới cũng không đẩy, nên tiếng tắt ngấm mà màn hình vẫn
+                    # báo đang đọc. Đúng họ lỗi sổ đối chiếu đã ghi ở màn Cài đặt.
+                    if not self._het_han(phien):
+                        self._day({"state": "tam_dung", "pos": self.index + 1,
+                                   "doan": self.index + 1})
                     return
                 if self._het_han(phien):
                     return

@@ -5,6 +5,7 @@ Tách bạch 100% giữa ID Kỹ thuật (ASCII chuẩn) và Dữ liệu Hiển 
 gợi ý đặc điểm, vùng miền, sở trường, mục đích sử dụng tốt nhất).
 """
 
+import re
 import unicodedata
 
 # 1. Danh mục chi tiết các giọng dựng sẵn tiếng Việt trong mô hình VieNeu
@@ -281,18 +282,33 @@ def _bo_dau(s: str) -> str:
     return "".join(c for c in unicodedata.normalize("NFD", s.lower()) if unicodedata.category(c) != "Mn").replace("-", " ").replace("_", " ").strip()
 
 
+# Ô ID do máy tự cấp (rieng_001, rieng_002...), KHÔNG phải tên người dùng đặt.
+_LA_O_ID_RIENG = re.compile(r"^rieng_\d+$", re.I)
+
+
 def tra_cuu_thong_tin_giong(identifier: str) -> dict:
     """Tra cứu toàn bộ thông tin giàu đặc trưng của giọng theo ID hoặc Tên bất kỳ."""
     raw = str(identifier or "").strip()
     slug = _bo_dau(raw)
     pref = slug.split("(")[0].strip()
 
-    # 1. Tra cứu giọng riêng
-    if raw in DANH_MUC_GIONG_RIENG:
-        return DANH_MUC_GIONG_RIENG[raw]
-    for k, v in DANH_MUC_GIONG_RIENG.items():
-        if k == raw or v["ten"].lower() == raw.lower() or slug in [ _bo_dau(a) for a in v["alias"] ]:
-            return v
+    # 1. Tra cứu giọng riêng — CHỈ theo TÊN, không theo ô ID.
+    #
+    # `_id_giong_rieng_moi()` cấp ID tuần tự rieng_001, rieng_002... nên giọng
+    # nhân bản ĐẦU TIÊN của BẤT KỲ ai cũng nhận rieng_001. Khớp theo ID thì thẻ
+    # giọng của họ hiện mô tả của người khác, và bấm nghe thử máy đọc to "Tôi là
+    # Duy Onyx, chuyên đọc review phim..." — dữ liệu của một máy cụ thể rò sang
+    # mọi người dùng.
+    #
+    # Khớp theo TÊN thì an toàn: ai đặt đúng tên ấy mới ra mô tả ấy. Người dùng
+    # đặt "Giọng bà nội" sẽ rơi xuống nhánh mặc định ở cuối hàm — mô tả trung
+    # tính, không bịa đặc điểm.
+    if not _LA_O_ID_RIENG.match(raw):
+        for k, v in DANH_MUC_GIONG_RIENG.items():
+            ds_alias = [_bo_dau(a) for a in v["alias"]
+                        if not _LA_O_ID_RIENG.match(a)]
+            if v["ten"].lower() == raw.lower() or slug in ds_alias:
+                return v
         if pref and pref == _bo_dau(v["ten"]).split("(")[0].strip():
             return v
 
