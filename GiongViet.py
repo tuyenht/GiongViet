@@ -117,7 +117,7 @@ def main():
     # Gom các tệp cấu hình rời vào giongviet.db, một lần duy nhất. Chạy TRƯỚC
     # khi dựng ApiMoi vì ApiMoi đọc cấu hình ngay lúc khởi tạo.
     #
-    # Tệp cũ không bị xoá, chỉ dời sang sao-luu-cu/. Gom hỏng thì mọi đường đọc
+    # Tệp cũ không bị xoá, chỉ dời sang _archive/config_backups/. Gom hỏng thì mọi đường đọc
     # tự lùi về tệp rời, chương trình vẫn chạy như chưa có gì.
     try:
         import kho_cau_hinh
@@ -164,7 +164,7 @@ def main():
     #    không có dòng này thì cửa sổ đóng rồi mà tiến trình vẫn sống, ôm vài GB.
     api._don_dep()
 
-    # Ghi kho ra tệp text trong sao-luu-cu/ mỗi lần đóng chương trình.
+    # Ghi kho ra tệp text trong _archive/config_backups/ mỗi lần đóng chương trình.
     #
     # Gom cấu hình vào SQLite lấy mất một thứ đang dùng hằng ngày: mở cấu hình
     # bằng Notepad để dò lỗi. Bản sao lúc gom chỉ là ảnh chụp ngày đầu, không

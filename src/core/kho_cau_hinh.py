@@ -124,7 +124,7 @@ def danh_sach() -> list:
 
 
 def nhap_tu_tep_cu() -> dict:
-    """Chép tệp cũ vào kho rồi dời chúng sang sao-luu-cu/.
+    """Chép tệp cũ vào kho rồi dời chúng sang _archive/config_backups/.
 
     Chỉ chép tệp nào kho CHƯA có: chạy lại lần hai không đè mất thiết lập mới.
     Dời chứ không xoá - có trục trặc thì chép ngược lại là xong.

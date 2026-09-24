@@ -12,6 +12,15 @@ trong DOM giả (cùng cách kiem/kiem-giao-dien.mjs vẫn làm), rồi đi đú
 mà nút "Dùng giọng này" đi — giao-dien.js:1492 `dat(datGiong(S, ...))` — và
 ĐỌC RA chuỗi mà cột phải in.
 
+TRẠNG THÁI (soát lại 24/9/2026): bài ĐỎ, tức phần nguy hiểm của L5 ĐÃ HẾT -
+ô Giọng đọc không còn trống nữa. giao-dien.js trong tay xử lý giongXong có gọi
+datGiongThat(await api('moi_danh_sach_giong')) - đã đọc tận nơi.
+
+NHƯỢC ĐIỂM CỦA CHÍNH BÀI NÀY - đừng đuổi theo: ba phép "ĐẠT" còn lại (gói đẩy
+về không làm danh sách nhúc nhích / giongXong xong vẫn thiếu giọng mới) là do
+api() GIẢ trong bài này luôn trả danh sách CŨ, không phải do mã thật hỏng. Muốn
+kiểm thật thì phải cho api() giả trả về danh sách có thêm giọng mới.
+
 Không chạy tổng hợp tiếng, không nạp mô hình, không chạm dữ liệu người dùng:
 chỉ ĐỌC mã nguồn và chạy JS trong node. Tệp tạm nằm ở %TEMP%.
 """
@@ -39,9 +48,12 @@ def _tim_goc() -> Path:
         return Path(os.environ["GIONGVIET_GOC"]).resolve()
     p = Path.cwd().resolve()
     for ung in [p, *p.parents]:
-        if (ung / "GiongViet.py").is_file() and (ung / "ui-moi").is_dir():
+        # ui-moi/ da doi ten thanh src/web/ (9/2026). Nhan ca hai, khong thi
+        # chay tu thu muc khac la chet ngay o day voi loi "khong tim ra goc".
+        if (ung / "GiongViet.py").is_file() and (
+                (ung / "src" / "web").is_dir() or (ung / "ui-moi").is_dir()):
             return ung
-    raise SystemExit("Không tìm ra gốc dự án (cần GiongViet.py + ui-moi/)")
+    raise SystemExit("Không tìm ra gốc dự án (cần GiongViet.py + src/web/)")
 
 
 _GOC = _tim_goc()
