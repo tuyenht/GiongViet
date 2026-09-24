@@ -220,6 +220,23 @@ ok(moi.max < cu.max, 'cách mới lệch ít hơn ở chỗ tệ nhất',
    `${cu.max.toFixed(2)}s → ${moi.max.toFixed(2)}s`);
 ok(moi.tb < cu.tb, 'cách mới lệch ít hơn tính trung bình',
    `${cu.tb.toFixed(2)}s → ${moi.tb.toFixed(2)}s`);
+/* ĐANG ĐỎ, và đã truy ra nguyên nhân — đừng nới ngưỡng cho nó xanh.
+
+   Đo được (24/9/2026): đúng MỘT chữ vượt ngưỡng, là "Trân" — chữ đầu của mẩu
+   thứ BA — lệch 0,30 giây, bằng CHÍNH XÁC khoảng nghỉ NGHI giữa hai mẩu. Mọi
+   chữ khác lệch 0,01 giây, trung bình cả đoạn 0,02 giây.
+
+   Điều đáng chú ý: "Nghỉ" — chữ đầu của mẩu thứ HAI — chỉ lệch 0,01 giây. Nên
+   đây KHÔNG phải "mọi chữ đầu mẩu đều lệch", cũng không phải sai số dồn (nếu
+   dồn thì cả bốn chữ của mẩu 3 cùng lệch, mà ba chữ kia vẫn 0,01).
+
+   Nghĩa là: chỉ đúng khoảnh khắc chuyển mẩu thứ hai sang thứ ba, đèn tô nhảy
+   sang chữ mới sớm bằng trọn khoảng nghỉ. Về hình thức thì chữ sáng lên trước
+   khi loa kêu 0,3 giây - khó chịu, không sai kết quả.
+
+   Chưa sửa vì sửa đúng phải động vào phép tính mốc tô chữ, mà thứ đó phải NHÌN
+   mới biết đúng hay sai, không phải chỉ chạy bài đo. Giữ phép này đỏ làm lời
+   nhắc, kèm sẵn phân tích để người sửa khỏi phải dò lại từ đầu. */
 ok(moi.max <= 0.15, 'chỗ tệ nhất của cách mới dưới 0,15 giây', `${moi.max.toFixed(2)}s`);
 ok(moi.tb <= 0.05, 'trung bình dưới 0,05 giây', `${moi.tb.toFixed(2)}s`);
 
