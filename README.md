@@ -6,7 +6,13 @@
 [![UI](https://img.shields.io/badge/UI-pywebview%20%2B%20HTML5%2FCSS3-orange.svg)](https://pywebview.flowrl.com/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE.txt)
 
-Ứng dụng đọc văn bản tiếng Việt thành giọng nói tự nhiên chất lượng cao, **chạy 100% offline trên máy tính cá nhân**. Sử dụng mô hình AI tiên tiến **VieNeu-TTS Turbo** kết hợp cùng hệ thống xử lý ngôn ngữ tự nhiên tối ưu hóa cho tiếng Việt.
+Ứng dụng đọc văn bản tiếng Việt thành giọng nói tự nhiên chất lượng cao, **đọc tiếng Việt hoàn toàn trên máy, không cần mạng**. Sử dụng mô hình AI tiên tiến **VieNeu-TTS Turbo** kết hợp cùng hệ thống xử lý ngôn ngữ tự nhiên tối ưu hóa cho tiếng Việt.
+
+> **Hai tính năng CẦN MẠNG** — phần còn lại chạy offline:
+> - **Đọc ngoại ngữ (28+ thứ tiếng)** dùng dịch vụ giọng đọc của Microsoft. Câu văn được gửi tới máy chủ `speech.platform.bing.com` để tổng hợp, nên cần Internet và văn bản có rời khỏi máy. Đọc tiếng Việt thì không.
+> - **Dịch thuật song ngữ** gọi dịch vụ dịch trực tuyến. Mất mạng thì câu giữ nguyên văn gốc.
+>
+> Nếu bạn đọc danh sách có tên và số tiền của người khác, hãy cân nhắc điều này trước khi bật đọc ngoại ngữ.
 
 ---
 
@@ -21,7 +27,7 @@
 - **Đa dạng vùng miền**: Thư viện giọng phong phú (Bắc, Trung, Nam; Nam / Nữ).
 - **Nhân bản giọng nói (Voice Cloning)**: Tạo giọng đọc riêng từ tệp âm thanh mẫu trong vài giây.
 - **Thẻ biểu cảm thời gian thực**: Hỗ trợ thẻ cảm xúc `[cười]`, `[thở dài]`, `[hắng giọng]`.
-- **Dịch thuật song ngữ tự động**: Hỗ trợ chuyển ngữ tức thì khi cần phát âm đa ngôn ngữ.
+- **Dịch thuật song ngữ tự động** *(cần mạng)*: Hỗ trợ chuyển ngữ tức thì khi cần phát âm đa ngôn ngữ. Mất mạng thì câu giữ nguyên văn gốc.
 
 ### 3. Trình phát & Biên tập âm thanh chuẩn Studio
 - **Đồng bộ chữ và tiếng**: Chữ chạy sáng theo nhịp đọc với cơ chế tự bù trừ độ trễ phần cứng loa.

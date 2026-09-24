@@ -582,7 +582,7 @@ function veHopNhanBanGiong(d) {
                 <span class="vanbanghep__badge" style="font-size:10px;padding:1px 5px;background:var(--acc-soft);color:var(--acc);border-radius:3px">Tùy chọn</span>
               </div>
               <div style="font-size:12px;color:var(--txt3);line-height:1.45;margin-top:3px">
-                Mặc định tắt (chỉ đọc ngôn ngữ gốc đã chọn ở trên). Tích chọn nếu muốn AI dùng chất giọng này để đọc thêm 28 ngoại ngữ khác (Tiếng Anh, Pháp, Trung, Nhật, v.v.).
+                Mặc định tắt (chỉ đọc ngôn ngữ gốc đã chọn ở trên). Tích chọn nếu muốn AI dùng chất giọng này để đọc thêm 28 ngoại ngữ khác (Tiếng Anh, Pháp, Trung, Nhật, v.v.).<br><b>Phần ngoại ngữ CẦN MẠNG</b> — câu văn được gửi tới máy chủ giọng đọc của Microsoft để tổng hợp. Đọc tiếng Việt thì không cần mạng và không gửi đi đâu cả.
               </div>
             </div>
           </label>
