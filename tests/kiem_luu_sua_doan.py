@@ -17,6 +17,20 @@ JSON chep nguyen van tu trinh duyet khi go sua that mot doan), roi:
 AN TOAN: toan bo chay tren tempfile.mkdtemp. kho_cau_hinh.dat_goc() duoc keo
 ve thu muc tam, ho_so_v2.TEP cung vay, nen khong mot byte nao cua du lieu
 that bi cham toi. KHONG nap mo hinh, KHONG tong hop tieng.
+
+TRANG THAI (soat lai 24/9/2026): bai van XANH, tuc la GOC RE con nguyen - goi ho
+so ghi xuong dia KHONG mang theo chu cua doan, va mo lai tep tu duong dan da nho
+thi ra ban goc tren dia.
+
+NHUNG TAC HAI DA DUOC CHAN bang duong khac: co `chuaLuu` trong giao-dien.js (16
+cho) danh dau moi duong sua, thanh trang thai in "Chua luu", va Dong tep / nut x
+tren tab / nut dong cua so deu hoi truoc khi bo. Nguoi dung khong con mat chu ma
+khong hay biet - do la phan nguy hiem cua L3, va no da het.
+
+=> XANH o day KHONG con nghia la "dang mat bai". No nghia la ho so van chua mang
+theo chu da go. Viec con lai lon hon: co nen cho hoso-v2.json om ca noi dung
+khong (tep se phinh theo so tab va do dai bai) - chua ai quyet. Dung xep bai nay
+vao "loi dang bao dong" khi doc bang ket qua.
 """
 # --- dat goc du an tu vi tri tep nay (bai nam trong kiem/) ---
 import os as _os, sys as _sys

@@ -14,6 +14,18 @@ Phần dựng playlist (thứ dẫn tới tổng hợp tiếng) được giả l
 Mọi tệp thử nằm trong thư mục tạm; không chạm một byte dữ liệu người dùng.
 
 Chạy:  PYTHONIOENCODING=utf-8 py kiem/kiem_khoa_ten_tep.py
+
+TRANG THAI (soat lai 24/9/2026): bai van XANH, tuc la GOC RE con nguyen - TAI_LIEU
+van khoa theo TEN TEP TRAN. Day la quyet dinh CO CHU Y, ghi ngay tai cho trong
+giao-dien.js ham datTaiLieu(): "Khong doi mo hinh khoa (viec do lon hon nhieu va
+phai trinh rieng), chi thoi khong cho hai hang giam len nhau."
+
+TAC HAI DA DUOC CHAN: hai hang trung ten thi ten thu hai duoc danh so cho khac di,
+va phep soi quet MOI hang cua MOI ho so chu khong rieng ho so dang mo. Ban mo lai
+dung tep cu thi van dung chung khoa - tru khi bai do dang co chu chua luu.
+
+=> XANH o day KHONG con nghia la nguoi dung dang mat bai. No nghia la mo hinh khoa
+chua doi. Dung xep bai nay vao "loi dang bao dong" khi doc bang ket qua.
 """
 # --- dat goc du an tu vi tri tep nay (bai nam trong kiem/) ---
 import os as _os, sys as _sys
