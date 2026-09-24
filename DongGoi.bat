@@ -83,6 +83,16 @@ rem
 rem hidden-import giaodien_moi.*: GiongViet.py import ApiMoi ben trong ham
 rem main(), PyInstaller co the tu tim thay hoac khong. Liet ke ra cho chac -
 rem cung dung cach ban cu lam voi giaodien.*.
+rem
+rem Nam module src.core them sau khi doi cay thu muc (chuan_hoa_am_thanh,
+rem danh_muc_giong, da_ngon_ngu_tts, dich_thuat, kho_cau_hinh) deu duoc import
+rem LUOI - trong than ham - nen cung thuoc dien "co the tu tim thay hoac khong".
+rem CO Y bo qua chuyen_mau_giong va kiem_dinh_1_1: ca hai khong co mot loi goi
+rem nao trong ma san pham, liet ke vao la ngam bao chung dang duoc dung.
+rem
+rem edge_tts la thu vien tong hop tieng ngoai ngu, da_ngon_ngu_tts import no o
+rem tang module. Khong co tep du lieu nao (chi py.typed) nen khong can
+rem --collect-data, nhung thieu hidden-import thi bam doc ngoai ngu la vo.
 py -m PyInstaller --noconfirm --onedir --windowed --name GiongViet ^
     --add-data "%ROOT%src\web;web" ^
     --add-data "%ROOT%src\web;ui-moi" ^
@@ -97,6 +107,9 @@ py -m PyInstaller --noconfirm --onedir --windowed --name GiongViet ^
     --hidden-import src.core.ho_so --hidden-import src.core.soat ^
     --hidden-import src.core.tu_dien --hidden-import src.core.cai_dat ^
     --hidden-import src.core.bo_dieu_phoi_ngu_canh --hidden-import src.core.bo_chuyen_ngu_khoa_hoc ^
+    --hidden-import src.core.chuan_hoa_am_thanh --hidden-import src.core.danh_muc_giong ^
+    --hidden-import src.core.da_ngon_ngu_tts --hidden-import src.core.dich_thuat ^
+    --hidden-import src.core.kho_cau_hinh --hidden-import edge_tts ^
     --hidden-import src.app.cau_noi_moi --hidden-import src.app.khoa_du_lieu ^
     --hidden-import src.app.ho_so_v2 --hidden-import src.app.luu_tep ^
     --hidden-import src.app.so_dien_thoai --hidden-import src.app.sdt_mau ^
