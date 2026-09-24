@@ -3001,7 +3001,16 @@ document.addEventListener('click', async (e) => {
                                   if (i === S.activeByProfile[S.profile]) return;
                                   return chuyenSang(doiTab(S, i)); }
   if ((n = t('[data-hoso]')))   { thoiSuaTen();
-                                  return chuyenSang(doiHoSo(S, +n.dataset.hoso)); }
+                                  const iHoSoMoi = +n.dataset.hoso;
+                                  /* Mau ghep di theo ho so (VG-15): cat ban dang
+                                     dung roi lay ban cua ho so vua chon. Thieu hai
+                                     dong nay thi chan dai trai in ten ho so moi ma
+                                     mau ghep van y nguyen cua ho so cu. */
+                                  if (typeof vbgGhiNho === 'function') {
+                                    vbgGhiNho(S.profile);
+                                    vbgDoiSang(iHoSoMoi);
+                                  }
+                                  return chuyenSang(doiHoSo(S, iHoSoMoi)); }
   /* Bấm vào chính chữ đang sửa được thì để yên cho con trỏ đứng đó - dat() ở
      dưới sẽ vẽ lại vùng đọc và ném con trỏ về đầu bài. */
   if (t('.doan__chu[contenteditable]')) {
@@ -5017,6 +5026,11 @@ function phanCanLuu() {
     loaiTep: S.loaiTep,
     noiDung: noiDungTab,
     hoSo: S.profiles.map((h, i) => ({
+      /* Mau ghep cua RIENG ho so nay, da bo `rows`: mot bang tinh 2.000 dong ma
+         nhet vao hoso-v2.json thi tep phinh theo, va henLuuHoSo() JSON.stringify
+         no moi lan dat() - may yeu dung hinh. Du lieu tai lai duoc; cau hinh thi
+         khong. */
+      vanBanGhep: (typeof vbgDeLuu === 'function') ? vbgDeLuu(i, S.profile) : null,
       ma: h.ma, ten: h.ten, giong: h.giong, chinh: h.chinh,
       ngonNgu: h.ngonNgu || 'vi',
       ngonNguNguon: h.ngonNguNguon || 'auto',
@@ -5103,6 +5117,14 @@ async function napHoSoDaLuu() {
 
   const tabs = {}, dangXem = {};
   d.hoSo.forEach((h, i) => { tabs[i] = h.tep.slice(); dangXem[i] = h.dangXem || 0; });
+
+  /* Dung lai kho mau ghep theo tung ho so. Phai chay TRUOC khi ve() lan dau,
+     khong thi man Van ban ghep hien ban mac dinh mot nhip roi moi nhay sang ban
+     that - va neu nguoi dung kip bam "Dong bo Live" trong nhip do thi no keo ve
+     GOOGLE_SHEET_MAC_DINH chu khong phai Sheet cua ho. */
+  if (typeof vbgNapTuHoSo === 'function') {
+    vbgNapTuHoSo(d.hoSo, d.dangDung || 0);
+  }
 
   // Khôi phục nội dung các tab đã lưu (văn bản ghép, tab tự tạo)
   if (d.noiDung) {
@@ -5607,6 +5629,12 @@ async function khoiDong() {
         const d = startup.hoSo;
         const tabs = {}, dangXem = {};
         d.hoSo.forEach((h, i) => { tabs[i] = h.tep.slice(); dangXem[i] = h.dangXem || 0; });
+        /* Duong khoi dong NHANH nay khong di qua napHoSoDaLuu(), nen phai dung
+           lai kho mau ghep o day nua - neu khong thi ban .exe that khong bao gio
+           khoi phuc duoc, chi duong lui moi khoi phuc. */
+        if (typeof vbgNapTuHoSo === 'function') {
+          vbgNapTuHoSo(d.hoSo, d.dangDung || 0);
+        }
         if (d.noiDung) {
           Object.keys(d.noiDung).forEach((ten) => {
             if (d.noiDung[ten] && (!TAI_LIEU[ten] || !TAI_LIEU[ten].doan || !TAI_LIEU[ten].doan.length)) {

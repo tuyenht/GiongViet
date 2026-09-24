@@ -379,6 +379,99 @@ const MAU_VAN_BAN_GHEP_MAC_DINH = {
 
 let duLieuVBG = JSON.parse(JSON.stringify(MAU_VAN_BAN_GHEP_MAC_DINH));
 
+/* ---------------------------------------------------------- nhớ mẫu ghép
+
+   Trước đây duLieuVBG là MỘT biến toàn cục duy nhất và không nơi nào lưu nó
+   xuống đĩa. Hai hậu quả:
+
+   · Đóng chương trình là mất link Sheet, mất khớp cột, mất bốn khối văn bản
+     vừa gõ. Mở lại, bấm "Đồng bộ Live" thì nó kéo về GOOGLE_SHEET_MAC_DINH —
+     đúng buổi lễ, máy đọc to danh sách người mẫu.
+   · Chân dải trái vẫn in tên hồ sơ đang dùng, nhưng đổi hồ sơ thì mẫu ghép y
+     nguyên. Chữ nói một đằng, máy làm một nẻo.
+
+   Nay mỗi hồ sơ giữ mẫu ghép RIÊNG (đúng thiết kế VG-15). Lưu theo hồ sơ là
+   tập cha của lưu dùng chung, nên sau này không phải viết bộ chuyển đổi ngược.
+
+   KHÔNG lưu `rows`: một bảng tính 2.000 dòng mà nhét vào hoso-v2.json thì tệp
+   phình theo, và henLuuHoSo() JSON.stringify nó mỗi lần dat() — máy yếu đứng
+   hình. Dữ liệu tải lại được từ nguồn; cấu hình thì không. `sheetOpts` cũng bỏ
+   vì đó là danh sách tab lấy về từ Sheet.                                    */
+
+const _VBG_BO_KHI_LUU = ['rows', 'sheetOpts'];
+const _VBG_BO_O_GOC = ['menuMauOpen', 'modalTaoMoi', 'stale'];
+
+let vbgTheoHoSo = {};
+
+function vbgCanLuu(d) {
+  if (!d || !Array.isArray(d.maus)) return null;
+  const goc = {};
+  Object.keys(d).forEach((k) => {
+    if (k !== 'maus' && !_VBG_BO_O_GOC.includes(k)) goc[k] = d[k];
+  });
+  goc.maus = d.maus.map((m) => {
+    const r = {};
+    Object.keys(m).forEach((k) => { if (!_VBG_BO_KHI_LUU.includes(k)) r[k] = m[k]; });
+    return r;
+  });
+  return goc;
+}
+
+function vbgTuDaLuu(daLuu) {
+  const moi = JSON.parse(JSON.stringify(MAU_VAN_BAN_GHEP_MAC_DINH));
+  if (!daLuu || !Array.isArray(daLuu.maus)) return moi;
+  Object.keys(daLuu).forEach((k) => { if (k !== 'maus') moi[k] = daLuu[k]; });
+  /* Ghép theo ID chứ không theo thứ tự: bản sau có thể thêm khuôn mẫu mới,
+     lấy theo chỉ số là gán nhầm cấu hình của khuôn này sang khuôn kia. Khuôn
+     nào đã lưu thì dùng bản lưu và mượn lại rows/sheetOpts của bản mặc định
+     để màn hình có cái mà vẽ trước khi tải lại. */
+  moi.maus = moi.maus.map((mm) => {
+    const cu = daLuu.maus.find((x) => x && x.id === mm.id);
+    if (!cu) return mm;
+    const gop = { ...mm, ...cu };
+    _VBG_BO_KHI_LUU.forEach((k) => { gop[k] = mm[k]; });
+    return gop;
+  });
+  // Khuôn người dùng tự tạo (không có trong bản mặc định) thì giữ nguyên.
+  daLuu.maus.forEach((cu) => {
+    if (cu && cu.id && !moi.maus.some((x) => x.id === cu.id)) {
+      moi.maus.push({ ...cu, rows: [], sheetOpts: [] });
+    }
+  });
+  if (!(moi.mauHienTai >= 0 && moi.mauHienTai < moi.maus.length)) moi.mauHienTai = 0;
+  return moi;
+}
+
+/* Cất mẫu ghép của hồ sơ đang mở trước khi chuyển sang hồ sơ khác. */
+function vbgGhiNho(iHoSo) {
+  if (iHoSo == null) return;
+  vbgTheoHoSo[iHoSo] = duLieuVBG;
+}
+
+/* Lấy mẫu ghép của hồ sơ vừa chuyển sang. Hồ sơ chưa có thì cho bản mặc định. */
+function vbgDoiSang(iHoSo) {
+  if (iHoSo == null) return;
+  duLieuVBG = vbgTheoHoSo[iHoSo]
+    || JSON.parse(JSON.stringify(MAU_VAN_BAN_GHEP_MAC_DINH));
+  vbgTheoHoSo[iHoSo] = duLieuVBG;
+}
+
+/* Gọi lúc lưu hồ sơ: trả về mẫu ghép đã bỏ rows, của đúng một hồ sơ. */
+function vbgDeLuu(iHoSo, iDangMo) {
+  const d = (iHoSo === iDangMo) ? duLieuVBG : vbgTheoHoSo[iHoSo];
+  return vbgCanLuu(d);
+}
+
+/* Gọi lúc khởi động: dựng lại kho từ danh sách hồ sơ đã lưu. */
+function vbgNapTuHoSo(dsHoSo, iDangMo) {
+  vbgTheoHoSo = {};
+  (dsHoSo || []).forEach((h, i) => {
+    if (h && h.vanBanGhep) vbgTheoHoSo[i] = vbgTuDaLuu(h.vanBanGhep);
+  });
+  if (vbgTheoHoSo[iDangMo]) duLieuVBG = vbgTheoHoSo[iDangMo];
+}
+
+
 function veManVanBanGhep(S, duLieu) {
   const cur = duLieuVBG.maus[duLieuVBG.mauHienTai] || duLieuVBG.maus[0];
   const nav = duLieuVBG.nav || 0;
@@ -945,5 +1038,6 @@ function veModalTaoMoi() {
 }
 
 if (typeof module !== 'undefined') {
-  module.exports = { veManVanBanGhep, MAU_VAN_BAN_GHEP_MAC_DINH, formatRowSentence };
+  module.exports = { veManVanBanGhep, MAU_VAN_BAN_GHEP_MAC_DINH, formatRowSentence,
+                     vbgCanLuu, vbgTuDaLuu };
 }
