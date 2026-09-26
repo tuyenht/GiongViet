@@ -155,7 +155,6 @@ Còn lại → làm thẳng, báo cáo sau. Đừng hỏi vụn vặt.
 - **Ngưỡng cứng đặt trên số đo ngẫu nhiên là bẫy.** In con số MONG MUỐN ra màn hình, còn phép
   khẳng định thì đặt ở sàn rộng — không thì bài lúc xanh lúc đỏ, rồi chẳng ai tin nó nữa.
 - VieNeu **không có** tham số tốc độ và cao độ. Thứ chỉnh được là các khoảng nghỉ.
-- Trả lời bằng tiếng Việt.
 
 ## 6. Lệnh hay dùng
 
