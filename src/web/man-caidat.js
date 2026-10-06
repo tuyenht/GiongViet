@@ -180,25 +180,40 @@ function veMucCaiDat(m) {
      dùng của chương trình này phần lớn lớn tuổi: kéo trượt cần giữ chuột đúng
      một rãnh hẹp, còn ô gõ thì gõ vào rồi quên Enter là mất. Hai nút bấm to
      không hỏng được kiểu nào. */
-  if (m.kieu === 'songuyen') {
+  /* O chinh so - dung cho ca so nguyen (so nguoi, so ky tu) va so thuc
+     (cac khoang nghi, tinh bang giay). MOT bo ve cho ca hai: markup y
+     nhau, viet hai khoi gan giong nhau la co ngay sua ben nay quen ben
+     kia.
+
+     Hai nut - / + thay cho thanh truot: nguoi dung phan lon lon tuoi, keo
+     truot can giu chuot dung mot ranh hep. Nut rong 48px theo chuan giao
+     dien cua du an, va co NHAN CHU chu khong nho title - title chi hien
+     khi re chuot nen man cam ung khong bao gio thay. */
+  if (m.kieu === 'songuyen' || m.kieu === 'sothuc') {
     const v = Number(m.giaTri);
-    const lui = Math.max(m.nhoNhat, v - 1);
-    const toi = Math.min(m.lonNhat, v + 1);
+    const buoc = Number(m.buoc) || 1;
+    /* Bam vao LUOI buoc khi bam nut, nhung KHONG bam khi hien thi: gia tri
+       dang luu co the la 1,3 giay (nguoi dung dat tu ban cu hoac sua tay).
+       Hien "1,5" la o chinh noi sai con so ho dang co. Lan bam dau se dua
+       no ve luoi. */
+    const buocVe = (x) => Math.round(x / buoc) * buoc;
+    const lui = Math.max(m.nhoNhat, Number(buocVe(v - buoc).toFixed(3)));
+    const toi = Math.min(m.lonNhat, Number(buocVe(v + buoc).toFixed(3)));
     const het = v <= m.nhoNhat;
     const day = v >= m.lonNhat;
-    /* NHAN CHU tren nut, khong dung title. title chi hien khi re chuot,
-       nen tren man cam ung khong ai thay, va chuan giao dien cua du an
-       cam giau thu quan trong sau hover. Dau - va + mot minh thi nguoi
-       chua quen may khong chac no tru vao cai gi. */
+    const dv = m.donVi === 'giay'
+      ? ' ' + String(buoc).replace('.', ',') + ' giây'
+      : '';
     return `<div class="caidat__muc">${nhan}
       <div class="caidat__dieu caidat__so">
         <button class="nut nut--vien caidat__so-nut" data-cdso="${esc(m.khoa)}"
                 data-cdgt="${lui}" ${het ? 'disabled' : ''}
-                aria-label="Bớt một">− Bớt</button>
-        <span class="caidat__gt caidat__so-gt" aria-live="polite">${v} người</span>
+                aria-label="Bớt${dv || ' một'}">− Bớt</button>
+        <span class="caidat__gt caidat__so-gt" aria-live="polite"
+          >${esc(m.hienThi || v)}</span>
         <button class="nut nut--vien caidat__so-nut" data-cdso="${esc(m.khoa)}"
                 data-cdgt="${toi}" ${day ? 'disabled' : ''}
-                aria-label="Thêm một">+ Thêm</button>
+                aria-label="Thêm${dv || ' một'}">+ Thêm</button>
       </div></div>`;
   }
   if (m.kieu === 'duongdan') {

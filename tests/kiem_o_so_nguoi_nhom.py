@@ -75,7 +75,12 @@ ok(not any(m["khoa"] == "so_nguoi_nhom" for m in _muc_doc("vanban", CFG)),
 print("\n=== C. Gia tri ban ra tu trinh duyet phai bi kep hai dau ===")
 # so_nguoi_nhom = 0 thi DocCongDuc.py chay `stt % 0` -> ZeroDivisionError
 # giua luc dang doc. Khong duoc tin gia tri tu trinh duyet.
-for vao, mong in ((0, 1), (-5, 1), (999, 50), ("abc", 20), (None, 20)):
+# Gia tri la (chu, None) lui ve CAN NHO NHAT, khong ve 20. Co y: ban nay duyet
+# thang THANH_TRUOT nen khong cat mac_dinh go cung o cai_dat.py - chep lai bang
+# mac dinh cua engine sang day la hai noi cung nho mot thu, roi co ngay lech.
+# Nhanh nay KHONG xay ra trong ban chay: engine.load_config() ep tung khoa bang
+# get_float/get_int kem mac dinh (DocCongDuc.py:657-663).
+for vao, mong in ((0, 1), (-5, 1), (999, 50), ("abc", 1), (None, 1)):
     r = [m for m in _muc_doc("congduc", {**CFG, "so_nguoi_nhom": vao})
          if m["khoa"] == "so_nguoi_nhom"]
     ok(bool(r) and r[0]["giaTri"] == mong, f"vao {vao!r} -> {mong}",
@@ -147,7 +152,7 @@ print("\n=== F2. Chuan giao dien (chu du an chot 6/10/2026) ===")
 # chuan doi vung bam >= 44px, va cam giau thu quan trong sau hover (man cam
 # ung khong co hover). Cac phep nay canh cho viec do khong quay lai.
 import re as _re
-_khoi = _re.search(r"if \(m\.kieu === 'songuyen'\).*?\n  \}", _js_cd, _re.S)
+_khoi = _re.search(r"if \(m\.kieu === 'songuyen'.*?\n  \}", _js_cd, _re.S)
 _khoi = _khoi.group(0) if _khoi else ""
 ok(bool(_khoi), "tim thay khoi ve o chinh so trong man-caidat.js")
 ok("title=" not in _khoi,
@@ -178,6 +183,60 @@ ok("focus-visible" in _css and "outline" in _css,
 print("      CHUA KIEM duoc bang bai nay: mau sac, do tuong phan THAT, bo cuc")
 print("      o be ngang dien thoai. Nhung thu do phai MO CUA SO moi thay.")
 
+
+print("\n=== B2. CA HO: bon khoang nghi cung phai co o chinh ===")
+# Do 6/10/2026: nghi_nguoi va nghi_nhom (cong duc), nghi_cau va nghi_doan_vb
+# (van ban) deu duoc engine dung that - dem duoc 11 cho - ma truoc gio khong
+# man nao dat duoc. "So nguoi moi nhom" chi la MOT trong SAU muc bi ket.
+_HO = {
+    "congduc": ["nghi_nguoi", "nghi_nhom", "so_nguoi_nhom"],
+    "vanban": ["nghi_cau", "nghi_doan_vb", "so_ky_tu"],
+}
+for _che, _can in _HO.items():
+    _co = [m["khoa"] for m in _muc_doc(_che, CFG)
+           if m["kieu"] in ("songuyen", "sothuc")]
+    ok(_co == _can, f"che do {_che} co du {len(_can)} o chinh, dung thu tu bang",
+       _co)
+
+print("\n  Moi o chinh phai khai day du de giao dien ve duoc:")
+for _che in _HO:
+    for m in _muc_doc(_che, CFG):
+        if m["kieu"] not in ("songuyen", "sothuc"):
+            continue
+        _du = all(k in m for k in
+                  ("khoa", "nhan", "goiY", "giaTri", "nhoNhat", "lonNhat",
+                   "buoc", "donVi", "hienThi"))
+        ok(_du, f"  {m['khoa']}: du cac truong",
+           f"{m['hienThi']} [{m['nhoNhat']}..{m['lonNhat']}] buoc {m['buoc']}")
+        ok(m["nhoNhat"] <= m["giaTri"] <= m["lonNhat"],
+           f"  {m['khoa']}: gia tri nam trong pham vi")
+
+print("\n  [B2-x] Hien thi KHONG duoc lam tron gia tri dang luu:")
+# Vap that: cfg co nghi_nguoi = 1,3 giay thi o chinh hien "1,5 giay" - noi sai
+# con so nguoi dung dang co, va chi mo man Cai dat ra xem cung lam lech thiet
+# lap neu ho bam tiep.
+for _vao, _mong in ((1.3, "1,3"), (0.7, "0,7"), (2.5, "2,5")):
+    _m = [m for m in _muc_doc("congduc", {**CFG, "nghi_nguoi": _vao})
+          if m["khoa"] == "nghi_nguoi"]
+    ok(bool(_m) and _m[0]["hienThi"].startswith(_mong),
+       f"  nghi_nguoi = {_vao} hien dung {_mong}",
+       _m[0]["hienThi"] if _m else "(mat muc)")
+
+print("\n=== B3. ApiMoi nhan ca khoa SO THUC ===")
+from giaodien_moi import cau_noi_moi as _cnm2
+_st = _cnm2.khoa_so_thuc()
+ok(set(_st) == {"nghi_nguoi", "nghi_nhom", "nghi_cau", "nghi_doan_vb"},
+   "dung bon khoang nghi duoc nhan nhu so thuc", sorted(_st))
+ok(not (set(_st) & set(_cnm2.khoa_so_nguyen())),
+   "khong khoa nao nam ca hai nhom - nguyen va thuc phai roi nhau",
+   sorted(set(_st) & set(_cnm2.khoa_so_nguyen())))
+if _ham:
+    _th = ast.get_source_segment(_nguon, _ham) or ""
+    ok("khoa_so_thuc()" in _th, "moi_dat_cai_dat co goi khoa_so_thuc()")
+    # So thang bang == tren so thuc la bay: 0.1+0.2 != 0.3 trong dau may, nen
+    # co luc tuong gia tri doi trong khi khong, roi dung lai playlist vo co.
+    ok("1e-9" in _th or "abs(" in _th,
+       "so sanh so thuc co tinh SAI SO, khong so thang bang ==")
 
 print("\n=== I. Nhanh khoa SO khong duoc nuot khoa SO THUC ===")
 # Vap that: ban dau quet ca THANH_TRUOT roi int() moi thu, nen bon khoa thoi

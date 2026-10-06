@@ -141,6 +141,26 @@ def khoa_so_nguyen():
     return ket
 
 
+def khoa_so_thuc():
+    """Nhung khoa ma moi_dat_cai_dat nhan nhu SO THUC -> (nho nhat, lon nhat).
+
+    Bon khoang nghi: nghi_nguoi, nghi_nhom (danh sach cong duc) va nghi_cau,
+    nghi_doan_vb (van ban). Engine doc chung khi dung playlist - dem duoc 11
+    cho - nhung truoc 6/10/2026 khong man nao dat duoc: chi dat duoc qua
+    Api.dat_thong_so cua lop CU, ma ca src/web/ chi goi datThongSo mot lan
+    voi khoa "tocDo".
+
+    Tach ra muc module cung ly do nhu khoa_so_nguyen(): de bai kiem goi HAM
+    THAT chu khong tu tinh lai bang logic rieng roi tu kiem chinh no.
+    """
+    ket = {}
+    for _che_do, bang in du_lieu.THANH_TRUOT.items():
+        for k, _nhan, nho, lon, _dv, _gy in bang:
+            if not (isinstance(nho, int) and isinstance(lon, int)):
+                ket.setdefault(k, (float(nho), float(lon)))
+    return ket
+
+
 class ApiMoi(Api):
     def __init__(self, vung_lam_viec=(0, 0, 1280, 800)):
         # CỐ Ý KHÔNG khoá đường ghi ở đây nữa (2026-08-13).
@@ -1372,6 +1392,24 @@ class ApiMoi(Api):
             # Dựng lại playlist: số này quyết định chỗ chèn nghỉ dài, mà chỗ nghỉ
             # được chèn ngay lúc DỰNG playlist chứ không phải lúc phát. Không dựng
             # lại thì đổi xong phải đóng mở lại tệp mới thấy tác dụng.
+            self._dung_lai_playlist_moi()
+            return self.moi_cai_dat()
+
+        so_thuc = khoa_so_thuc()
+        if khoa in so_thuc:
+            nho, lon = so_thuc[khoa]
+            try:
+                moi = round(max(nho, min(lon, float(gia_tri))), 3)
+            except (TypeError, ValueError):
+                return None
+            # So sanh co SAI SO: 0.1+0.2 trong dau may khong bang 0.3, nen so
+            # thang bang == la co luc tuong gia tri doi trong khi khong, roi
+            # dung lai playlist vo co giua luc nguoi ta dang nghe.
+            if abs(moi - float(self._cfg.get(khoa) or 0.0)) < 1e-9:
+                return self.moi_cai_dat()
+            self._cfg[khoa] = moi
+            engine.save_config(self._cfg)
+            self._bo_doc.cap_nhat_cfg(self._cfg)
             self._dung_lai_playlist_moi()
             return self.moi_cai_dat()
 

@@ -219,6 +219,47 @@ ok(len(dai5) == so_nguoi // 5,
    f"nghi dai dung moi 5 nguoi mot lan ({so_nguoi}//5)", len(dai5))
 
 # =============================================================================
+print("\n=== B4. Khoang nghi (SO THUC) cung di tron duong ===")
+# Phep [B] o tren do so_nguoi_nhom - khoa SO NGUYEN. Bon khoang nghi la so
+# THUC va di qua mot NHANH KHAC trong moi_dat_cai_dat, nen phai do rieng.
+# Khong do thi nhanh so thuc lai thanh ma chua ai chay - dung cai bay bai nay
+# duoc viet ra de chan.
+def _ghi_cau_hinh_nghi(nghi_nhom: float) -> dict:
+    (TAM / "cauhinh.ini").write_text(
+        "[GiongDoc]\n"
+        "phong_cach = Tin t\u1ee9c - th\u00f4ng b\u00e1o\n"
+        "\n[DocLienTuc]\n"
+        "nghi_giua_nguoi = 1.30\n"
+        f"nghi_giua_nhom = {nghi_nhom}\n"
+        "so_nguoi_moi_nhom = 10\n"
+        "nghi_giua_doan = 0.80\n"
+        "nhan_manh_tien = 0\n",
+        encoding="utf-8-sig")
+    return engine.load_config()
+
+
+api3 = _Thu(_ghi_cau_hinh_nghi(2.5), records, noidung)
+api3._dung_lai_playlist_moi()
+lang25 = sum(m["nghi"] for m in api3._playlist)
+sau25 = len([m for m in api3._playlist if m["loai"] == "nguoi"
+             and abs(m["nghi"] - 2.5) < 1e-9])
+
+api3._cfg = _ghi_cau_hinh_nghi(6.0)
+api3._dung_lai_playlist_moi()
+lang60 = sum(m["nghi"] for m in api3._playlist)
+sau60 = len([m for m in api3._playlist if m["loai"] == "nguoi"
+             and abs(m["nghi"] - 6.0) < 1e-9])
+
+print(f"      nghi_nhom 2,5 giay: tong lang {lang25:.2f}s · {sau25} mau nghi 2,5s")
+print(f"      nghi_nhom 6,0 giay: tong lang {lang60:.2f}s · {sau60} mau nghi 6,0s")
+ok(lang60 > lang25, "nghi lau hon -> tong khoang lang dai hon",
+   f"{lang25:.2f}s → {lang60:.2f}s")
+ok(sau25 > 0 and sau25 == sau60,
+   "so cho nghi khong doi, chi do dai cho nghi doi", f"{sau25} = {sau60}")
+ok(api3._cfg["nghi_nhom"] == 6.0,
+   "cau hinh nap dung so THUC, khong bi cat cut thanh 6", api3._cfg["nghi_nhom"])
+
+
 print("\n=== C. So DOAN co doi khong - giao dien KHONG xin lai danh sach ===")
 # datCaiDat trong giao-dien.js chi lam `duLieuCaiDat = kq; ve()`. Neu so doan
 # doi thi dong thu k tren man hinh khong con ung voi mau thu k ben Python.

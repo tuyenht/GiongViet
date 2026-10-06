@@ -57,25 +57,63 @@ def _cong_tac(khoa, nhan, goi_y, bat) -> dict:
             "goiY": goi_y, "bat": bool(bat)}
 
 
-def _so_nguyen(khoa, che_do, gia_tri, mac_dinh) -> dict:
-    """Một mục chỉnh SỐ, lấy nhãn/phạm vi từ du_lieu.THANH_TRUOT.
+def _muc_truot(khoa, nhan, nho, lon, don_vi, goi_y, gia_tri) -> dict:
+    """Một mục chỉnh số, dựng từ MỘT dòng của du_lieu.THANH_TRUOT.
 
-    KHÔNG gõ lại nhãn và phạm vi ở đây. Bảng THANH_TRUOT đã là nơi khai báo
-    duy nhất; chép sang đây là hai chỗ cùng nhớ một thứ, rồi có ngày màn Cài
-    đặt cho kéo tới 50 trong khi engine chặn ở 30 mà không ai hay.
+    Nhãn, phạm vi và đơn vị đều lấy từ bảng đó chứ không gõ lại ở đây: hai
+    nơi cùng nhỉ một thứ thì có ngày màn Cài đặt cho kéo tới 50 trong khi
+    engine chặn ở 30 mà không ai hay.
+
+    CẬN LÀ SỐ NGUYÊN hay SỐ THỰC quyết định kiểu mục. so_nguoi_nhom và
+    so_ky_tu đếm đơn vị rời nên đi từng 1; các khoảng nghỉ là giây nên đi
+    từng 0,25 hay 0,5 — bước nhỏ hơn thì người dùng phải bấm hàng chục lần
+    mới đi hết phạm vi, mà phần lớn họ lớn tuổi.
     """
     from . import du_lieu
-    for k, nhan, nho, lon, don_vi, goi_y in du_lieu.THANH_TRUOT.get(che_do, []):
-        if k != khoa:
-            continue
-        try:
-            v = int(float(gia_tri))
-        except (TypeError, ValueError):
-            v = mac_dinh
-        return {"kieu": "songuyen", "khoa": khoa, "nhan": nhan, "goiY": goi_y,
-                "giaTri": max(int(nho), min(int(lon), v)),
-                "nhoNhat": int(nho), "lonNhat": int(lon), "donVi": don_vi}
-    return {}
+    nguyen = isinstance(nho, int) and isinstance(lon, int)
+    mac_dinh = nho if nguyen else float(nho)
+    try:
+        v = (int(float(gia_tri)) if nguyen else float(gia_tri))
+    except (TypeError, ValueError):
+        # Nhánh này KHÔNG xảy ra trong bản chạy: cfg luôn đến từ
+        # engine.load_config(), mà hàm ấy ép từng khóa bằng get_float/get_int kèm
+        # mặc định (DocCongDuc.py:657-663). Giữ để không vỡ nếu ai gọi trực
+        # tiếp với dict tự dựng — và CỐ Ý không chép lại bảng mặc định của
+        # engine sang đây: hai nơi cùng nhỉ một thứ là có ngày chúng lệch nhau.
+        v = mac_dinh
+    if v is None:
+        v = mac_dinh
+    v = max(nho, min(lon, v))
+    if nguyen:
+        buoc = 1
+    else:
+        # Phạm vi hẹp thì bước nhỏ cho đủ tinh; phạm vi rộng thì bước lớn cho
+        # đỡ phải bấm nhiều. 0..2 giây → 8 lần bấm; 0..8 giây → 16 lần.
+        buoc = 0.25 if (lon - nho) <= 3 else 0.5
+        # KHÔNG bắt v về lưới bước ở đây. Đã đo: cfg có nghi_nguoi = 1,3 giây
+        # thì ô chỉnh hiện "1,5 giây" — nói sai con số người dùng đang có, và chỉ
+        # mở màn Cài đặt ra xem cũng làm lệch thiết lập của họ. Hiển thị phải
+        # là giá trị THẬT; việc bám lưới để nhúc − / + lo khi tính giá trị mới.
+        v = round(v, 3)
+    return {"kieu": "songuyen" if nguyen else "sothuc",
+            "khoa": khoa, "nhan": nhan, "goiY": goi_y,
+            "giaTri": v, "nhoNhat": nho, "lonNhat": lon, "buoc": buoc,
+            "donVi": don_vi,
+            "hienThi": du_lieu._hien_thi_gia_tri(don_vi, v)}
+
+
+def _muc_nhip_doc(cfg, loai_ho_so) -> list:
+    """Mọi mục chỉnh nhịp đọc của loại hồ sơ đang mở.
+
+    Duyệt THẮNG bảng THANH_TRUOT chứ không bày từng mục bằng tay. Bản trước
+    bày tay đúng một mục (so_nguoi_nhom) và để sót năm mục còn lại — đo 6/10:
+    engine dùng chúng thật mà người dùng không có đường nào đổi. Duyệt bảng
+    thì thêm một dòng vào bảng là nó tự hiện ra, không còn chỗ để bỏ sót.
+    """
+    from . import du_lieu
+    return [_muc_truot(k, nhan, nho, lon, don_vi, goi_y, cfg.get(k))
+            for k, nhan, nho, lon, don_vi, goi_y
+            in du_lieu.THANH_TRUOT.get(loai_ho_so or "vanban", [])]
 
 
 def _chu(nhan, goi_y, gia_tri) -> dict:
@@ -131,12 +169,11 @@ def du_lieu(cfg: dict, tuy_chon: dict, loai_ho_so: str = "",
                           "Nhóm có số lớn nhất trong danh sách được đọc to hơn "
                           "một chút và nghỉ lâu hơn sau đó.",
                           cfg.get("nhan_manh_tien")),
-                # Số này chi phối nhịp đọc THẬT (DocCongDuc.py: cứ bao nhiêu
-                # tên thì nghỉ dài một lần) nhưng trước giờ không màn nào đặt
-                # được - hồ sơ vẫn cất nó, người dùng vẫn chịu. Bài đo:
-                # tests/kiem_so_nguoi_nhom.py
-                _so_nguyen("so_nguoi_nhom", "congduc",
-                           cfg.get("so_nguoi_nhom"), 20),
+                # Mọi mục nhịp đọc của loại hồ sơ này. Chúng chi phối nhịp đọc
+                # THẬT (engine đọc chúng khi dựng playlist) nhưng trước giờ
+                # không màn nào đặt được — hồ sơ vẫn cất, người dùng vẫn chịu.
+                # Bài đo: tests/kiem_so_nguoi_nhom.py
+                *_muc_nhip_doc(cfg, loai_ho_so),
             ],
         },
         {
@@ -176,7 +213,7 @@ def du_lieu(cfg: dict, tuy_chon: dict, loai_ho_so: str = "",
     # đổi không có chỗ cất, chuyển sang hồ sơ văn bản thì nó bật lại - tưởng
     # chương trình không nghe lời. Đo được thật, nên chỉ hiện đúng mục hợp
     # với hồ sơ đang mở.
-    # _so_nguyen trả {} nếu khóa không có trong THANH_TRUOT. Bỏ trước khi lọc,
+    # Bỏ mục rỗng trước khi lọc theo loại hồ sơ,
     # không thì khi loai_ho_so rỗng nó lọt ra giao diện thành một dòng trống.
     for n in nhom:
         n["muc"] = [m for m in n["muc"] if m]
