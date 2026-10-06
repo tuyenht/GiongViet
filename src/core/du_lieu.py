@@ -131,6 +131,13 @@ THANH_TRUOT = {
          "Khoảng lặng sau mỗi nhóm, từ 0 đến 8 giây"),
         ("so_nguoi_nhom", "Số người mỗi nhóm", 1, 50, "nguoi",
          "Cứ bao nhiêu tên thì nghỉ dài một lần"),
+        # Thành viên cuối của họ, thêm 6/10/2026. Engine đọc cfg["nghi_doan"]
+        # sáu chỗ và hồ sơ cất nó theo từng hồ sơ, nhưng trước giờ nó không
+        # nằm trong bảng này nên không màn nào bày ra được.
+        # Phạm vi 0..3 lấy y nguyên nghi_doan_vb bên "vanban": cùng nghĩa
+        # (nghỉ giữa hai đoạn), chỉ khác chế độ. Không tự nghĩ ra con số khác.
+        ("nghi_doan", "Nghỉ giữa các đoạn lời dẫn", 0.0, 3.0, "giay",
+         "Khoảng lặng giữa hai đoạn của lời dẫn đầu và cuối danh sách"),
     ],
     "vanban": [
         ("nghi_cau", "Nghỉ giữa các câu", 0.0, 2.0, "giay",

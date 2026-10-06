@@ -189,7 +189,7 @@ print("\n=== B2. CA HO: bon khoang nghi cung phai co o chinh ===")
 # (van ban) deu duoc engine dung that - dem duoc 11 cho - ma truoc gio khong
 # man nao dat duoc. "So nguoi moi nhom" chi la MOT trong SAU muc bi ket.
 _HO = {
-    "congduc": ["nghi_nguoi", "nghi_nhom", "so_nguoi_nhom"],
+    "congduc": ["nghi_nguoi", "nghi_nhom", "so_nguoi_nhom", "nghi_doan"],
     "vanban": ["nghi_cau", "nghi_doan_vb", "so_ky_tu"],
 }
 for _che, _can in _HO.items():
@@ -225,8 +225,8 @@ for _vao, _mong in ((1.3, "1,3"), (0.7, "0,7"), (2.5, "2,5")):
 print("\n=== B3. ApiMoi nhan ca khoa SO THUC ===")
 from giaodien_moi import cau_noi_moi as _cnm2
 _st = _cnm2.khoa_so_thuc()
-ok(set(_st) == {"nghi_nguoi", "nghi_nhom", "nghi_cau", "nghi_doan_vb"},
-   "dung bon khoang nghi duoc nhan nhu so thuc", sorted(_st))
+ok(set(_st) == {"nghi_nguoi", "nghi_nhom", "nghi_doan", "nghi_cau", "nghi_doan_vb"},
+   "dung nam khoang nghi duoc nhan nhu so thuc", sorted(_st))
 ok(not (set(_st) & set(_cnm2.khoa_so_nguyen())),
    "khong khoa nao nam ca hai nhom - nguyen va thuc phai roi nhau",
    sorted(set(_st) & set(_cnm2.khoa_so_nguyen())))
