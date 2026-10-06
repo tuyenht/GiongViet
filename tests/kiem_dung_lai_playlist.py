@@ -260,6 +260,50 @@ ok(api3._cfg["nghi_nhom"] == 6.0,
    "cau hinh nap dung so THUC, khong bi cat cut thanh 6", api3._cfg["nghi_nhom"])
 
 
+print("\n=== B5. nghi_doan (o chinh thu bay) cung di tron duong ===")
+# O nay duoc them sau cung. Khi them, toi chi kiem no HIEN RA trong man Cai
+# dat chu chua do no toi playlist - tuc no la "ma chua ai chay", dung cai bay
+# ca bai nay viet ra de chan. Nen do that o day.
+#
+# Do TONG KHOANG LANG chu khong dem so mau: o 2,5 giay thi nghi_doan trung
+# voi nghi_nhom (cung 2,50) nen phep dem mau se bat ca hai loai, doc ra so
+# vo nghia.
+def _ghi_cau_hinh_doan(nghi_doan: float) -> dict:
+    (TAM / "cauhinh.ini").write_text(
+        "[GiongDoc]\n"
+        "phong_cach = Tin t\u1ee9c - th\u00f4ng b\u00e1o\n"
+        "\n[DocLienTuc]\n"
+        "nghi_giua_nguoi = 1.30\n"
+        "nghi_giua_nhom = 2.50\n"
+        "so_nguoi_moi_nhom = 10\n"
+        f"nghi_giua_doan = {nghi_doan}\n"
+        "nhan_manh_tien = 0\n",
+        encoding="utf-8-sig")
+    return engine.load_config()
+
+
+# Loi dan PHAI bat, va phai co nhieu doan: nghi_doan chi chen GIUA hai doan
+# cua loi dan. Loi dan tat thi doi no khong thay gi - va bai se do oan.
+_nd = engine.NoiDung()
+_nd.dau_bat, _nd.dau_text = True, "Doan mot.\n\nDoan hai.\n\nDoan ba."
+_nd.cuoi_bat, _nd.cuoi_text = True, "Ket mot.\n\nKet hai."
+
+api4 = _Thu(_ghi_cau_hinh_doan(0.8), records, _nd)
+api4._dung_lai_playlist_moi()
+lang08 = sum(m["nghi"] for m in api4._playlist)
+
+api4._cfg = _ghi_cau_hinh_doan(2.5)
+api4._dung_lai_playlist_moi()
+lang25 = sum(m["nghi"] for m in api4._playlist)
+
+print(f"      nghi_doan 0,8 giay: tong lang {lang08:.2f}s")
+print(f"      nghi_doan 2,5 giay: tong lang {lang25:.2f}s")
+ok(lang25 > lang08, "nghi giua doan lau hon -> tong khoang lang dai hon",
+   f"{lang08:.2f}s → {lang25:.2f}s")
+ok(api4._cfg["nghi_doan"] == 2.5,
+   "cau hinh nap dung so THUC", api4._cfg["nghi_doan"])
+
+
 print("\n=== C. So DOAN co doi khong - giao dien KHONG xin lai danh sach ===")
 # datCaiDat trong giao-dien.js chi lam `duLieuCaiDat = kq; ve()`. Neu so doan
 # doi thi dong thu k tren man hinh khong con ung voi mau thu k ben Python.
