@@ -142,6 +142,43 @@ print(f"      lop cha tu goi _dung_lai_playlist {_goi_cha} lan - de mat la "
 ok(_goi_cha > 0, "lop cha that su van dung phuong thuc do", _goi_cha)
 print(f"      ApiMoi ghi de co y {len(_de)} ten: {_de}")
 
+print("\n=== F2. Chuan giao dien (chu du an chot 6/10/2026) ===")
+# Ban dau nut 34px va loi giai thich nam trong title. Ca hai deu khong dat:
+# chuan doi vung bam >= 44px, va cam giau thu quan trong sau hover (man cam
+# ung khong co hover). Cac phep nay canh cho viec do khong quay lai.
+import re as _re
+_khoi = _re.search(r"if \(m\.kieu === 'songuyen'\).*?\n  \}", _js_cd, _re.S)
+_khoi = _khoi.group(0) if _khoi else ""
+ok(bool(_khoi), "tim thay khoi ve o chinh so trong man-caidat.js")
+ok("title=" not in _khoi,
+   "KHONG dung title - title chi hien khi re chuot, man cam ung khong thay")
+ok(_khoi.count("aria-label") == 2,
+   "ca hai nut co aria-label cho bo doc man hinh", _khoi.count("aria-label"))
+ok("aria-live" in _khoi,
+   "con so co aria-live - doi gia tri thi bo doc man hinh doc len")
+# Nhan chu ngay tren nut, khong chi mot dau - hay +
+ok("B\u1edbt" in _khoi and "Th\u00eam" in _khoi,
+   "nut co NHAN CHU, khong chi mot dau toan hoc")
+
+_so_nut = _re.search(r"\.caidat__so-nut \{(.*?)\}", _css, _re.S)
+_than = _so_nut.group(1) if _so_nut else ""
+ok(bool(_so_nut), "co khoi CSS .caidat__so-nut")
+_mw = _re.search(r"min-width:\s*(\d+)px", _than)
+_mh = _re.search(r"min-height:\s*(\d+)px", _than)
+ok(bool(_mw) and int(_mw.group(1)) >= 44,
+   "vung bam rong >= 44px", (_mw.group(1) + "px") if _mw else "khong khai")
+ok(bool(_mh) and int(_mh.group(1)) >= 44,
+   "vung bam cao >= 44px", (_mh.group(1) + "px") if _mh else "khong khai")
+_cu = _re.search(r"font-size:\s*(\d+)px", _than)
+ok(bool(_cu) and int(_cu.group(1)) >= 16,
+   "chu tren nut >= 16px", (_cu.group(1) + "px") if _cu else "khong khai")
+ok("focus-visible" in _css and "outline" in _css,
+   "co vien tieu diem thay duoc de di bang ban phim")
+
+print("      CHUA KIEM duoc bang bai nay: mau sac, do tuong phan THAT, bo cuc")
+print("      o be ngang dien thoai. Nhung thu do phai MO CUA SO moi thay.")
+
+
 print("\n=== I. Nhanh khoa SO khong duoc nuot khoa SO THUC ===")
 # Vap that: ban dau quet ca THANH_TRUOT roi int() moi thu, nen bon khoa thoi
 # gian cung roi vao nhanh nay va bi CAT CUT - nghi_cau = 0,9 giay ghi xuong

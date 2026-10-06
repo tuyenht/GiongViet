@@ -124,7 +124,14 @@ def khoa_so_nguyen():
 
     Loc theo KIEU cua can: bon khoa thoi gian trong THANH_TRUOT co can la so
     thuc. Nhan ca chung roi int() la CAT CUT - nghi_cau = 0,9 giay ghi xuong
-    thanh 0. Duong chinh cac khoang nghi la dat_thong_so, khong phai duong nay.
+    thanh 0.
+
+    Hai khóa nghi_nguoi và nghi_nhom hiện KHÔNG CÓ đường nào đặt từ bản
+    mới - đã đo 6/10/2026: engine dùng chúng 11 chỗ, nhưng chỉ đặt được qua
+    Api.dat_thong_so của lớp CŨ, mà cả src/web/ chỉ gọi datThongSo đúng
+    một lần với khóa "tocDo". Tức chúng đang ở đúng tình cảnh của
+    so_nguoi_nhom trước khi được nối. Muốn nối thì thêm một kiểu mục số
+    THỰC bên cạnh "songuyen" trong cai_dat.py, đừng ép chúng qua đường này.
     """
     ket = {}
     for _che_do, bang in du_lieu.THANH_TRUOT.items():

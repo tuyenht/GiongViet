@@ -140,6 +140,10 @@ Còn lại → làm thẳng, báo cáo sau. Đừng hỏi vụn vặt.
 | Dấu `)` nằm trong chuỗi của `.bat` | `cmd` coi đó là hết khối `if ( ) else ( )` nên **cả hai nhánh cùng chạy** — một mục in ra cả OK lẫn LỖI |
 | `rem` chen giữa hai dòng nối bằng `^` | `rem` thành ĐỐI SỐ của lệnh đang nối chứ không phải chú thích. Đặt chú thích TRƯỚC cả lệnh |
 | `Get-ChildItem -Recurse -File 'đường\dẫn'` | `-File` là CÔNG TẮC, đường dẫn rơi vào tham số khác → "Second path fragment must not be a drive", ra 0.00 GB trong khi thư mục nặng 1,34 GB. Phải ghi `-Path` tường minh |
+| Tin một chú thích nói "đường chỉnh X là hàm Y" | Phải kiểm Y CÓ AI GỌI không. `Api.dat_thong_so` là "đường chỉnh các khoảng nghỉ" nhưng cả `src/web/` chỉ gọi nó một lần với khóa `tocDo`. **`nghi_nguoi` và `nghi_nhom` engine dùng 11 chỗ mà bản mới không đặt được** — cùng họ với `so_nguoi_nhom`, đo 6/10/2026 |
+| Bài kiểm đứng trên dữ liệu thiếu điều kiện | `parse_data_file` lấy **TAB** làm ranh tên/số tiền. Ghi dấu phẩy thì cả 45 dòng ra `tieude`, mọi phép về nhịp đọc ra 0 — bài đỏ oan cho mã thật. Đếm loại bản ghi trước khi tin một phép nào |
+| Giữ tầng tính toán trong THÂN phương thức | Bài kiểm phải tự tính lại bằng logic riêng, tức **nó kiểm chính nó** và không bao giờ đỏ dù mã thật hỏng. Đã thử đặt ngược lỗi vào và bài vẫn xanh. Tách ra mức module để bài gọi HÀM THẬT |
+| Phép canh đứng trên trạng thái RỖNG | `_doan = []` thì nhánh lùi không chạy, nên phép ĐỖ OAN dù lỗi đã nằm sẵn. **Mồi trạng thái lên trước khi đo**, rồi thử đặt ngược lỗi để chắc phép có cắn |
 | `cmd /c foo.bat` | Tìm trong PATH chứ không tìm thư mục hiện tại. Ghi đường dẫn đầy đủ |
 
 ## 5. Quy tắc làm việc
@@ -161,6 +165,9 @@ Còn lại → làm thẳng, báo cáo sau. Đừng hỏi vụn vặt.
 ```
 py -c "import glob,py_compile;[py_compile.compile(f,doraise=True) for f in ['GiongViet.py','DocCongDuc.py']+glob.glob('src/core/*.py')+glob.glob('src/app/*.py')]"
 py tests/chay_tat_ca.py                     # ca bo kiem, co doc gium ket qua
+py tests/chay_tat_ca.py --cong              # che do CONG: chi do khi co bai
+                                            # do NGOAI du kien (DO_CO_CHU_Y)
+py tests/hooks/cai_cong.py                  # cai cong vao .git/hooks/pre-push
 set GIONGDOC_TU_DONG=1 && DongGoi.bat       # build; thieu bien nay se treo o pause
 set GIONGDOC_TU_DONG=1 && DongGoi_Giao.bat  # dong goi de GIAO (sau khi da build)
 Get-Process ffplay                          # dem tien trinh phat tieng, toi da 1
@@ -174,6 +181,17 @@ Bundle phải có đủ 3 tệp mấu chốt:
 trong hai. Tốn 596 KB, đổi lấy việc giao diện không vỡ nếu một đường bị hụt.
 
 Lệnh hội đồng: `/bs:spec` · `/bs:audit` · `/bs:next` · `/bs:review` · `/bs:ship` · `/bs:close`
+
+**Cổng trước khi push.** `.git/hooks/` KHÔNG đi theo `git clone`, nên bản gốc
+để trong `tests/hooks/`. Kho mới tải về thì chạy `py tests/hooks/cai_cong.py`
+một lần. Cổng chạy `py_compile` + `node --check` + cả bộ kiểm, chỉ chặn khi
+có bài đỏ **ngoài** danh sách `DO_CO_CHU_Y` ở đầu `tests/chay_tat_ca.py` —
+mỗi mục trong danh sách ấy **bắt buộc kèm lý do**, không thì nó phình dần cho
+tới khi cổng vô nghĩa. Bỏ qua một lần: `git push --no-verify`.
+
+Cổng này **không kiểm bản `.exe`** — bảy bài chiếm màn hình bị bỏ qua,
+nên vỡ được đóng gói mà cổng vẫn mở. Sau khi đổi thứ gì đụng đường chạy thì
+vẫn phải build rồi chạy `py tests/KiemBanExe.py`.
 
 ## 7. Giao bản cho người khác
 

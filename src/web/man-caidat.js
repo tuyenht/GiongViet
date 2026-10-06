@@ -184,13 +184,21 @@ function veMucCaiDat(m) {
     const v = Number(m.giaTri);
     const lui = Math.max(m.nhoNhat, v - 1);
     const toi = Math.min(m.lonNhat, v + 1);
+    const het = v <= m.nhoNhat;
+    const day = v >= m.lonNhat;
+    /* NHAN CHU tren nut, khong dung title. title chi hien khi re chuot,
+       nen tren man cam ung khong ai thay, va chuan giao dien cua du an
+       cam giau thu quan trong sau hover. Dau - va + mot minh thi nguoi
+       chua quen may khong chac no tru vao cai gi. */
     return `<div class="caidat__muc">${nhan}
       <div class="caidat__dieu caidat__so">
-        <button class="nut nut--vien" data-cdso="${esc(m.khoa)}" data-cdgt="${lui}"
-                ${v <= m.nhoNhat ? 'disabled' : ''} title="Bớt một">−</button>
-        <span class="caidat__gt">${v} ${esc(m.donVi === 'nguoi' ? 'người' : '')}</span>
-        <button class="nut nut--vien" data-cdso="${esc(m.khoa)}" data-cdgt="${toi}"
-                ${v >= m.lonNhat ? 'disabled' : ''} title="Thêm một">+</button>
+        <button class="nut nut--vien caidat__so-nut" data-cdso="${esc(m.khoa)}"
+                data-cdgt="${lui}" ${het ? 'disabled' : ''}
+                aria-label="Bớt một">− Bớt</button>
+        <span class="caidat__gt caidat__so-gt" aria-live="polite">${v} người</span>
+        <button class="nut nut--vien caidat__so-nut" data-cdso="${esc(m.khoa)}"
+                data-cdgt="${toi}" ${day ? 'disabled' : ''}
+                aria-label="Thêm một">+ Thêm</button>
       </div></div>`;
   }
   if (m.kieu === 'duongdan') {
