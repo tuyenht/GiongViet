@@ -230,7 +230,16 @@ class ApiMoi(Api):
         bản thường ngay sau khi người dùng đổi một con số.
         """
         if self._loai_tai_lieu == "congduc" and self._records:
-            self._bo_doc.dung()
+            # GIU CHO DANG DOC. dung() mac dinh dat index = 0, nen ban truoc
+            # nguoi dung dang o mau 121 tren 208 ma nhich mot thiet lap la bi
+            # dua ve mau 1 - da do that. Voi nguoi lon tuoi dang do theo danh
+            # sach 200 ten o chua thi do la mat cho, phai tim lai tu dau.
+            #
+            # KHONG tu phat lai: man Cai dat chiem toan cua so, tieng noi len
+            # trong khi ho khong thay bo doc la lam giat minh. Giu cho la du
+            # chua cai hai that; tu phat lai la quyet dinh thiet ke khac.
+            vi_tri = self._bo_doc.index
+            self._bo_doc.dung(giu_vi_tri=True)
             self._trong_so_cache.clear()
             self._moc_phat = None
             self._playlist = engine.build_playlist_congduc(
@@ -239,8 +248,11 @@ class ApiMoi(Api):
             self._doan = [{"kieu": self._kieu_doan(s), "chu": self._chu_doan(s)}
                           for s in self._playlist]
             self._bo_doc.dat_playlist(self._playlist, self._cfg)
+            # Kep lai sau khi dat playlist: so mau co the doi (vi du so_ky_tu
+            # doi cach cat doan), va dat_playlist tu dat lai index.
+            self._bo_doc.index = min(vi_tri, max(0, len(self._playlist) - 1))
             self._nghe_rieng = False
-            self._nap_truoc_mau_dau()
+            self._nap_truoc_mau_dau(self._bo_doc.index)
         elif self._doan:
             self.moi_dat_doan(self._doan)
 

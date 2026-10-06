@@ -75,12 +75,23 @@ class _LoaGia:
         self.playlist = None
         self.index = 0
         self.dang_doc = False
+        self.co_giu_vi_tri = None
 
-    def dung(self):
+    def dung(self, giu_vi_tri=False):
+        # GHI LAI co giu_vi_tri. Phai soi chinh cai co nay, khong phai soi
+        # index sau cung: dong khoi phuc vi tri o cuoi ham tu lo index roi,
+        # nen bo giu_vi_tri di ma phep van xanh - da thu dat nguoc loi va no
+        # DO OAN. Cai co nay co viec rieng: bo phat that DAY "pos" len giao
+        # dien ngay trong dung(), nen thieu no la giao dien nhan "doan 1"
+        # trong khi nguoi ta dang o doan 121.
         self.da_dung += 1
+        self.co_giu_vi_tri = giu_vi_tri
+        if not giu_vi_tri:
+            self.index = 0
 
     def dat_playlist(self, pl, cfg):
         self.playlist = list(pl)
+        self.index = 0
 
     def cap_nhat_cfg(self, cfg):
         pass
@@ -302,6 +313,47 @@ ok(lang25 > lang08, "nghi giua doan lau hon -> tong khoang lang dai hon",
    f"{lang08:.2f}s → {lang25:.2f}s")
 ok(api4._cfg["nghi_doan"] == 2.5,
    "cau hinh nap dung so THUC", api4._cfg["nghi_doan"])
+
+
+print("\n=== B6. Dung lai playlist phai GIU CHO DANG DOC ===")
+# Vap that, da do: nguoi dung o mau 121 tren 208, nhich mot thiet lap trong
+# man Cai dat -> bi dua ve mau 1. bo_doc.dung() mac dinh dat index = 0, ma
+# ban truoc goi dung() khong doi so. Voi nguoi lon tuoi dang do theo danh
+# sach 200 ten o chua thi do la mat cho, phai tim lai tu dau.
+#
+# Lop cha Api._dung_lai_playlist(giu_vi_tri=True) da giai dung viec nay tu
+# truoc; ban moi khong mang sang.
+api5 = _Thu(_ghi_cau_hinh(20), records, noidung)
+api5._dung_lai_playlist_moi()
+_tong = len(api5._playlist)
+_o = min(40, _tong - 1)
+api5._bo_doc.index = _o
+api5._bo_doc.dang_doc = True
+api5._cfg = _ghi_cau_hinh(5)
+api5._dung_lai_playlist_moi()
+print(f"      o mau {_o + 1}/{_tong} -> sau khi nhich thiet lap: "
+      f"mau {api5._bo_doc.index + 1}")
+ok(api5._bo_doc.index == _o, "giu dung cho dang doc",
+   f"{_o + 1} → {api5._bo_doc.index + 1}")
+
+# Gan cuoi: so mau co the doi sau khi dung lai, nen phai KEP trong pham vi -
+# khong kep thi index tro ra ngoai playlist.
+api5._bo_doc.index = len(api5._playlist) - 1
+_cuoi = api5._bo_doc.index
+api5._cfg = _ghi_cau_hinh(20)
+api5._dung_lai_playlist_moi()
+ok(0 <= api5._bo_doc.index < len(api5._playlist),
+   "cho dang doc luon nam trong pham vi playlist moi",
+   f"{api5._bo_doc.index} / {len(api5._playlist)} mau")
+
+# KHONG tu phat lai: man Cai dat chiem toan cua so, tieng noi len trong khi
+# nguoi dung khong thay bo doc la lam ho giat minh.
+ok(not hasattr(api5._bo_doc, "da_phat") or not api5._bo_doc.da_phat,
+   "KHONG tu phat lai sau khi dung lai playlist")
+
+ok(api5._bo_doc.co_giu_vi_tri is True,
+   "co goi dung(giu_vi_tri=True) - thieu co nay la giao dien nhan sai cho",
+   api5._bo_doc.co_giu_vi_tri)
 
 
 print("\n=== C. So DOAN co doi khong - giao dien KHONG xin lai danh sach ===")
