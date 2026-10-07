@@ -49,6 +49,7 @@ sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
 CHIEM_MAN_HINH = {
     "KiemBanExe.py", "NghiemThu.py", "TuKiemGiaoDien.py", "chay_thu_tieng.py",
     "do_cach_phat.py", "do_tre_phat.py", "do_phan_ra_tre.py",
+    "do_tre_nhieu_luot.py",
 }
 
 HET_GIO = 300  # giay cho moi bai
