@@ -211,6 +211,23 @@ for _che in _HO:
         ok(m["nhoNhat"] <= m["giaTri"] <= m["lonNhat"],
            f"  {m['khoa']}: gia tri nam trong pham vi")
 
+print("\n  [B2-b] Buoc nhay phai hien RA MAT THUONG va bam duoc trong so lan vua phai:")
+# Hai loi da vap, deu lo ra khi in dong goi y ra doc:
+#   - co buoc chi nam trong aria-label, tuc chi BO DOC MAN HINH thay.
+#     Nguoi dung chinh la nguoi lon tuoi mat thuong - ho khong biet mot lan
+#     bam doi bao nhieu cho toi khi bam thu. Nguoc han.
+#   - so_ky_tu pham vi 120..600 ma buoc 1 -> 480 lan bam. Khong dung duoc.
+for _che in ("congduc", "vanban"):
+    for m in _muc_doc(_che, CFG):
+        if m["kieu"] not in ("songuyen", "sothuc"):
+            continue
+        _lan = round((m["lonNhat"] - m["nhoNhat"]) / m["buoc"])
+        ok(_lan <= 50, f"  {m['khoa']}: di het pham vi trong {_lan} lan bam",
+           f"buoc {m['buoc']}")
+        ok("M\u1ed7i l\u1ea7n b\u1ea5m \u0111\u1ed5i" in (m["goiY"] or ""),
+           f"  {m['khoa']}: dong goi y NOI RO buoc nhay (mat thuong doc duoc)",
+           (m["goiY"] or "")[-28:])
+
 print("\n  [B2-x] Hien thi KHONG duoc lam tron gia tri dang luu:")
 # Vap that: cfg co nghi_nguoi = 1,3 giay thi o chinh hien "1,5 giay" - noi sai
 # con so nguoi dung dang co, va chi mo man Cai dat ra xem cung lam lech thiet

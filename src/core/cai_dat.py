@@ -85,7 +85,14 @@ def _muc_truot(khoa, nhan, nho, lon, don_vi, goi_y, gia_tri) -> dict:
         v = mac_dinh
     v = max(nho, min(lon, v))
     if nguyen:
-        buoc = 1
+        # Buoc 1 la dung voi pham vi hep. Nhung so_ky_tu la 120..600: buoc 1 thi
+        # 480 lan bam moi di het pham vi - o chinh do khong dung duoc. Da do khi
+        # in dong goi y ra doc.
+        #
+        # KHONG chia pham vi cho mot so de "ra chung 24 lan bam": lam vay thi
+        # so_nguoi_nhom (1..50) ra buoc 2, tuc chi dat duoc so CHAN, khong dat
+        # noi 5 hay 15 nguoi moi nhom.
+        buoc = 1 if (lon - nho) <= 60 else 20
     else:
         # Phạm vi hẹp thì bước nhỏ cho đủ tinh; phạm vi rộng thì bước lớn cho
         # đỡ phải bấm nhiều. 0..2 giây → 8 lần bấm; 0..8 giây → 16 lần.
@@ -95,8 +102,17 @@ def _muc_truot(khoa, nhan, nho, lon, don_vi, goi_y, gia_tri) -> dict:
         # mở màn Cài đặt ra xem cũng làm lệch thiết lập của họ. Hiển thị phải
         # là giá trị THẬT; việc bám lưới để nhúc − / + lo khi tính giá trị mới.
         v = round(v, 3)
+    # BUOC NHAY phai hien ra MAT THUONG. Ban truoc chi dat no trong
+    # aria-label, tuc chi bo doc man hinh thay - nguoi dung chinh cua chuong
+    # trinh nay la nguoi lon tuoi mat thuong, ho khong biet mot lan bam doi bao
+    # nhieu cho toi khi bam thu. KHONG nhoi len nut: "- Bot 0,5 giay" lam bon
+    # nut dai, de xuong dong o man hep. Dong goi y da hien san, chi them mot cau.
+    goi_y_du = goi_y
+    if goi_y:
+        buoc_chu = du_lieu._hien_thi_gia_tri(don_vi, buoc)
+        goi_y_du = f"{goi_y}. M\u1ed7i l\u1ea7n b\u1ea5m \u0111\u1ed5i {buoc_chu}."
     return {"kieu": "songuyen" if nguyen else "sothuc",
-            "khoa": khoa, "nhan": nhan, "goiY": goi_y,
+            "khoa": khoa, "nhan": nhan, "goiY": goi_y_du,
             "giaTri": v, "nhoNhat": nho, "lonNhat": lon, "buoc": buoc,
             "donVi": don_vi,
             "hienThi": du_lieu._hien_thi_gia_tri(don_vi, v)}
