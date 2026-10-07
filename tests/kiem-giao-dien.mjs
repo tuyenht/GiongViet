@@ -93,11 +93,21 @@ const ctx = {
      `pyTra` cho từng mục kiểm gài sẵn câu trả lời cho lượt gọi kế tiếp. */
   pywebview: null,
   /* performance PHAI co. Khong co no thi batDauToChu() nem ReferenceError -
-     va truoc khi muc [N] them mot cho NHUONG that su, khong gi trong tep nay
-     nhuong cho vong su kien, nen chuoi bat dong bo do treo mai mai va duong
-     to chu KHONG BAO GIO chay trong bo kiem. Them no vao la duong ay song. */
+     va truoc khi muc [S] them mot cho NHUONG that su, khong gi trong tep nay
+     nhuong cho vong su kien, nen chuoi bat dong bo do treo mai mai va dong
+     `toChuMoc = performance.now() + tre` KHONG BAO GIO chay. Them no vao la
+     doan ay song.
+
+     Nhung CHI doan ay. Da do: rAF xoay 0 vong trong ca bo kiem, nen vong to
+     chu van khong chay. Dung noi qua thanh "duong to chu nay song".
+
+     rAF CO Y khong goi ham: giao-dien.js:1787 tu arm lai
+     (`toChuId = f < 1 ? requestAnimationFrame(chay) : 0`), nen goi dong bo
+     la de quy cho toi khi f >= 1. Hien f ra NaN nen nhanh chet - nhung do la
+     MAY, doi mot con so trong bai kiem la treo hoac vo stack. Giu nguyen
+     kieu voi setTimeout o tren: tra so, khong chay ham. */
   performance: { now: () => Date.now() },
-  requestAnimationFrame: (f) => { f(Date.now()); return 0; },
+  requestAnimationFrame: () => 0,
   cancelAnimationFrame() {},
   localStorage: { getItem: () => null, setItem() {} },
   module: undefined,
