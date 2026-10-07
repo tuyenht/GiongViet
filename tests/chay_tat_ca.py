@@ -99,8 +99,12 @@ def main():
     tat_ca = "--tat-ca" in sys.argv
     cong = "--cong" in sys.argv
     bai = sorted(
+        # KHONG phai bai kiem: tep in du lieu cho bai JS dung. De no lot vao
+        # bang ket qua thi no hien ra nhu mot "bai canh xanh" - mot dong noi
+        # doi, va lam con so 42/43 mat nghia.
         [p for p in THU_MUC.glob("*.py")
-         if p.name not in ("chay_tat_ca.py", "sitecustomize.py")]
+         if p.name not in ("chay_tat_ca.py", "sitecustomize.py",
+                           "_bang_caidat.py")]
         + list(THU_MUC.glob("*.mjs")),
         key=lambda p: p.name.lower())
 

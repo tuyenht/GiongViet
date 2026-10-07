@@ -6,6 +6,7 @@
    a function" trước khi phiền người dùng mở cửa sổ. */
 
 import { readFileSync, existsSync } from 'fs';
+import { execFileSync } from 'child_process';
 import { createContext, runInContext } from 'vm';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
@@ -16,6 +17,12 @@ const UI = existsSync(join(DIR, '..', 'src', 'web'))
   ? join(DIR, '..', 'src', 'web')
   : join(DIR, '..', 'ui-moi');
 let HTML = '';
+/* LOP NOI la mot thung RIENG, khong nam trong #goc. Hop thong bao
+   (moBao -> veBaoXuatXong), hop xuat, trinh nhan ban giong deu ve vao
+   day. DOM gia truoc chi bat #goc nen MOI thu trong lop noi vo hinh voi
+   bo kiem - do duoc: S.toast co dung cau 'Chua doi duoc thiet lap nay'
+   ma phep canh van bao san pham im lang. Bat ca hai thung. */
+let HTML_NOI = '';
 let batSuKien = {};
 
 function nutGia(id = '') {
@@ -26,7 +33,11 @@ function nutGia(id = '') {
     scrollTop: 0, value: '', focus() {}, select() {}, remove() {}, appendChild() {},
     querySelector: () => nutGia(), querySelectorAll: () => [],
     getBoundingClientRect: () => ({ left: 0, width: 200 }),
-    set innerHTML(v) { if (this.id === 'goc') HTML = v; }, get innerHTML() { return ''; },
+    set innerHTML(v) {
+      if (this.id === 'goc') HTML = v;
+      if (this.id === 'lopnoi') HTML_NOI = v;
+    },
+    get innerHTML() { return this.id === 'lopnoi' ? HTML_NOI : ''; },
     set onchange(f) {}, set onclick(f) {},
   };
 }
@@ -44,6 +55,7 @@ const ctx = {
     activeElement: { tagName: 'DIV' },
     querySelector: (s) => {
       if (s === '#goc') return ctx.__goc;
+      if (s === '#lopnoi') return ctx.__lopnoi;
       if (s === '#cuon') return null;
       /* Trả phần tử BIẾT nó thuộc đoạn nào khi selector có [data-doan="N"].
          doanGoDuoc() lấy phần tử rồi hỏi ngược .closest('[data-doan]') để biết
@@ -80,10 +92,18 @@ const ctx = {
      Các hàm ở đây trả đúng hình dạng Python thật trả (giaodien_moi/cau_noi_moi.py).
      `pyTra` cho từng mục kiểm gài sẵn câu trả lời cho lượt gọi kế tiếp. */
   pywebview: null,
+  /* performance PHAI co. Khong co no thi batDauToChu() nem ReferenceError -
+     va truoc khi muc [N] them mot cho NHUONG that su, khong gi trong tep nay
+     nhuong cho vong su kien, nen chuoi bat dong bo do treo mai mai va duong
+     to chu KHONG BAO GIO chay trong bo kiem. Them no vao la duong ay song. */
+  performance: { now: () => Date.now() },
+  requestAnimationFrame: (f) => { f(Date.now()); return 0; },
+  cancelAnimationFrame() {},
   localStorage: { getItem: () => null, setItem() {} },
   module: undefined,
 };
 ctx.__goc = nutGia('goc');
+ctx.__lopnoi = nutGia('lopnoi');
 ctx.globalThis = ctx;
 createContext(ctx);
 
@@ -100,6 +120,8 @@ const ok = (dk, nhan, them = '') => {
   if (!dk) loi++;
 };
 const co = (s) => HTML.includes(s);
+// Soi LOP NOI: hop thong bao va cac hop thoai nam o day, khong o #goc.
+const coNoi = (s) => HTML_NOI.includes(s);
 const dem = (s) => HTML.split(s).length - 1;
 
 /* `const` cấp cao nhất trong vm nằm ở phạm vi script, KHÔNG thành thuộc tính
@@ -1339,6 +1361,88 @@ ok(!co('title="Quay lại màn hình chính"'),
 
 chay("dat({ ...S, man: 'chinh' })");
 ok(co('class="menu"') && !co('class="manphu"'), 'quay về màn chính thì khung trở lại đủ');
+
+
+/* MAT XICH CUOI CHUA AI CHAY. Bay o chinh so trong man Cai dat deu di qua
+   datCaiDat() -> api('moi_dat_cai_dat') -> ve lai man hinh. TuKiemGiaoDien.py
+   co goi datCaiDat nhung chi voi mot CONG TAC, va no mo cua so that nen bi bo
+   qua mac dinh. Nen bay o chinh SO chua duong nao cham toi.
+
+   Ba lan trong mach viec nay, ma "chua ai chay" deu co van de (hai lan la loi
+   that). Day la mat xich cuoi con lai o phia khong can mo cua so.
+
+   BANG CAI DAT LAY TU PYTHON THAT. Go tay mot bang gia thi doi ten mot truong
+   ben Python la bai nay van xanh trong khi san pham da hong. */
+console.log('\n--- S. O chinh so: bam THAT, xem Python nhan gi ---');
+
+const bangCaiDat = (cheDo) => JSON.parse(
+  execFileSync('py', [join(DIR, '_bang_caidat.py'), cheDo],
+               { encoding: 'utf8', env: { ...process.env, PYTHONIOENCODING: 'utf-8' } }));
+
+// setTimeout trong ngu canh gia la ham khong lam gi, nen phai dung cua Node o
+// day: datCaiDat() la async, ve() chi chay sau khi Promise xong.
+const nhuong = () => new Promise((r) => setTimeout(r, 0));
+
+for (const cheDo of ['congduc', 'vanban']) {
+  const bang = bangCaiDat(cheDo);
+  const oSo = bang.nhom.filter((n) => n.ma === 'doc')
+    .flatMap((n) => n.muc).filter((m) => m.kieu === 'songuyen' || m.kieu === 'sothuc');
+  ok(oSo.length > 0, `${cheDo}: Python tra ve ${oSo.length} o chinh so`,
+     oSo.map((m) => m.khoa).join(', '));
+
+  let daGui = null;
+  batPython({
+    moi_cai_dat: () => bang,
+    moi_thong_tin_cache: () => ({ dungLuongMB: 0, soTep: 0, gioiHanMB: 150 }),
+    moi_dat_cai_dat: (khoa, gt) => { daGui = [khoa, gt]; return bang; },
+  });
+  await chay('moManCaiDat()');
+  await nhuong();
+
+  ok(co('data-cdso='), `${cheDo}: man hinh ve ra o chinh co data-cdso`);
+  for (const m of oSo) {
+    ok(co(`data-cdso="${m.khoa}"`), `  ${cheDo}: co o chinh cho ${m.khoa}`);
+    ok(co(m.hienThi), `  ${cheDo}: hien dung ${m.hienThi}`);
+  }
+
+  // Bam THAT vao nut +, voi dung gia tri ma bo ve dat vao data-cdgt.
+  for (const m of oSo) {
+    const toi = Math.min(m.lonNhat,
+      Math.round((m.giaTri + m.buoc) / m.buoc) * m.buoc);
+    daGui = null;
+    bam('[data-cdso]', { cdso: m.khoa, cdgt: String(toi) });
+    await nhuong();
+    ok(daGui !== null, `  ${cheDo}: bam ${m.khoa} -> Python CO duoc goi`);
+    ok(daGui && daGui[0] === m.khoa,
+       `  ${cheDo}: gui dung ten khoa`, daGui && daGui[0]);
+    ok(daGui && typeof daGui[1] === 'number',
+       `  ${cheDo}: gui SO, khong phai chuoi`, daGui && typeof daGui[1]);
+    ok(daGui && Math.abs(daGui[1] - toi) < 1e-9,
+       `  ${cheDo}: gui dung gia tri ${toi}`, daGui && daGui[1]);
+  }
+}
+
+/* Python tra null = "khong doi duoc". San pham PHAI noi cho nguoi dung biet,
+   khong duoc im lang - ho vua bam mot nut va khong thay gi doi. */
+{
+  const bang = bangCaiDat('congduc');
+  const oDau = bang.nhom.filter((n) => n.ma === 'doc').flatMap((n) => n.muc)
+    .find((m) => m.kieu === 'songuyen' || m.kieu === 'sothuc');
+  batPython({
+    moi_cai_dat: () => bang,
+    moi_thong_tin_cache: () => ({ dungLuongMB: 0, soTep: 0, gioiHanMB: 150 }),
+    moi_dat_cai_dat: () => null,
+  });
+  await chay('moManCaiDat()');
+  await nhuong();
+  bam('[data-cdso]', { cdso: oDau.khoa, cdgt: '1' });
+  await nhuong();
+  // Hop thong bao ve vao LOP NOI, khong vao #goc - nen phai soi coNoi().
+  ok(coNoi('Chưa đổi được thiết lập này'),
+     'Python tra null -> san pham BAO cho nguoi dung, khong im lang',
+     chay('S.toast && S.toast.ten'));
+}
+tatPython();
 
 console.log(`\n${loi === 0 ? 'XANH — khớp hết' : `ĐỎ — ${loi} chỗ lệch`}`);
 process.exit(loi ? 1 : 0);
