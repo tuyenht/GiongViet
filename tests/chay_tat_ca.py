@@ -104,7 +104,7 @@ def main():
         # doi, va lam con so 42/43 mat nghia.
         [p for p in THU_MUC.glob("*.py")
          if p.name not in ("chay_tat_ca.py", "sitecustomize.py",
-                           "_bang_caidat.py")]
+                           "_bang_caidat.py", "dat_lai_nhip_doc.py")]
         + list(THU_MUC.glob("*.mjs")),
         key=lambda p: p.name.lower())
 
